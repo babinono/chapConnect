@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-brand-blue: #2563eb;
+  --color-brand-red: #ef4444;
+}
+
+body {
+  @apply text-slate-900;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  background-color: #f8fafc;
+  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.brutal-shadow {
+  box-shadow: 6px 6px 0px 0px rgba(15, 23, 42, 1);
+}
+
+.brutal-shadow-sm {
+  box-shadow: 3px 3px 0px 0px rgba(15, 23, 42, 1);
+}
+
+.brutal-shadow:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 8px 8px 0px 0px rgba(15, 23, 42, 1);
+}
+
+.brutal-shadow:active {
+  transform: translate(2px, 2px);
+  box-shadow: 4px 4px 0px 0px rgba(15, 23, 42, 1);
+}

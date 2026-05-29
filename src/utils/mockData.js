@@ -1,0 +1,62 @@
+export const mentors = [
+  {
+    id: 1,
+    name: "Alex Johnson",
+    gradYear: 2018,
+    college: "Duke University",
+    major: "Finance",
+    career: "Management Consulting",
+    company: "McKinsey & Company",
+    location: "New York, NY",
+    highSchoolActivities: ["Student Council", "Debate Team", "Golf"],
+    contactPlatform: "Email",
+    contactInfo: "alex.johnson@example.com",
+    avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=Alex",
+    role: "Recent Alumni"
+  },
+  {
+    id: 2,
+    name: "Sarah Chen",
+    gradYear: 2008,
+    college: "University of Texas at Austin",
+    major: "Computer Science",
+    career: "Software Engineering",
+    company: "Google",
+    location: "Austin, TX",
+    highSchoolActivities: ["Robotics", "Math Club", "Orchestra"],
+    contactPlatform: "LinkedIn",
+    contactInfo: "linkedin.com/in/sarahchen",
+    avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=Sarah",
+    role: "Established Alumni"
+  },
+  {
+    id: 3,
+    name: "Michael Smith",
+    gradYear: 2022,
+    college: "Stanford University",
+    major: "Economics",
+    career: "Student",
+    company: "Stanford",
+    location: "Stanford, CA",
+    highSchoolActivities: ["Football", "Student Council", "Investment Club"],
+    contactPlatform: "Instagram",
+    contactInfo: "@michaelsmith_22",
+    avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=Michael",
+    role: "Recent Alumni"
+  },
+  {
+    id: 4,
+    name: "Emily Rodriguez",
+    gradYear: 2012,
+    college: "UCLA",
+    major: "Marketing",
+    career: "Product Marketing",
+    company: "Meta",
+    location: "San Francisco, CA",
+    highSchoolActivities: ["Cheerleading", "Yearbook", "Drama"],
+    contactPlatform: "Email",
+    contactInfo: "erodriguez@example.com",
+    avatar: "https://api.dicebear.com/7.x/notionists/svg?seed=Emily",
+    role: "Established Alumni"
+  }
+];
