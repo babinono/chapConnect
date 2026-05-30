@@ -1,11 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, Zap } from 'lucide-react';
+import { supabase } from '../utils/supabaseClient';
 
-export default function WelcomeScreen() {
-  const [name, setName] = useState('');
+export default function WelcomeScreen({ session }) {
+  const [name, setName] = useState(session?.user?.user_metadata?.full_name || '');
   const [gradYear, setGradYear] = useState('');
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (session?.user?.id) {
+      supabase
+        .from('user_profiles')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+           if (data) {
+             navigate('/dashboard', { replace: true });
+           }
+        });
+    }
+  }, [session, navigate]);
 
   const handleStart = (e) => {
     e.preventDefault();
@@ -13,7 +29,7 @@ export default function WelcomeScreen() {
     
     const year = parseInt(gradYear, 10);
     let flow = 'student';
-    if (year <= 2010) flow = 'established';
+    if (year <= 2020) flow = 'post_college';
     else if (year <= 2025) flow = 'recent';
 
     navigate('/onboarding', { state: { name, gradYear: year, flow } });
