@@ -437,7 +437,7 @@ export default function Dashboard({ session }) {
               onClick={handleResetDevMode}
               className="bg-red-500 text-white font-black py-4 px-6 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer"
             >
-              <span>Reset Dev Profile</span>
+              <span>Reset Account</span>
             </button>
           )}
 
