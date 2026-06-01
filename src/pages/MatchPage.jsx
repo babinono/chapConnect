@@ -63,7 +63,21 @@ export default function MatchPage({ session }) {
       }
 
       try {
-        const result = await findBestMatch(location.state.profile);
+        let result;
+        try {
+          result = await findBestMatch(location.state.profile);
+        } catch (err) {
+          if (location.state.profile.matchType === 'ai') {
+            console.warn("MatchPage: Gemini AI Match failed. Falling back to Quick Algo Match...", err);
+            const fallbackProfile = { ...location.state.profile, matchType: 'algo' };
+            result = await findBestMatch(fallbackProfile);
+            if (result) {
+              result.fallbackToAlgo = true;
+            }
+          } else {
+            throw err;
+          }
+        }
         console.log("MatchPage: match engine result:", result);
         
         if (result && result.mentor) {
@@ -216,6 +230,11 @@ export default function MatchPage({ session }) {
             <Sparkles className="w-10 h-10 text-white fill-current animate-spin" style={{ animationDuration: '6s' }} />
           </div>
           <h1 className="text-5xl font-black text-slate-900 tracking-tight uppercase mb-2">It's a Match!</h1>
+          {matchData?.fallbackToAlgo && (
+            <div className="inline-flex items-center space-x-1.5 bg-yellow-400 border-2 border-slate-900 text-slate-900 px-3 py-1 font-black text-xs uppercase tracking-widest rounded-md brutal-shadow-sm rotate-[1.5deg] mb-4">
+              <span>⚡ High-Speed Fallback Match Active</span>
+            </div>
+          )}
           <p className="text-slate-600 font-bold uppercase tracking-wider text-sm">We found a great connection for you</p>
         </div>
 
