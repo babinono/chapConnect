@@ -40,11 +40,24 @@ function App() {
   };
 
   const handleBypassAuth = () => {
-    // Inject a mock session for local development
+    // Inject a unique mock session for local development to prevent database conflicts and RLS deletion issues.
+    // Must generate a valid RFC 4122 UUID since Supabase columns are typed as UUID.
+    let mockId = localStorage.getItem('mock_user_id');
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    
+    if (!mockId || !uuidRegex.test(mockId)) {
+      mockId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+      localStorage.setItem('mock_user_id', mockId);
+    }
+
     const mockSession = {
       user: {
-        id: '11111111-1111-1111-1111-111111111111',
-        email: 'mock.user@chapconnect.dev',
+        id: mockId,
+        email: `mock.${mockId.substring(0, 8)}@chapconnect.dev`,
         user_metadata: {
           full_name: 'WHS Alumni'
         }
@@ -54,6 +67,8 @@ function App() {
   };
 
   const handleSignOut = async () => {
+    localStorage.removeItem('mock_user_id');
+    localStorage.removeItem('dev_profile_reset');
     await supabase.auth.signOut();
     setSession(null);
   };

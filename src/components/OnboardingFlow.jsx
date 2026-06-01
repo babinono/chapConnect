@@ -324,12 +324,7 @@ export default function OnboardingFlow({ session }) {
     }
 
     setIsSubmitting(false);
-    if (isAlumniFlow) {
-      navigate('/dashboard');
-    } else {
-      const fullProfile = { name, gradYear, ...formData, flow_type: finalFlowType, postGradSchool: finalPostGradSchool };
-      navigate('/match', { state: { profile: fullProfile } });
-    }
+    navigate('/dashboard');
   };
 
   const inputClass = "w-full px-4 py-3 rounded-xl border-2 border-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-slate-50 font-medium transition-all";
@@ -498,11 +493,11 @@ export default function OnboardingFlow({ session }) {
         return (
           <div className="space-y-5">
             <div>
-              <label className={labelClass}>Graduate School 1 (Completed)</label>
+              <label className={labelClass}>Graduate School 1 (If Completed)</label>
               <input name="firstGrad" type="text" onChange={handleChange} value={formData.firstGrad || ''} className={inputClass} placeholder="e.g. Stanford University (MS)" />
             </div>
             <div>
-              <label className={labelClass}>Graduate School 2 (Completed)</label>
+              <label className={labelClass}>Graduate School 2 (If Completed)</label>
               <input name="secondGrad" type="text" onChange={handleChange} value={formData.secondGrad || ''} className={inputClass} placeholder="e.g. Harvard Business School (MBA)" />
             </div>
             <div>
@@ -518,13 +513,14 @@ export default function OnboardingFlow({ session }) {
                 <option value="Email">Email</option>
                 <option value="LinkedIn">LinkedIn</option>
                 <option value="Instagram">Instagram</option>
-                <option value="Phone">Phone</option>
+                <option value="Phone">Phone / Text</option>
+                <option value="Twitter">Twitter / X</option>
                 <option value="Other">Other</option>
               </select>
             </div>
             {formData.contactPlatform === 'Other' && (
               <div>
-                <label className={labelClass}>Specify Platform</label>
+                <label className={labelClass}>Please specify contact platform</label>
                 <input name="otherContactPlatform" type="text" required onChange={handleChange} value={formData.otherContactPlatform || ''} className={inputClass} placeholder="e.g. Slack" />
               </div>
             )}
@@ -559,8 +555,8 @@ export default function OnboardingFlow({ session }) {
               <input name="targetCareers" type="text" onChange={handleChange} className={inputClass} placeholder="e.g. Consulting (comma separated)" />
             </div>
             <div>
-              <label className={labelClass}>High School Activities</label>
-              <input name="activities" type="text" onChange={handleChange} className={inputClass} placeholder="e.g. Debate, Golf (comma separated)" />
+              <label className={labelClass}>High School Clubs / Sports</label>
+              <input name="activities" type="text" onChange={handleChange} className={inputClass} placeholder="e.g. Student Council (comma separated)" />
             </div>
           </div>
         );
@@ -578,22 +574,22 @@ export default function OnboardingFlow({ session }) {
             <label className={labelClass}>Intended Major</label>
             <Autocomplete name="targetMajors" onChange={handleChange} value={formData.targetMajors || ''} suggestions={MAJORS} placeholder="e.g. Economics (comma separated)" />
           </div>
-          <div>
-            <label className={labelClass}>Intended Career</label>
-            <input name="targetCareers" type="text" onChange={handleChange} value={formData.targetCareers || ''} className={inputClass} placeholder="e.g. Software Engineer (comma separated)" />
-          </div>
         </div>
       );
     } else {
       return (
         <div className="space-y-5">
           <div>
-            <label className={labelClass}>High School Clubs</label>
-            <input name="activities" type="text" onChange={handleChange} className={inputClass} placeholder="e.g. Football (comma separated)" />
+            <label className={labelClass}>Intended Career</label>
+            <input name="targetCareers" type="text" onChange={handleChange} className={inputClass} placeholder="e.g. Software Engineer (comma separated)" />
+          </div>
+          <div>
+            <label className={labelClass}>High School Clubs / Sports</label>
+            <input name="activities" type="text" onChange={handleChange} className={inputClass} placeholder="e.g. Student Council (comma separated)" />
           </div>
           <div>
             <label className={labelClass}>Favorite Classes</label>
-            <input name="classes" type="text" onChange={handleChange} className={inputClass} placeholder="e.g. AP Calculus (comma separated)" />
+            <input name="classes" type="text" onChange={handleChange} className={inputClass} placeholder="e.g. AP US History (comma separated)" />
           </div>
         </div>
       );
@@ -604,37 +600,33 @@ export default function OnboardingFlow({ session }) {
   const isLastStep = step === 3 || (flow === 'recent' && step === 2) || (flow === 'student' && step === 2);
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-6">
-      <div className="w-full max-w-sm bg-white border-4 border-slate-900 rounded-2xl p-8 brutal-shadow transition-all">
-        <div className="mb-8">
-          <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Hi, {name}!</h2>
-          <p className="text-slate-600 font-bold mt-1">Let's set up your profile.</p>
-          
-          {!isSelectorStep && (
-            <div className="flex space-x-2 mt-6">
-              <div className={`h-3 border-2 border-slate-900 flex-1 rounded-full ${step >= 1 ? 'bg-red-500' : 'bg-slate-100'} transition-all`}></div>
-              <div className={`h-3 border-2 border-slate-900 flex-1 rounded-full ${step >= 2 ? 'bg-red-500' : 'bg-slate-100'} transition-all`}></div>
-              {(subFlow === 'post_schooling' || flow === 'established') && (
-                <div className={`h-3 border-2 border-slate-900 flex-1 rounded-full ${step >= 3 ? 'bg-red-500' : 'bg-slate-100'} transition-all`}></div>
-              )}
-            </div>
-          )}
+    <div className="min-h-screen flex items-center justify-center p-6">
+      <div className="w-full max-w-xl bg-white border-4 border-slate-900 rounded-2xl p-8 brutal-shadow relative">
+        <div className="absolute top-4 right-4 bg-slate-900 text-white font-black px-3 py-1 text-xs uppercase rounded-md">
+          Step {step} of {flow === 'post_college' ? 3 : 2}
         </div>
 
-        <form onSubmit={isLastStep ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }}>
+        <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-8">
+          Tell Us About Yourself
+        </h1>
+
+        <form onSubmit={isLastStep ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }} className="space-y-6">
           {renderFields()}
 
           {!isSelectorStep && (
-            <div className="flex justify-between mt-8 pt-6 border-t-2 border-slate-200">
-              <button
-                type="button"
-                onClick={handlePrev}
-                className="flex items-center space-x-2 text-slate-900 font-black uppercase tracking-wide hover:text-blue-600 transition-colors"
-                disabled={isSubmitting}
-              >
-                <ArrowLeft className="w-5 h-5" />
-                <span>Back</span>
-              </button>
+            <div className="flex justify-between pt-4 border-t-2 border-slate-200">
+              {step > 1 ? (
+                <button
+                  type="button"
+                  onClick={handlePrev}
+                  className="bg-white text-slate-900 font-black py-3 px-5 border-2 border-slate-900 rounded-xl brutal-shadow-sm flex items-center space-x-2 transition-all uppercase tracking-wider"
+                >
+                  <ArrowRight className="w-5 h-5 rotate-180" />
+                  <span>Back</span>
+                </button>
+              ) : (
+                <div />
+              )}
 
               <button
                 type="submit"
@@ -648,7 +640,7 @@ export default function OnboardingFlow({ session }) {
                   </>
                 ) : (
                   <>
-                    <span>{isLastStep ? ((subFlow === 'post_schooling' || flow === 'established') ? 'Done' : 'Match Me') : 'Next'}</span>
+                    <span>{isLastStep ? 'Proceed to Dashboard' : 'Next'}</span>
                     {!isLastStep && <ArrowRight className="w-5 h-5" />}
                   </>
                 )}

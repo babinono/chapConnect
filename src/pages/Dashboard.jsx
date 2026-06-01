@@ -94,13 +94,49 @@ export default function Dashboard({ session }) {
           
           // Convert database arrays to comma-separated strings for form state inputs
           const toString = (arr) => Array.isArray(arr) ? arr.join(', ') : (arr || '');
+          const PRESET_GRAD_SCHOOLS = ['UT Austin', 'Stanford', 'Harvard', 'Duke', 'UCLA', 'Yale', 'Columbia', 'MIT'];
+          const PRESET_GRAD_PROGRAMS = ['Medicine', 'Law', 'MBA', 'PhD/Masters', 'Residency'];
+          const PRESET_INDUSTRIES = ['Technology', 'Finance', 'Consulting', 'Healthcare', 'Education', 'Marketing', 'Law', 'Engineering', 'Real Estate'];
+
+          let parsedMeta = {};
+          const isAlumniFlow = profileData.flow_type === 'post_schooling' || profileData.flow_type === 'established';
+          if (isAlumniFlow && profileData.post_grad_program) {
+            try {
+              parsedMeta = JSON.parse(profileData.post_grad_program || '{}');
+            } catch (e) {
+              console.error("Error parsing alumni meta:", e);
+            }
+          }
+
+          const isCustomGradSchool = profileData.post_grad_school && !PRESET_GRAD_SCHOOLS.includes(profileData.post_grad_school);
+          const isCustomGradProgram = !isAlumniFlow && profileData.post_grad_program && !PRESET_GRAD_PROGRAMS.includes(profileData.post_grad_program);
+          const isCustomIndustry = profileData.career && !PRESET_INDUSTRIES.includes(profileData.career);
+
+          const standardContactPlatforms = ['LinkedIn', 'Email', 'Phone', 'Twitter', 'Instagram'];
+          const isCustomContactPlatform = parsedMeta.contactPlatform && !standardContactPlatforms.includes(parsedMeta.contactPlatform);
+
           setProfileForm({
             ...profileData,
             targetColleges: toString(profileData.target_colleges),
             targetMajors: toString(profileData.target_majors),
             targetCareers: toString(profileData.target_careers),
             activities: toString(profileData.high_school_activities),
-            classes: toString(profileData.favorite_classes)
+            classes: toString(profileData.favorite_classes),
+            
+            post_grad_school: isCustomGradSchool ? 'Other' : (profileData.post_grad_school || ''),
+            other_post_grad_school: isCustomGradSchool ? profileData.post_grad_school : '',
+            
+            post_grad_program: isCustomGradProgram ? 'Other' : (isAlumniFlow ? '' : (profileData.post_grad_program || '')),
+            other_post_grad_program: isCustomGradProgram ? profileData.post_grad_program : '',
+            
+            career: isCustomIndustry ? 'Other' : (profileData.career || ''),
+            other_career: isCustomIndustry ? profileData.career : '',
+
+            firstGrad: parsedMeta.firstGrad || '',
+            secondGrad: parsedMeta.secondGrad || '',
+            contactPlatform: isCustomContactPlatform ? 'Other' : (parsedMeta.contactPlatform || ''),
+            otherContactPlatform: isCustomContactPlatform ? parsedMeta.contactPlatform : '',
+            contactInfo: parsedMeta.contactInfo || ''
           });
         }
 
@@ -223,6 +259,23 @@ export default function Dashboard({ session }) {
     const activitiesArr = toArray(profileForm.activities);
     const classesArr = toArray(profileForm.classes);
 
+    const isAlumniFlow = profileForm.flow_type === 'post_schooling' || profileForm.flow_type === 'established';
+    let finalPostGradProgram = null;
+    if (isAlumniFlow) {
+      const contactPlatformVal = profileForm.contactPlatform === 'Other' 
+        ? profileForm.otherContactPlatform 
+        : profileForm.contactPlatform;
+      finalPostGradProgram = JSON.stringify({
+        firstGrad: profileForm.firstGrad || '',
+        secondGrad: profileForm.secondGrad || '',
+        industry: profileForm.career === 'Other' ? profileForm.other_career : (profileForm.career || ''),
+        contactPlatform: contactPlatformVal || '',
+        contactInfo: profileForm.contactInfo || ''
+      });
+    } else {
+      finalPostGradProgram = profileForm.post_grad_program === 'Other' ? profileForm.other_post_grad_program : (profileForm.post_grad_program || null);
+    }
+
     const updatedProfile = {
       name: profileForm.name,
       grad_year: parseInt(profileForm.grad_year, 10),
@@ -231,9 +284,9 @@ export default function Dashboard({ session }) {
       college: profileForm.college || null,
       location: profileForm.location || null,
       company: profileForm.company || null,
-      career: profileForm.career || null,
-      post_grad_school: profileForm.post_grad_school || null,
-      post_grad_program: profileForm.post_grad_program || null,
+      career: profileForm.career === 'Other' ? profileForm.other_career : (profileForm.career || null),
+      post_grad_school: profileForm.post_grad_school === 'Other' ? profileForm.other_post_grad_school : (profileForm.post_grad_school || null),
+      post_grad_program: finalPostGradProgram,
       target_colleges: targetCollegesArr,
       target_majors: targetMajorsArr,
       target_careers: targetCareersArr,
@@ -263,20 +316,36 @@ export default function Dashboard({ session }) {
     
     setLoading(true);
     try {
-      // 1. Delete student matches
-      await supabase
-        .from('student_matches')
-        .delete()
-        .eq('user_id', session.user.id);
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      const isValidUuid = uuidRegex.test(session?.user?.id);
+
+      // 1. Delete student matches (only if valid UUID to prevent database crashes)
+      if (isValidUuid) {
+        const { error: matchesErr } = await supabase
+          .from('student_matches')
+          .delete()
+          .eq('user_id', session.user.id);
+        if (matchesErr) throw matchesErr;
+      }
         
-      // 2. Delete user profile
-      await supabase
-        .from('user_profiles')
-        .delete()
-        .eq('user_id', session.user.id);
+      // 2. Delete user profile (try deleting by primary key first, then fallback to user_id)
+      if (profile?.id) {
+        const { error: profileErr } = await supabase
+          .from('user_profiles')
+          .delete()
+          .eq('id', profile.id);
+        if (profileErr) throw profileErr;
+      } else if (isValidUuid) {
+        const { error: profileErr } = await supabase
+          .from('user_profiles')
+          .delete()
+          .eq('user_id', session.user.id);
+        if (profileErr) throw profileErr;
+      }
         
       // 3. Clear rate limiters and localStorage
       localStorage.removeItem('match_rate_limit');
+      localStorage.removeItem('mock_user_id');
       localStorage.setItem('dev_profile_reset', 'true');
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
@@ -363,7 +432,7 @@ export default function Dashboard({ session }) {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 self-start md:self-auto">
-          {(session?.user?.id === '11111111-1111-1111-1111-111111111111' || import.meta.env.DEV) && (
+          {(session?.user?.id === '11111111-1111-1111-1111-111111111111' || import.meta.env.DEV || window.location.hostname.includes('vercel.app')) && (
             <button
               onClick={handleResetDevMode}
               className="bg-red-500 text-white font-black py-4 px-6 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer"
@@ -548,15 +617,9 @@ export default function Dashboard({ session }) {
           <div className="bg-white border-4 border-slate-900 brutal-shadow p-10 rounded-2xl text-center max-w-md mx-auto w-full mt-8">
             <BookOpen className="w-16 h-16 text-blue-600 mx-auto mb-6" />
             <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-2">No Matches Yet</h2>
-            <p className="text-slate-700 font-bold mb-8">
-              Start matching with Westlake High School graduates to build your profile here!
+            <p className="text-slate-700 font-bold">
+              Click Quick Algo Match or Gemini AI Match at the top of the page to connect with Westlake High School graduates!
             </p>
-            <button
-              onClick={handleFindMatch}
-              className="w-full bg-blue-600 text-white py-4 rounded-xl font-black border-2 border-slate-900 brutal-shadow uppercase tracking-wide cursor-pointer animate-bounce"
-            >
-              Match Me Instantly
-            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -884,8 +947,23 @@ export default function Dashboard({ session }) {
                     <option value="Yale">Yale University</option>
                     <option value="Columbia">Columbia University</option>
                     <option value="MIT">MIT</option>
+                    <option value="Other">Other (Please specify below)</option>
                   </select>
                 </div>
+                {profileForm.post_grad_school === 'Other' && (
+                  <div>
+                    <label className={labelClass}>Please specify graduate school</label>
+                    <input
+                      type="text"
+                      name="other_post_grad_school"
+                      value={profileForm.other_post_grad_school || ''}
+                      onChange={handleProfileFormChange}
+                      className={inputClass}
+                      placeholder="e.g. Rice University"
+                      required
+                    />
+                  </div>
+                )}
                 <div>
                   <label className={labelClass}>Program / Degree Type</label>
                   <select
@@ -903,6 +981,20 @@ export default function Dashboard({ session }) {
                     <option value="Other">Other</option>
                   </select>
                 </div>
+                {profileForm.post_grad_program === 'Other' && (
+                  <div>
+                    <label className={labelClass}>Please specify program type</label>
+                    <input
+                      type="text"
+                      name="other_post_grad_program"
+                      value={profileForm.other_post_grad_program || ''}
+                      onChange={handleProfileFormChange}
+                      className={inputClass}
+                      placeholder="e.g. Master of Science in Data Science"
+                      required
+                    />
+                  </div>
+                )}
               </>
             )}
 
@@ -941,6 +1033,20 @@ export default function Dashboard({ session }) {
                     <option value="Other">Other</option>
                   </select>
                 </div>
+                {profileForm.career === 'Other' && (
+                  <div>
+                    <label className={labelClass}>Please specify industry</label>
+                    <input
+                      type="text"
+                      name="other_career"
+                      value={profileForm.other_career || ''}
+                      onChange={handleProfileFormChange}
+                      className={inputClass}
+                      placeholder="e.g. Aerospace Engineering"
+                      required
+                    />
+                  </div>
+                )}
                 <div>
                   <label className={labelClass}>Company Worked At</label>
                   <input
@@ -950,6 +1056,71 @@ export default function Dashboard({ session }) {
                     onChange={handleProfileFormChange}
                     className={inputClass}
                     placeholder="e.g. Google"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Graduate Program 1 (If Completed)</label>
+                  <input
+                    type="text"
+                    name="firstGrad"
+                    value={profileForm.firstGrad || ''}
+                    onChange={handleProfileFormChange}
+                    className={inputClass}
+                    placeholder="e.g. UT Austin, MBA (Business)"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Graduate Program 2 (If Completed)</label>
+                  <input
+                    type="text"
+                    name="secondGrad"
+                    value={profileForm.secondGrad || ''}
+                    onChange={handleProfileFormChange}
+                    className={inputClass}
+                    placeholder="e.g. Harvard, Law School (JD)"
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>Preferred Reach Out Method</label>
+                  <select
+                    name="contactPlatform"
+                    value={profileForm.contactPlatform || ''}
+                    onChange={handleProfileFormChange}
+                    className={`${inputClass} font-black`}
+                  >
+                    <option value="">-- Select Contact Method --</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Email">Email</option>
+                    <option value="Phone">Phone / Text</option>
+                    <option value="Twitter">Twitter / X</option>
+                    <option value="Instagram">Instagram</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                {profileForm.contactPlatform === 'Other' && (
+                  <div>
+                    <label className={labelClass}>Please specify contact platform</label>
+                    <input
+                      type="text"
+                      name="otherContactPlatform"
+                      value={profileForm.otherContactPlatform || ''}
+                      onChange={handleProfileFormChange}
+                      className={inputClass}
+                      placeholder="e.g. Slack, WhatsApp"
+                      required
+                    />
+                  </div>
+                )}
+                <div>
+                  <label className={labelClass}>Contact Username / Link / Email</label>
+                  <input
+                    type="text"
+                    name="contactInfo"
+                    value={profileForm.contactInfo || ''}
+                    onChange={handleProfileFormChange}
+                    className={inputClass}
+                    placeholder="e.g. linkedin.com/in/username"
+                    required
                   />
                 </div>
               </>
@@ -977,7 +1148,7 @@ export default function Dashboard({ session }) {
       )}
 
       {/* Eanes ISD & Alumni Portal Resources Hub */}
-      {activeTab === 'matches' && (
+      {activeTab === 'matches' && isAlumniMentor && (
         <div className="mt-16 border-t-4 border-slate-900 pt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
           <div className="inline-flex items-center space-x-2 bg-purple-500 border-2 border-slate-900 text-white px-3 py-1 font-black text-xs uppercase tracking-widest rounded-md brutal-shadow-sm rotate-[1.5deg] mb-4">
             <span>📚 Official Resources</span>
