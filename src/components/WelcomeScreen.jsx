@@ -10,6 +10,12 @@ export default function WelcomeScreen({ session }) {
 
   useEffect(() => {
     if (session?.user?.id) {
+      // If dev profile was reset, bypass automated dashboard redirect to let them onboard fresh
+      if (session.user.id === '11111111-1111-1111-1111-111111111111' && localStorage.getItem('dev_profile_reset') === 'true') {
+        console.log("WelcomeScreen: dev_profile_reset flag is active. Bypassing automatic redirect.");
+        return;
+      }
+
       supabase
         .from('user_profiles')
         .select('id')

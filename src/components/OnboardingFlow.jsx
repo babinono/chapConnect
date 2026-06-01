@@ -295,11 +295,13 @@ export default function OnboardingFlow({ session }) {
 
     const { error } = await supabase
       .from('user_profiles')
-      .insert([profileData]);
+      .upsert([profileData]);
 
     if (error) {
       console.error('Error saving profile:', error);
       alert('There was an error saving your profile. Continuing anyway.');
+    } else {
+      localStorage.removeItem('dev_profile_reset');
     }
 
     if (finalFlowType === 'post_schooling' || finalFlowType === 'established') {

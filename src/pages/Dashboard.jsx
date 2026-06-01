@@ -273,6 +273,7 @@ export default function Dashboard({ session }) {
         
       // 3. Clear rate limiters and localStorage
       localStorage.removeItem('match_rate_limit');
+      localStorage.setItem('dev_profile_reset', 'true');
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
         if (key && key.includes(`_milestones_`)) {
