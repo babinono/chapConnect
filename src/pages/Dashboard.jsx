@@ -254,6 +254,41 @@ export default function Dashboard({ session }) {
     }
   };
 
+  const handleResetDevMode = async () => {
+    if (!window.confirm("Are you sure you want to reset your profile and onboarding data? This will delete your matches and profile from the database so you can start onboarding completely from scratch.")) return;
+    
+    setLoading(true);
+    try {
+      // 1. Delete student matches
+      await supabase
+        .from('student_matches')
+        .delete()
+        .eq('user_id', session.user.id);
+        
+      // 2. Delete user profile
+      await supabase
+        .from('user_profiles')
+        .delete()
+        .eq('user_id', session.user.id);
+        
+      // 3. Clear rate limiters and localStorage
+      localStorage.removeItem('match_rate_limit');
+      for (let i = localStorage.length - 1; i >= 0; i--) {
+        const key = localStorage.key(i);
+        if (key && key.includes(`_milestones_`)) {
+          localStorage.removeItem(key);
+        }
+      }
+      
+      // 4. Force hard redirect to home screen
+      window.location.href = '/';
+    } catch (err) {
+      console.error("Failed to reset dev profile:", err);
+      alert("Reset failed: " + err.message);
+      setLoading(false);
+    }
+  };
+
   const handleFindMatch = () => {
     if (profile) {
       // Bypasses onboarding forms completely by going straight to /match with current mapped profile data!
@@ -317,13 +352,24 @@ export default function Dashboard({ session }) {
           </p>
         </div>
 
-        <button
-          onClick={handleFindMatch}
-          className="bg-blue-600 text-white font-black py-4 px-6 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer self-start md:self-auto animate-pulse"
-        >
-          <Sparkles className="w-5 h-5 stroke-[3] fill-current" />
-          <span>Match Me Instantly</span>
-        </button>
+        <div className="flex flex-col sm:flex-row gap-4 self-start md:self-auto">
+          {session?.user?.id === '11111111-1111-1111-1111-111111111111' && (
+            <button
+              onClick={handleResetDevMode}
+              className="bg-red-500 text-white font-black py-4 px-6 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer"
+            >
+              <span>Reset Dev Profile</span>
+            </button>
+          )}
+
+          <button
+            onClick={handleFindMatch}
+            className="bg-blue-600 text-white font-black py-4 px-6 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer animate-pulse"
+          >
+            <Sparkles className="w-5 h-5 stroke-[3] fill-current" />
+            <span>Match Me Instantly</span>
+          </button>
+        </div>
       </header>
 
       {/* Tabs Menu */}

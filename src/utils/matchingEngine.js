@@ -146,22 +146,41 @@ ${JSON.stringify(studentProfile, null, 2)}
 Candidate Mentors:
 ${JSON.stringify(formattedCandidates, null, 2)}`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
-      }],
-      generationConfig: {
-        responseMimeType: "application/json",
-        temperature: 0.2
-      }
-    })
-  });
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => {
+    console.warn("matchingEngine: Gemini API request exceeded 30s, aborting connection...");
+    controller.abort();
+  }, 30000); // 30-second timeout limit
+
+  let response;
+  try {
+    console.log("matchingEngine: Sending fetch request to Gemini AI...");
+    console.time("⏰ gemini_api_fetch_call");
+    response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: `${systemPrompt}\n\n${userPrompt}` }]
+        }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.2
+        }
+      })
+    });
+    console.timeEnd("⏰ gemini_api_fetch_call");
+    clearTimeout(timeoutId);
+  } catch (err) {
+    console.timeEnd("⏰ gemini_api_fetch_call");
+    clearTimeout(timeoutId);
+    throw new Error(`Gemini API connection failed or timed out: ${err.message}`);
+  }
 
   if (!response.ok) {
     throw new Error(`Gemini API returned status ${response.status}`);
@@ -174,7 +193,7 @@ ${JSON.stringify(formattedCandidates, null, 2)}`;
   }
 
   const parsed = JSON.parse(text.trim());
-  const selectedMentor = candidates.find(c => c.id === parsed.mentorId);
+  const selectedMentor = candidates.find(c => String(c.id) === String(parsed.mentorId));
   
   if (!selectedMentor) {
     throw new Error(`Gemini selected mentorId ${parsed.mentorId} which was not in candidate list.`);
@@ -189,10 +208,13 @@ ${JSON.stringify(formattedCandidates, null, 2)}`;
 }
 
 export async function findBestMatch(userProfile) {
+  console.log("matchingEngine: Fetching candidates from Supabase...");
+  console.time("⏰ supabase_fetch_all_mentors");
   // Fetch all mentors from Supabase
   const { data: mentors, error } = await supabase
     .from('mentors')
     .select('*');
+  console.timeEnd("⏰ supabase_fetch_all_mentors");
 
   if (error) {
     console.error("Error fetching mentors:", error);
