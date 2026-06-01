@@ -67,8 +67,11 @@ export default function MatchPage({ session }) {
         try {
           result = await findBestMatch(location.state.profile);
         } catch (err) {
-          if (location.state.profile.matchType === 'ai') {
-            console.warn("MatchPage: Gemini AI Match failed. Falling back to Quick Algo Match...", err);
+          const errMsg = err.message || '';
+          const isServerError = errMsg.includes('503') || errMsg.includes('502') || errMsg.includes('504') || errMsg.includes('500') || errMsg.includes('fetch') || errMsg.includes('Failed to fetch') || errMsg.includes('connection');
+          
+          if (location.state.profile.matchType === 'ai' && isServerError) {
+            console.warn("MatchPage: Gemini AI Match failed with server error. Falling back to Quick Algo Match...", err);
             const fallbackProfile = { ...location.state.profile, matchType: 'algo' };
             result = await findBestMatch(fallbackProfile);
             if (result) {
