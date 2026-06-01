@@ -154,7 +154,7 @@ ${JSON.stringify(formattedCandidates, null, 2)}`;
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
   
   const controller = new AbortController();
-  const timeoutLimit = userProfile.forceNoTimeout ? 300000 : 60000; // 5 mins if no timeout vs 60s
+  const timeoutLimit = userProfile.forceNoTimeout ? 300000 : 150000; // 5 mins if no timeout vs 150s
   const timeoutId = setTimeout(() => {
     console.warn(`matchingEngine: Gemini API request exceeded ${timeoutLimit/1000}s, aborting connection...`);
     controller.abort();
