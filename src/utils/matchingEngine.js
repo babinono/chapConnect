@@ -484,8 +484,25 @@ function generateOutreachMessage(userProfile, mentor, commonThreads, personalize
   const sharedCollege = mentor.college || 'your university';
   const major = parseArray(userProfile.targetMajors || userProfile.major)[0] || 'my intended major';
 
-  const defaultSnippet = `Since ${sharedCollege} is at the top of my list and I’m very interested in ${major}, I wanted to reach out.`;
+  const flowType = userProfile.flow_type || userProfile.flow || 'student';
+  const isRecent = flowType === 'recent';
+  const currentCollege = userProfile.college || 'my college';
+
+  let introText = `My name is ${studentFirstName}, and I’m a student at Westlake (Class of ${gradYearVal}) involved in ${act1} and ${act2}.`;
+  if (isRecent) {
+    introText = `My name is ${studentFirstName}, and I’m a student at ${currentCollege} (Westlake Class of ${gradYearVal}) studying ${major}.`;
+  }
+
+  let defaultSnippet = `Since ${sharedCollege} is at the top of my list and I’m very interested in ${major}, I wanted to reach out.`;
+  if (isRecent) {
+    if (userProfile.college && mentor.college && userProfile.college.toLowerCase().trim() === mentor.college.toLowerCase().trim()) {
+      defaultSnippet = `Since we both share the ${sharedCollege} connection and I’m very interested in your career path, I wanted to reach out.`;
+    } else {
+      defaultSnippet = `Since I’m very interested in your career path in ${mentor.career || mentor.industry || 'your industry'}, I wanted to reach out.`;
+    }
+  }
+
   const snippetToUse = personalizedSnippet || defaultSnippet;
 
-  return `Hi ${mentorFirstName},\n\nI hope your week is going well! My name is ${studentFirstName}, and I’m a student at Westlake (Class of ${gradYearVal}) involved in ${act1} and ${act2}.\n\n${snippetToUse}\n\nWould you be open to a quick, 15-minute virtual coffee chat sometime soon? I’m trying to learn as much as I can about the path ahead and would love to hear about your experiences and your transition from WHS.\n\nBest,\n\n${studentFullName}`;
+  return `Hi ${mentorFirstName},\n\nI hope your week is going well! ${introText}\n\n${snippetToUse}\n\nWould you be open to a quick, 15-minute virtual coffee chat sometime soon? I’m trying to learn as much as I can about the path ahead and would love to hear about your experiences and your transition from WHS.\n\nBest,\n\n${studentFullName}`;
 }

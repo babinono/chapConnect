@@ -273,29 +273,48 @@ export default function OnboardingFlow({ session }) {
       ? formData.otherPostGradSchool 
       : (formData.postGradSchool || null);
 
+    const finalPostGradProgram = formData.postGradProgram === 'Other'
+      ? formData.otherPostGradProgram
+      : (formData.postGradProgram || null);
+
+    const finalIndustry = formData.industry === 'Other'
+      ? formData.otherIndustry
+      : (formData.industry || null);
+
+    // Grad school (post_undergrad), working (post_schooling), and established are all alumni!
+    const isAlumniFlow = finalFlowType === 'post_schooling' || finalFlowType === 'established' || finalFlowType === 'post_undergrad';
+
+    const alumniMeta = isAlumniFlow ? JSON.stringify({
+      firstGrad: formData.firstGrad || null,
+      secondGrad: formData.secondGrad || null,
+      industry: finalIndustry,
+      contactPlatform: formData.contactPlatform === 'Other' ? formData.otherContactPlatform : formData.contactPlatform,
+      contactInfo: formData.contactInfo || null
+    }) : null;
+
     const profileData = {
       name,
       grad_year: gradYear,
       flow_type: finalFlowType,
       email: formData.email || null,
       college: formData.college || null,
-      major: formData.targetMajors || null,
-      career: formData.career || null,
-      high_school_activities: toArray(formData.activities),
+      major: formData.major || formData.targetMajors || null,
+      career: formData.career || null, // Saves the job title / role / position
+      high_school_activities: null, // Removed high school activities/clubs for alumni
       target_colleges: toArray(formData.targetColleges),
       target_majors: toArray(formData.targetMajors),
       target_careers: toArray(formData.targetCareers),
       favorite_classes: toArray(formData.classes),
       location: formData.location || null,
       company: formData.company || null,
-      post_grad_school: finalPostGradSchool,
-      post_grad_program: formData.postGradProgram || null,
+      post_grad_school: isAlumniFlow ? 'ALUMNI_METADATA' : finalPostGradSchool,
+      post_grad_program: isAlumniFlow ? alumniMeta : finalPostGradProgram,
       user_id: session?.user?.id || null
     };
 
     const { error } = await supabase
       .from('user_profiles')
-      .upsert([profileData]);
+      .upsert([profileData], { onConflict: 'user_id' });
 
     if (error) {
       console.error('Error saving profile:', error);
@@ -304,10 +323,9 @@ export default function OnboardingFlow({ session }) {
       localStorage.removeItem('dev_profile_reset');
     }
 
-    if (finalFlowType === 'post_schooling' || finalFlowType === 'established') {
-      setIsSubmitting(false);
-      alert("Thank you for joining the Alumni Hub! This MVP doesn't have a dashboard yet.");
-      navigate('/');
+    setIsSubmitting(false);
+    if (isAlumniFlow) {
+      navigate('/dashboard');
     } else {
       const fullProfile = { name, gradYear, ...formData, flow_type: finalFlowType, postGradSchool: finalPostGradSchool };
       navigate('/match', { state: { profile: fullProfile } });
@@ -402,6 +420,12 @@ export default function OnboardingFlow({ session }) {
                 <option value="Other">Other</option>
               </select>
             </div>
+            {formData.postGradProgram === 'Other' && (
+              <div>
+                <label className={labelClass}>Specify Program</label>
+                <input name="otherPostGradProgram" type="text" required onChange={handleChange} value={formData.otherPostGradProgram || ''} className={inputClass} placeholder="e.g. Master's in Data Science" />
+              </div>
+            )}
           </div>
         );
       }
@@ -419,9 +443,13 @@ export default function OnboardingFlow({ session }) {
               <label className={labelClass}>College Attended</label>
               <Autocomplete name="college" onChange={handleChange} value={formData.college || ''} suggestions={COLLEGES} placeholder="e.g. UT Austin" />
             </div>
+            <div>
+              <label className={labelClass}>Major studied</label>
+              <Autocomplete name="major" onChange={handleChange} value={formData.major || ''} suggestions={MAJORS} placeholder="e.g. Computer Science" />
+            </div>
           </div>
         );
-      } else {
+      } else if (step === 2) {
         return (
           <div className="space-y-5">
             <div>
@@ -429,12 +457,12 @@ export default function OnboardingFlow({ session }) {
               <input name="location" type="text" required onChange={handleChange} value={formData.location || ''} className={inputClass} placeholder="e.g. Austin, TX" />
             </div>
             <div>
-              <label className={labelClass}>Industry</label>
+              <label className={labelClass}>Industry / Career Field</label>
               <select 
-                name="career" 
+                name="industry" 
                 required 
                 onChange={handleChange} 
-                value={formData.career || ''} 
+                value={formData.industry || ''} 
                 className={`${inputClass} font-black`}
               >
                 <option value="">-- Select Industry --</option>
@@ -450,9 +478,59 @@ export default function OnboardingFlow({ session }) {
                 <option value="Other">Other</option>
               </select>
             </div>
+            {formData.industry === 'Other' && (
+              <div>
+                <label className={labelClass}>Specify Industry</label>
+                <input name="otherIndustry" type="text" required onChange={handleChange} value={formData.otherIndustry || ''} className={inputClass} placeholder="e.g. Renewable Energy" />
+              </div>
+            )}
+            <div>
+              <label className={labelClass}>Job Title / Position / Role</label>
+              <input name="career" type="text" required onChange={handleChange} value={formData.career || ''} className={inputClass} placeholder="e.g. Senior Software Engineer" />
+            </div>
             <div>
               <label className={labelClass}>Company Worked At</label>
               <input name="company" type="text" onChange={handleChange} value={formData.company || ''} className={inputClass} placeholder="e.g. Google (Optional)" />
+            </div>
+          </div>
+        );
+      } else {
+        return (
+          <div className="space-y-5">
+            <div>
+              <label className={labelClass}>Graduate School 1 (Completed)</label>
+              <input name="firstGrad" type="text" onChange={handleChange} value={formData.firstGrad || ''} className={inputClass} placeholder="e.g. Stanford University (MS)" />
+            </div>
+            <div>
+              <label className={labelClass}>Graduate School 2 (Completed)</label>
+              <input name="secondGrad" type="text" onChange={handleChange} value={formData.secondGrad || ''} className={inputClass} placeholder="e.g. Harvard Business School (MBA)" />
+            </div>
+            <div>
+              <label className={labelClass}>Preferred Contact Platform</label>
+              <select 
+                name="contactPlatform" 
+                required 
+                onChange={handleChange} 
+                value={formData.contactPlatform || ''} 
+                className={`${inputClass} font-black`}
+              >
+                <option value="">-- Select Platform --</option>
+                <option value="Email">Email</option>
+                <option value="LinkedIn">LinkedIn</option>
+                <option value="Instagram">Instagram</option>
+                <option value="Phone">Phone</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+            {formData.contactPlatform === 'Other' && (
+              <div>
+                <label className={labelClass}>Specify Platform</label>
+                <input name="otherContactPlatform" type="text" required onChange={handleChange} value={formData.otherContactPlatform || ''} className={inputClass} placeholder="e.g. Slack" />
+              </div>
+            )}
+            <div>
+              <label className={labelClass}>Contact Username / Link / Email</label>
+              <input name="contactInfo" type="text" required onChange={handleChange} value={formData.contactInfo || ''} className={inputClass} placeholder="e.g. linkedin.com/in/username" />
             </div>
           </div>
         );
@@ -523,7 +601,7 @@ export default function OnboardingFlow({ session }) {
   };
 
   const isSelectorStep = flow === 'post_college' && !subFlow;
-  const isLastStep = flow === 'established' || step === 2;
+  const isLastStep = step === 3 || (flow === 'recent' && step === 2) || (flow === 'student' && step === 2);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-6">
@@ -532,10 +610,13 @@ export default function OnboardingFlow({ session }) {
           <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Hi, {name}!</h2>
           <p className="text-slate-600 font-bold mt-1">Let's set up your profile.</p>
           
-          {!isSelectorStep && flow !== 'established' && (
+          {!isSelectorStep && (
             <div className="flex space-x-2 mt-6">
               <div className={`h-3 border-2 border-slate-900 flex-1 rounded-full ${step >= 1 ? 'bg-red-500' : 'bg-slate-100'} transition-all`}></div>
               <div className={`h-3 border-2 border-slate-900 flex-1 rounded-full ${step >= 2 ? 'bg-red-500' : 'bg-slate-100'} transition-all`}></div>
+              {(subFlow === 'post_schooling' || flow === 'established') && (
+                <div className={`h-3 border-2 border-slate-900 flex-1 rounded-full ${step >= 3 ? 'bg-red-500' : 'bg-slate-100'} transition-all`}></div>
+              )}
             </div>
           )}
         </div>
@@ -567,7 +648,7 @@ export default function OnboardingFlow({ session }) {
                   </>
                 ) : (
                   <>
-                    <span>{isLastStep ? (subFlow === 'post_schooling' || flow === 'established' ? 'Done' : 'Match Me') : 'Next'}</span>
+                    <span>{isLastStep ? ((subFlow === 'post_schooling' || flow === 'established') ? 'Done' : 'Match Me') : 'Next'}</span>
                     {!isLastStep && <ArrowRight className="w-5 h-5" />}
                   </>
                 )}

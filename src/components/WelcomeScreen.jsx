@@ -20,9 +20,10 @@ export default function WelcomeScreen({ session }) {
         .from('user_profiles')
         .select('id')
         .eq('user_id', session.user.id)
-        .maybeSingle()
+        .order('created_at', { ascending: false })
+        .limit(1)
         .then(({ data }) => {
-           if (data) {
+           if (data && data.length > 0) {
              navigate('/dashboard', { replace: true });
            }
         });

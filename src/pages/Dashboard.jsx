@@ -70,18 +70,22 @@ export default function Dashboard({ session }) {
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
 
   const navigate = useNavigate();
+  const isAlumniMentor = profile?.flow_type === 'established' || profile?.flow_type === 'post_schooling';
 
   useEffect(() => {
     if (!session?.user?.id) return;
 
     async function fetchDashboardData() {
       try {
-        // 1. Fetch user profile
-        const { data: profileData, error: profileErr } = await supabase
+        // 1. Fetch user profile (ordering by created_at desc to always load the latest profile created)
+        const { data: profiles, error: profileErr } = await supabase
           .from('user_profiles')
           .select('*')
           .eq('user_id', session.user.id)
-          .maybeSingle();
+          .order('created_at', { ascending: false })
+          .limit(1);
+
+        const profileData = profiles?.[0] || null;
 
         if (profileErr) {
           console.error("Error fetching profile:", profileErr);
@@ -351,12 +355,15 @@ export default function Dashboard({ session }) {
             Chap Connect
           </h1>
           <p className="text-slate-600 font-bold mt-2">
-            Welcome back, {profile?.name || 'Chap'}! Manage your profile and alumni outreach matches.
+            {isAlumniMentor 
+              ? `Welcome back, ${profile?.name || 'Chap'}! Manage your mentor profile and student connections.`
+              : `Welcome back, ${profile?.name || 'Chap'}! Manage your profile and alumni outreach matches.`
+            }
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 self-start md:self-auto">
-          {session?.user?.id === '11111111-1111-1111-1111-111111111111' && (
+          {(session?.user?.id === '11111111-1111-1111-1111-111111111111' || import.meta.env.DEV) && (
             <button
               onClick={handleResetDevMode}
               className="bg-red-500 text-white font-black py-4 px-6 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer"
@@ -365,20 +372,24 @@ export default function Dashboard({ session }) {
             </button>
           )}
 
-          <button
-            onClick={() => handleFindMatch('algo')}
-            className="bg-yellow-500 text-slate-900 font-black py-4 px-5 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer"
-          >
-            <span>Quick Algo Match</span>
-          </button>
+          {!isAlumniMentor && (
+            <>
+              <button
+                onClick={() => handleFindMatch('algo')}
+                className="bg-yellow-500 text-slate-900 font-black py-4 px-5 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer"
+              >
+                <span>Quick Algo Match</span>
+              </button>
 
-          <button
-            onClick={() => handleFindMatch('ai', true)}
-            className="bg-blue-600 text-white font-black py-4 px-5 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer animate-pulse"
-          >
-            <Sparkles className="w-5 h-5 stroke-[3] fill-current" />
-            <span>Gemini AI Match</span>
-          </button>
+              <button
+                onClick={() => handleFindMatch('ai', true)}
+                className="bg-blue-600 text-white font-black py-4 px-5 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer animate-pulse"
+              >
+                <Sparkles className="w-5 h-5 stroke-[3] fill-current" />
+                <span>Gemini AI Match</span>
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -411,8 +422,129 @@ export default function Dashboard({ session }) {
       </div>
 
       {activeTab === 'matches' ? (
-        /* Matches CRM list Tab */
-        matches.length === 0 ? (
+        isAlumniMentor ? (
+          <div className="space-y-8 animate-in fade-in duration-500">
+            {/* Warm Welcome Banner */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 border-4 border-slate-900 rounded-2xl p-8 brutal-shadow text-white relative overflow-hidden">
+              <div className="absolute right-4 top-4 bg-white/20 text-white border border-white/30 text-xs font-black px-3 py-1.5 uppercase tracking-widest rounded-md flex items-center space-x-1 backdrop-blur-sm rotate-[2deg]">
+                <span>✨ Mentor Account Active</span>
+              </div>
+              <h2 className="text-4xl font-black uppercase tracking-tight mb-2">Alumni Mentor Portal</h2>
+              <p className="text-indigo-100 font-bold max-w-2xl text-sm leading-relaxed">
+                Thank you for giving back to the Westlake High School community! Your profile has been saved to the Chap Connect database, making you visible to current WHS students and recent grads seeking college and career insights.
+              </p>
+            </div>
+
+            {(() => {
+              let alumniMeta = null;
+              if (profile?.post_grad_school === 'ALUMNI_METADATA') {
+                try {
+                  alumniMeta = JSON.parse(profile.post_grad_program || '{}');
+                } catch (e) {
+                  console.error("Failed to parse alumni metadata:", e);
+                }
+              }
+
+              return (
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
+                  {/* Profile Card */}
+                  <div className="md:col-span-2 bg-white border-4 border-slate-900 rounded-2xl brutal-shadow overflow-hidden flex flex-col">
+                    <div className="h-16 bg-slate-900 flex items-center px-6">
+                      <h3 className="text-white font-black uppercase tracking-widest text-sm">Your Active Mentor Listing</h3>
+                    </div>
+                    <div className="p-6 space-y-6">
+                      <div className="flex items-center space-x-4 border-b-2 border-slate-100 pb-4">
+                        <img
+                          src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(profile?.name || '')}`}
+                          alt={profile?.name}
+                          className="w-16 h-16 rounded-full border-4 border-slate-900 bg-white brutal-shadow-sm"
+                        />
+                        <div>
+                          <h3 className="text-2xl font-black text-slate-900 uppercase leading-none">{profile?.name}</h3>
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            <span className="bg-red-500 border-2 border-slate-900 text-white text-[10px] font-black px-2 py-0.5 uppercase tracking-widest rounded brutal-shadow-sm rotate-[-1deg]">
+                              Class of {profile?.grad_year}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-bold text-slate-800">
+                        <div className="flex items-center">
+                          <Briefcase className="w-5 h-5 mr-3 text-blue-600 stroke-[3] flex-shrink-0" />
+                          <span>
+                            {profile?.career || 'Position not specified'}
+                            {alumniMeta?.industry && <span className="text-slate-500 font-semibold"> ({alumniMeta.industry})</span>}
+                            {profile?.company && ` @ ${profile.company}`}
+                          </span>
+                        </div>
+                        <div className="flex items-start">
+                          <GraduationCap className="w-5 h-5 mr-3 text-blue-600 stroke-[3] flex-shrink-0 mt-0.5" />
+                          <div className="flex flex-col">
+                            <span>{profile?.college || 'College not specified'} {profile?.major && `(${profile.major})`}</span>
+                            {alumniMeta?.firstGrad && (
+                              <span className="text-xs text-slate-600 font-semibold mt-0.5">Grad 1: {alumniMeta.firstGrad}</span>
+                            )}
+                            {alumniMeta?.secondGrad && (
+                              <span className="text-xs text-slate-600 font-semibold">Grad 2: {alumniMeta.secondGrad}</span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center">
+                          <MapPin className="w-5 h-5 mr-3 text-blue-600 stroke-[3] flex-shrink-0" />
+                          <span>{profile?.location || 'Location not specified'}</span>
+                        </div>
+                        <div className="flex items-center">
+                          <User className="w-5 h-5 mr-3 text-blue-600 stroke-[3] flex-shrink-0" />
+                          <span>Contact Platform: <span className="uppercase text-indigo-700 font-black">{alumniMeta?.contactPlatform || 'Not specified'}</span></span>
+                        </div>
+                      </div>
+
+                      <div className="bg-slate-100 border-2 border-slate-900 rounded-xl p-4">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-900 mb-2 border-b border-slate-300 pb-1">Preferred Contact Details</h4>
+                        <p className="text-sm font-bold text-slate-800 break-all">{alumniMeta?.contactInfo || 'No contact details provided yet.'}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Stats Card */}
+                  <div className="bg-white border-4 border-slate-900 rounded-2xl brutal-shadow p-6 space-y-6">
+                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-wide">Mentorship Status</h3>
+                    
+                    <div className="bg-green-100 border-2 border-slate-900 rounded-xl p-4 text-center">
+                      <div className="text-xs uppercase font-black text-slate-500">Profile Status</div>
+                      <div className="font-black text-green-700 text-lg uppercase tracking-wider mt-1">Active & Ready</div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center font-bold text-xs uppercase text-slate-600 border-b border-slate-100 pb-2">
+                        <span>Target Cohorts</span>
+                        <span className="font-black text-slate-900">WHS Students</span>
+                      </div>
+                      <div className="flex justify-between items-center font-bold text-xs uppercase text-slate-600 border-b border-slate-100 pb-2">
+                        <span>Connected Students</span>
+                        <span className="font-black text-slate-900">0 Active</span>
+                      </div>
+                    </div>
+
+                    <p className="text-xs font-bold text-slate-500 leading-relaxed text-center">
+                      Students can request virtual coffee chats using the matched outreach templates. You will receive an email if a match request is generated!
+                    </p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Inactive Student Connections Notice */}
+            <div className="bg-white border-4 border-slate-900 p-8 rounded-2xl brutal-shadow text-center max-w-xl mx-auto w-full mt-8">
+              <FolderHeart className="w-16 h-16 text-blue-600 mx-auto mb-6" />
+              <h3 className="text-2xl font-black text-slate-900 uppercase tracking-tight mb-2">Looking for students to connect with!</h3>
+              <p className="text-slate-700 font-bold text-sm leading-relaxed">
+                As soon as students initiate a match with your profile, active outreach logs and connection statuses will show up here. Keep an eye on your inbox!
+              </p>
+            </div>
+          </div>
+        ) : matches.length === 0 ? (
           <div className="bg-white border-4 border-slate-900 brutal-shadow p-10 rounded-2xl text-center max-w-md mx-auto w-full mt-8">
             <BookOpen className="w-16 h-16 text-blue-600 mx-auto mb-6" />
             <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-2">No Matches Yet</h2>
