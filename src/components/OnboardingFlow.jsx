@@ -281,8 +281,8 @@ export default function OnboardingFlow({ session }) {
       ? formData.otherIndustry
       : (formData.industry || null);
 
-    // Grad school (post_undergrad), working (post_schooling), and established are all alumni!
-    const isAlumniFlow = finalFlowType === 'post_schooling' || finalFlowType === 'established' || finalFlowType === 'post_undergrad';
+    // Only working (post_schooling) and established are alumni mentors who use serialized alumniMeta
+    const isAlumniFlow = finalFlowType === 'post_schooling' || finalFlowType === 'established';
 
     const alumniMeta = isAlumniFlow ? JSON.stringify({
       firstGrad: formData.firstGrad || null,
@@ -597,13 +597,13 @@ export default function OnboardingFlow({ session }) {
   };
 
   const isSelectorStep = flow === 'post_college' && !subFlow;
-  const isLastStep = step === 3 || (flow === 'recent' && step === 2) || (flow === 'student' && step === 2);
+  const isLastStep = step === 3 || (flow === 'recent' && step === 2) || (flow === 'student' && step === 2) || (subFlow === 'post_undergrad' && step === 2);
 
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-xl bg-white border-4 border-slate-900 rounded-2xl p-8 brutal-shadow relative">
         <div className="absolute top-4 right-4 bg-slate-900 text-white font-black px-3 py-1 text-xs uppercase rounded-md">
-          Step {step} of {flow === 'post_college' ? 3 : 2}
+          Step {step} of {subFlow === 'post_undergrad' ? 2 : (flow === 'post_college' ? 3 : 2)}
         </div>
 
         <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-8">
