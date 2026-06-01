@@ -843,6 +843,86 @@ export default function Dashboard({ session }) {
           </form>
         </div>
       )}
+
+      {/* Eanes ISD & Alumni Portal Resources Hub */}
+      {activeTab === 'matches' && (
+        <div className="mt-16 border-t-4 border-slate-900 pt-12 animate-in fade-in slide-in-from-bottom-4 duration-500">
+          <div className="inline-flex items-center space-x-2 bg-purple-500 border-2 border-slate-900 text-white px-3 py-1 font-black text-xs uppercase tracking-widest rounded-md brutal-shadow-sm rotate-[1.5deg] mb-4">
+            <span>📚 Official Resources</span>
+          </div>
+          <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-8">
+            Eanes ISD & Alumni Portal
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Alumni Website */}
+            <div className="bg-white border-4 border-slate-900 rounded-xl brutal-shadow p-6 flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 uppercase tracking-wide mb-3 flex items-center">
+                  🎓 EEF Alumni Portal
+                </h3>
+                <p className="text-xs font-bold text-slate-700 leading-relaxed mb-4">
+                  The official Eanes Education Foundation Alumni page is the ultimate registry for former Chaps. 
+                  It is perfect for staying updated on WHS reunions, accessing alumni networking registers, and keeping your connection to the community alive. 
+                  Click this to tap back into your WHS heritage and see what other graduates are up to!
+                </p>
+              </div>
+              <a 
+                href="https://eaneseducationfoundation.org/alumni/" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="w-full bg-blue-600 text-white py-2 rounded-lg font-black border-2 border-slate-900 brutal-shadow-sm text-center text-xs uppercase tracking-wider hover:translate-y-[1px] hover:brutal-shadow-none transition-all block cursor-pointer"
+              >
+                Visit EEF Alumni
+              </a>
+            </div>
+
+            {/* Eanes ISD */}
+            <div className="bg-white border-4 border-slate-900 rounded-xl brutal-shadow p-6 flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 uppercase tracking-wide mb-3 flex items-center">
+                  🏫 Eanes ISD Website
+                </h3>
+                <p className="text-xs font-bold text-slate-700 leading-relaxed mb-4">
+                  The home base for all official district announcements, academic calendars, and school board updates. 
+                  It is the go-to portal if you want to check out district achievements, athletic schedules, or campus innovations. 
+                  Click this to keep tabs on the current generation of WHS students and see how the district continues to excel!
+                </p>
+              </div>
+              <a 
+                href="https://www.eanesisd.net/" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="w-full bg-yellow-500 text-slate-900 py-2 rounded-lg font-black border-2 border-slate-900 brutal-shadow-sm text-center text-xs uppercase tracking-wider hover:translate-y-[1px] hover:brutal-shadow-none transition-all block cursor-pointer"
+              >
+                Visit Eanes ISD
+              </a>
+            </div>
+
+            {/* Donate Page */}
+            <div className="bg-white border-4 border-slate-900 rounded-xl brutal-shadow p-6 flex flex-col justify-between">
+              <div>
+                <h3 className="text-lg font-black text-slate-900 uppercase tracking-wide mb-3 flex items-center">
+                  💸 Support the Foundation
+                </h3>
+                <p className="text-xs font-bold text-slate-700 leading-relaxed mb-4">
+                  Look, we all know Eanes is great, but premium public education doesn't just fund itself. 
+                  The Eanes Education Foundation funds critical teacher salaries and programs that state formulas conveniently overlook. 
+                  Click this to part with some spare change—your wallet will recover, and the school district will thank you.
+                </p>
+              </div>
+              <a 
+                href="https://eaneseducationfoundation.org/donate/" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="w-full bg-red-500 text-white py-2 rounded-lg font-black border-2 border-slate-900 brutal-shadow-sm text-center text-xs uppercase tracking-wider hover:translate-y-[1px] hover:brutal-shadow-none transition-all block cursor-pointer animate-bounce"
+              >
+                Donate Cash Here
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
