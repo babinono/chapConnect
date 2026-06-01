@@ -93,8 +93,9 @@ async function findAIBestMatch(userProfile, mentors, apiKey) {
     name: c.name,
     college: c.college,
     major: c.major || c.education,
-    role: c.role || c.current_position,
-    current_position: c.current_position,
+    career: c.career || c.role || c.current_position,
+    company: c.company,
+    highSchoolActivities: c.highSchoolActivities || c.high_school_activities || c.activities,
     location: c.location,
     skills: c.skills,
     match_count: c.match_count || 0
@@ -106,7 +107,7 @@ async function findAIBestMatch(userProfile, mentors, apiKey) {
     targetColleges: userProfile.targetColleges || userProfile.college,
     targetCareers: userProfile.targetCareers || userProfile.career,
     targetMajors: userProfile.targetMajors || userProfile.major,
-    activities: userProfile.activities,
+    activities: userProfile.activities || userProfile.high_school_activities,
     favoriteClasses: userProfile.classes || userProfile.favorite_classes,
     location: userProfile.location
   };
@@ -117,21 +118,25 @@ Your job is to find the absolute best mentor from a list of candidates for a giv
 CRITICAL BRANDING RULES:
 - NEVER include the words "Chap Connect" or "Chap" in the output (including commonThreads). Instead, use generic descriptions like "alumni network", "mentorship community", or "alumni connection".
 
-CRITICAL INSTRUCTIONS FOR AI DOMAIN & COLLEGE REASONING:
-1. UNIVERSITY ALIGNMENT: Prioritize matching the student with a mentor who attended one of the student's "targetColleges" (schools they are highly interested in).
-2. CLASS & CLUB INTERSECTION: Take the student's "favoriteClasses" and high school "activities" (clubs) into deep account alongside their target majors to determine their unique domain "flavor".
-   - For example, if a student lists "Calculus BC", "Computer Science Club", and intends to study "Biomedical Engineering", they lean heavily towards the technical/computational/medical device side of BME. Match them with a mentor who studied BME with a focus on code, systems, devices, or computing.
-   - Apply this deep intersectional reasoning for all major/club/class combinations.
+CRITICAL INSTRUCTIONS FOR AI HOLISTIC MATCHING & INTERSECTIONAL DOMAIN REASONING:
+1. HOLISTIC FACTOR EVALUATION: Evaluate candidate mentors highly holistically across ALL available student data points including target majors, high school clubs/sports, favorite classes, target careers, and geographical location. Do NOT ignore any factor.
+2. ACADEMIC & DISCIPLINARY SYNERGY: Prioritize matching the student with a mentor who studied the student's target majors or related fields (highest priority!).
+3. CLASS & CLUB INTERSECTION (THE FLAVOR TEST): Go beyond surface-level major matching. Analyze the intersection of WHS classes, clubs, and target majors to discover the student's unique domain "flavor" or sub-discipline leaning.
+   - SPECIFIC INTERSECT EXAMPLE (CRITICAL): If a student has biological sciences (e.g. Biology, Biomedical Engineering) as their target majors BUT also has a technical/quantitative club (e.g. Computer Science Club, Robotics, Math Club) and a technical/quantitative favorite class (e.g. Calculus BC, AP Computer Science, Physics C) as their favorite class, you MUST lean heavily into matching them with a technical/computational profile (e.g. computational biology, bioinformatics, software-driven medical devices, technical engineering) rather than a traditional pre-med, clinical medicine, or doctor profile.
+   - Apply this high-fidelity intersectional reasoning across all combinations (e.g., Business majors with speech/debate background lean towards consulting/strategy over finance/quantitative analysis).
+4. UNIVERSITY ALIGNMENT: Give secondary weight to matching the student with a mentor who attended one of the student's target colleges.
 
 Evaluate candidates based on:
-1. Target University Match (extremely high weight)
-2. Class & Club Synergy (intersections of WHS classes, clubs, and target majors matched to mentor's actual field)
-3. Academic & Major Synergy
-4. Career Path Alignment
+1. Holistic Academic & Major Synergy (highest weight, matching domain sub-specialties)
+2. Class & Club Interdisciplinary Synergy (intersections of WHS classes, clubs, and target majors matched to mentor's actual field and background)
+3. Target University System Match (secondary weight)
+4. Career & Location Alignment
 
 Output your decision strictly as a JSON object with this exact structure:
 {
   "mentorId": "the ID of the selected mentor",
+  "holisticAssessment": "A super concise, 1-2 sentence personalized explanation (under 30 words) summarizing precisely why this mentor is a perfect match for the student's unique combination of classes, clubs, and major trajectory.",
+  "personalizedSnippet": "A personalized 1-2 sentence statement (under 30 words) connecting the student's specific academic goals, favorite classes, or high school activities directly to the mentor's specific college, company, or current career role. (e.g. 'Since I plan to study Biomedical Engineering and saw your fascinating work in medical devices at Google, I\\'m super interested in hearing how you navigated that transition.')",
   "commonThreads": [
     "A bullet point explaining the primary match alignment (e.g., 'Target University: Aligned with your target school, Stanford University')",
     "A bullet point specifically highlighting the class/club intersection reasoning (e.g., 'Interdisciplinary Tech: Connected your CS Club and Calculus BC interests to your mentor\\'s software-driven bioengineering research')"
@@ -146,13 +151,14 @@ ${JSON.stringify(studentProfile, null, 2)}
 Candidate Mentors:
 ${JSON.stringify(formattedCandidates, null, 2)}`;
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
   
   const controller = new AbortController();
+  const timeoutLimit = userProfile.forceNoTimeout ? 300000 : 30000; // 5 mins if no timeout vs 30s
   const timeoutId = setTimeout(() => {
-    console.warn("matchingEngine: Gemini API request exceeded 30s, aborting connection...");
+    console.warn(`matchingEngine: Gemini API request exceeded ${timeoutLimit/1000}s, aborting connection...`);
     controller.abort();
-  }, 30000); // 30-second timeout limit
+  }, timeoutLimit);
 
   let response;
   try {
@@ -192,7 +198,13 @@ ${JSON.stringify(formattedCandidates, null, 2)}`;
     throw new Error("Empty response from Gemini API");
   }
 
-  const parsed = JSON.parse(text.trim());
+  let cleanText = text.trim();
+  if (cleanText.startsWith('```')) {
+    // Remove markdown code block fences if present (e.g. ```json ... ```)
+    cleanText = cleanText.replace(/^```json\s*/i, '').replace(/```\s*$/, '').trim();
+  }
+
+  const parsed = JSON.parse(cleanText);
   const selectedMentor = candidates.find(c => String(c.id) === String(parsed.mentorId));
   
   if (!selectedMentor) {
@@ -201,8 +213,9 @@ ${JSON.stringify(formattedCandidates, null, 2)}`;
 
   return {
     mentor: selectedMentor,
+    holisticAssessment: parsed.holisticAssessment || '',
     commonThreads: parsed.commonThreads || [],
-    outreachMessage: generateOutreachMessage(userProfile, selectedMentor, parsed.commonThreads),
+    outreachMessage: generateOutreachMessage(userProfile, selectedMentor, parsed.commonThreads, parsed.personalizedSnippet),
     isAIPowered: true
   };
 }
@@ -225,21 +238,33 @@ export async function findBestMatch(userProfile) {
     return null;
   }
 
-  // 1. Check if Gemini API key exists, if so try AI matchmaking first
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  if (apiKey) {
-    try {
-      console.log("matchingEngine: VITE_GEMINI_API_KEY detected, initiating Gemini AI Matcher...");
-      const aiResult = await findAIBestMatch(userProfile, mentors, apiKey);
-      if (aiResult) {
-        console.log("matchingEngine: Gemini AI successfully matched with mentor:", aiResult.mentor.name);
-        return aiResult;
-      }
-    } catch (aiErr) {
-      console.warn("matchingEngine: Gemini AI matching failed/errored. Falling back to local heuristic match engine.", aiErr);
-    }
+  // If local algorithm matchmaking is explicitly requested, bypass Gemini AI matching entirely!
+  if (userProfile.matchType === 'algo') {
+    console.log("matchingEngine: Local algorithm match type requested. Bypassing Gemini AI.");
   } else {
-    console.log("matchingEngine: VITE_GEMINI_API_KEY not found. Running local heuristic match engine.");
+    // 1. Check if Gemini API key exists, if so try AI matchmaking first
+    const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    if (apiKey) {
+      try {
+        console.log("matchingEngine: VITE_GEMINI_API_KEY detected, initiating Gemini AI Matcher...");
+        const aiResult = await findAIBestMatch(userProfile, mentors, apiKey);
+        if (aiResult) {
+          console.log("matchingEngine: Gemini AI successfully matched with mentor:", aiResult.mentor.name);
+          return aiResult;
+        }
+      } catch (aiErr) {
+        console.error("matchingEngine: Gemini AI matching failed/errored.", aiErr);
+        if (userProfile.matchType === 'ai') {
+          // If the user explicitly requested AI match, throw the error so the UI shows the failure instead of silently falling back!
+          throw new Error(`Gemini AI Matching failed: ${aiErr.message}`);
+        }
+      }
+    } else {
+      console.warn("matchingEngine: VITE_GEMINI_API_KEY not found.");
+      if (userProfile.matchType === 'ai') {
+        throw new Error("Gemini AI matching is not configured. VITE_GEMINI_API_KEY is missing.");
+      }
+    }
   }
 
 
@@ -287,7 +312,7 @@ export async function findBestMatch(userProfile) {
       .filter(Boolean)
       .map(c => c.trim().toLowerCase());
 
-    // --- 1. ACADEMIC MAJOR SYNERGY (HIGHEST WEIGHT: +30) ---
+    // --- 1. ACADEMIC MAJOR SYNERGY (HIGHEST WEIGHT: +45) ---
     // Direct major match first
     let majorMatchFound = false;
     const matchedMajor = userTargetMajors.find(major => {
@@ -296,7 +321,7 @@ export async function findBestMatch(userProfile) {
     });
 
     if (matchedMajor) {
-      score += 30; // Highly focused on intended majors
+      score += 45; // Highly focused on intended majors
       majorMatchFound = true;
       currentCommonThreads.push(`Academic Synergy: Shared focus in studying ${matchedMajor}`);
     }
@@ -315,19 +340,19 @@ export async function findBestMatch(userProfile) {
       currentCommonThreads.push(`Career Path Alignment: In your target field of ${positionName}`);
     }
 
-    // --- 3. UNIVERSITY MATCHING (+20 or +10 for Affinity Group) ---
+    // --- 3. UNIVERSITY MATCHING (+10 or +5 for Affinity Group) ---
     const matchedSchool = userTargetColleges.find(target => {
       const targetLower = target.toLowerCase();
       return mentorSchools.some(school => school.includes(targetLower) || targetLower.includes(school));
     });
 
     if (matchedSchool) {
-      score += 20; 
+      score += 10; 
       const exactSchoolName = [mentor.college, mentor.first_grad_education, mentor.second_grad_education]
         .find(s => s && (s.toLowerCase().includes(matchedSchool.toLowerCase()) || matchedSchool.toLowerCase().includes(s.toLowerCase()))) || mentor.college || matchedSchool;
       currentCommonThreads.push(`Target University: Both connected to ${exactSchoolName}`);
     } else {
-      // Affinity tier similarity match (+10)
+      // Affinity tier similarity match (+5)
       let affinityMatch = null;
       let matchedTargetSchool = '';
       let matchedMentorSchool = '';
@@ -350,7 +375,7 @@ export async function findBestMatch(userProfile) {
       }
 
       if (affinityMatch) {
-        score += 10;
+        score += 5;
         const formatSchool = (s) => s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
         currentCommonThreads.push(`University System: Aligned in ${affinityMatch.name} (e.g. ${formatSchool(matchedTargetSchool)} & ${formatSchool(matchedMentorSchool)})`);
       }
@@ -440,7 +465,7 @@ export async function findBestMatch(userProfile) {
   };
 }
 
-function generateOutreachMessage(userProfile, mentor, commonThreads) {
+function generateOutreachMessage(userProfile, mentor, commonThreads, personalizedSnippet) {
   const mentorFirstName = mentor.name ? mentor.name.split(' ')[0] : 'Alumni';
   const studentFirstName = userProfile.name ? userProfile.name.split(' ')[0] : 'a student';
   const studentFullName = userProfile.name || 'A fellow Chap';
@@ -459,5 +484,8 @@ function generateOutreachMessage(userProfile, mentor, commonThreads) {
   const sharedCollege = mentor.college || 'your university';
   const major = parseArray(userProfile.targetMajors || userProfile.major)[0] || 'my intended major';
 
-  return `Hi ${mentorFirstName},\n\nI hope your week is going well! My name is ${studentFirstName}, and I’m a student at Westlake (Class of ${gradYearVal}) involved in ${act1} and ${act2}. Since ${sharedCollege} is at the top of my list and I’m very interested in ${major}, I wanted to reach out.\n\nWould you be open to a quick, 15-minute virtual coffee chat sometime soon? I’m trying to learn as much as I can about the path ahead and would love to hear about your experiences and your transition from WHS.\n\nBest,\n\n${studentFullName}`;
+  const defaultSnippet = `Since ${sharedCollege} is at the top of my list and I’m very interested in ${major}, I wanted to reach out.`;
+  const snippetToUse = personalizedSnippet || defaultSnippet;
+
+  return `Hi ${mentorFirstName},\n\nI hope your week is going well! My name is ${studentFirstName}, and I’m a student at Westlake (Class of ${gradYearVal}) involved in ${act1} and ${act2}.\n\n${snippetToUse}\n\nWould you be open to a quick, 15-minute virtual coffee chat sometime soon? I’m trying to learn as much as I can about the path ahead and would love to hear about your experiences and your transition from WHS.\n\nBest,\n\n${studentFullName}`;
 }

@@ -290,7 +290,7 @@ export default function Dashboard({ session }) {
     }
   };
 
-  const handleFindMatch = () => {
+  const handleFindMatch = (matchType = 'ai', forceNoTimeout = false) => {
     if (profile) {
       // Bypasses onboarding forms completely by going straight to /match with current mapped profile data!
       const toArray = (val) => {
@@ -317,7 +317,9 @@ export default function Dashboard({ session }) {
         career: profile.career,
         postGradSchool: profile.post_grad_school,
         postGradProgram: profile.post_grad_program,
-        excludedIds: excludedIds
+        excludedIds: excludedIds,
+        matchType: matchType,
+        forceNoTimeout: forceNoTimeout
       };
       navigate('/match', { state: { profile: profileForMatch } });
     } else {
@@ -364,11 +366,18 @@ export default function Dashboard({ session }) {
           )}
 
           <button
-            onClick={handleFindMatch}
-            className="bg-blue-600 text-white font-black py-4 px-6 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer animate-pulse"
+            onClick={() => handleFindMatch('algo')}
+            className="bg-yellow-500 text-slate-900 font-black py-4 px-5 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer"
+          >
+            <span>Quick Algo Match</span>
+          </button>
+
+          <button
+            onClick={() => handleFindMatch('ai', true)}
+            className="bg-blue-600 text-white font-black py-4 px-5 border-4 border-slate-900 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wider text-sm cursor-pointer animate-pulse"
           >
             <Sparkles className="w-5 h-5 stroke-[3] fill-current" />
-            <span>Match Me Instantly</span>
+            <span>Gemini AI Match</span>
           </button>
         </div>
       </header>

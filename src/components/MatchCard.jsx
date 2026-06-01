@@ -3,18 +3,12 @@ import { Briefcase, GraduationCap, MapPin, CheckCircle2 } from 'lucide-react';
 
 export default function MatchCard({ matchData }) {
   if (!matchData || !matchData.mentor) return null;
-  const { mentor, commonThreads, isAIPowered } = matchData;
+  const { mentor, commonThreads, isAIPowered, holisticAssessment } = matchData;
 
   return (
     <div className="bg-white border-4 border-slate-900 rounded-2xl brutal-shadow overflow-hidden h-full flex flex-col">
       <div className="h-24 bg-blue-600 border-b-4 border-slate-900 relative flex items-center justify-between px-6">
         <h3 className="text-2xl font-black text-white uppercase tracking-wider mt-4">The Mentor</h3>
-        {isAIPowered && (
-          <div className="bg-indigo-600 border-2 border-slate-900 text-white text-[10px] font-black px-3 py-1.5 uppercase tracking-widest rounded-md brutal-shadow-sm rotate-[-3deg] absolute right-6 -bottom-4 z-10 flex items-center space-x-1 shadow-md">
-            <span className="animate-pulse">✨</span>
-            <span>Gemini AI</span>
-          </div>
-        )}
       </div>
       
       <div className="px-6 pb-6 relative flex-grow">
@@ -69,6 +63,11 @@ export default function MatchCard({ matchData }) {
 
           <div className="bg-slate-100 border-2 border-slate-900 rounded-xl p-4 mb-4">
             <h3 className="text-xs font-black text-slate-900 uppercase tracking-widest mb-3 border-b-2 border-slate-900 pb-2">Why you match</h3>
+            {isAIPowered && holisticAssessment && (
+              <p className="text-xs font-bold text-indigo-700 leading-relaxed mb-3 pb-3 border-b border-dashed border-slate-300 italic">
+                ✨ {holisticAssessment}
+              </p>
+            )}
             <ul className="space-y-2">
               {commonThreads.map((thread, i) => (
                 <li key={i} className="flex items-start">

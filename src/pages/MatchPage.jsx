@@ -211,13 +211,14 @@ export default function MatchPage({ session }) {
           <ArrowLeft className="w-5 h-5 mr-2" /> Back to Dashboard
         </Link>
         
-        <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <div className="inline-flex items-center justify-center p-4 bg-red-500 border-4 border-slate-900 brutal-shadow rounded-full mb-6 rotate-[-3deg]">
             <Sparkles className="w-10 h-10 text-white fill-current animate-spin" style={{ animationDuration: '6s' }} />
           </div>
           <h1 className="text-5xl font-black text-slate-900 tracking-tight uppercase mb-2">It's a Match!</h1>
           <p className="text-slate-600 font-bold uppercase tracking-wider text-sm">We found a great connection for you</p>
         </div>
+
 
         <div className="flex flex-col md:flex-row gap-8 items-stretch justify-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
           <div className="flex-1 max-w-sm mx-auto w-full">
