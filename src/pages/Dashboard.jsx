@@ -603,6 +603,17 @@ export default function Dashboard({ session }) {
                   />
                 </div>
                 <div>
+                  <label className={labelClass}>Intended Career(s)</label>
+                  <input
+                    type="text"
+                    name="targetCareers"
+                    value={profileForm.targetCareers || ''}
+                    onChange={handleProfileFormChange}
+                    className={inputClass}
+                    placeholder="e.g. Software Engineer, Doctor (comma separated)"
+                  />
+                </div>
+                <div>
                   <label className={labelClass}>High School Clubs / Sports</label>
                   <input
                     type="text"

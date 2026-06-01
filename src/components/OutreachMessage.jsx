@@ -161,10 +161,7 @@ export default function OutreachMessage({ matchData, userProfile }) {
 
   // Unified outreach message generators
   const getSubjectText = () => {
-    if (matchData.outreachMessage) {
-      return `WHS Connection Inquiry — ${studentFullName}`;
-    }
-    return `Quick WHS to ${sharedCollege} connection!`;
+    return `WHS Student Interested in ${sharedCollege}`;
   };
 
   const getBodyText = () => {

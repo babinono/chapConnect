@@ -70,7 +70,6 @@ const FIELD_ASSOCIATIONS = {
   law: ['pre-law', 'law', 'politics', 'government', 'public policy', 'history', 'legal', 'jd', 'philosophy'],
   arts: ['art', 'design', 'graphic', 'film', 'television', 'theater', 'creative', 'music', 'fine arts', 'architecture', 'creative writing']
 };
-
 async function findAIBestMatch(userProfile, mentors, apiKey) {
   const excludedIds = userProfile.excludedIds || [];
   const userLowerName = (userProfile.name || '').trim().toLowerCase();
@@ -116,12 +115,11 @@ async function findAIBestMatch(userProfile, mentors, apiKey) {
 Your job is to find the absolute best mentor from a list of candidates for a given student profile.
 
 CRITICAL BRANDING RULES:
-- NEVER include the words "Chap Connect" or "Chap" in the output (including commonThreads and outreachMessage). Instead, use generic descriptions like "alumni network", "mentorship community", or "alumni connection".
+- NEVER include the words "Chap Connect" or "Chap" in the output (including commonThreads). Instead, use generic descriptions like "alumni network", "mentorship community", or "alumni connection".
 
 CRITICAL INSTRUCTIONS FOR AI DOMAIN & COLLEGE REASONING:
-1. UNIVERSITY ALIGNMENT: Prioritize matching the student with a mentor who attended one of the student's "targetColleges" (schools they are highly interested in). 
-   - TONAL RULE: In the generated outreach message, NEVER use sweaty, prestige-hunter phrases like "dream school", "dream university", or "top target". Instead, speak naturally and humbly, e.g., "a university I am highly interested in", "a school I'm really excited about", or "a college I'm strongly considering".
-2. CLASS & CLUB INTERSECTION: Take the student's "favoriteClasses" and high school "activities" (clubs) into deep account alongside their target majors to determine their unique domain "flavor". 
+1. UNIVERSITY ALIGNMENT: Prioritize matching the student with a mentor who attended one of the student's "targetColleges" (schools they are highly interested in).
+2. CLASS & CLUB INTERSECTION: Take the student's "favoriteClasses" and high school "activities" (clubs) into deep account alongside their target majors to determine their unique domain "flavor".
    - For example, if a student lists "Calculus BC", "Computer Science Club", and intends to study "Biomedical Engineering", they lean heavily towards the technical/computational/medical device side of BME. Match them with a mentor who studied BME with a focus on code, systems, devices, or computing.
    - Apply this deep intersectional reasoning for all major/club/class combinations.
 
@@ -137,8 +135,7 @@ Output your decision strictly as a JSON object with this exact structure:
   "commonThreads": [
     "A bullet point explaining the primary match alignment (e.g., 'Target University: Aligned with your target school, Stanford University')",
     "A bullet point specifically highlighting the class/club intersection reasoning (e.g., 'Interdisciplinary Tech: Connected your CS Club and Calculus BC interests to your mentor\\'s software-driven bioengineering research')"
-  ],
-  "outreachMessage": "An extremely CONCISE, warm, and highly personalized outreach email from the student to the mentor (STRICT MAXIMUM 80-110 words, exactly 2 short paragraphs). Avoid repeating information or stating student interests twice. Greeting: 'Dear [Mentor Name],'. Intro: student name, Westlake High School class of [Grad Year]. Body: highly tailored, punchy connection linking their WHS classes/clubs and target university directly to the mentor's track. Request a brief 15-minute coffee chat. Closing: 'Best regards,\\n[Student Name]'. Use this exact elegant style as your gold-standard tone benchmark: 'My involvement in the Writing Club and Student Council at WHS, alongside my favorite English classes, makes me eager to learn more about your academic journey and how your sociology background has shaped your path.'"
+  ]
 }
 
 Return ONLY this JSON object and nothing else. Do NOT wrap in \`\`\`json block.`;
@@ -186,7 +183,7 @@ ${JSON.stringify(formattedCandidates, null, 2)}`;
   return {
     mentor: selectedMentor,
     commonThreads: parsed.commonThreads || [],
-    outreachMessage: parsed.outreachMessage,
+    outreachMessage: generateOutreachMessage(userProfile, selectedMentor, parsed.commonThreads),
     isAIPowered: true
   };
 }
@@ -222,6 +219,8 @@ export async function findBestMatch(userProfile) {
   } else {
     console.log("matchingEngine: VITE_GEMINI_API_KEY not found. Running local heuristic match engine.");
   }
+
+
 
 
   let bestMatch = null;
@@ -420,35 +419,23 @@ export async function findBestMatch(userProfile) {
 }
 
 function generateOutreachMessage(userProfile, mentor, commonThreads) {
-  const greeting = `Dear ${mentor.name},`;
-  const intro = `I'm ${userProfile.name || 'a student'} from the Westlake High School class of ${userProfile.gradYear || userProfile.grad_year || ''}.`;
-  
-  let connection = '';
-  if (commonThreads.length > 0) {
-    const thread = commonThreads[0];
-    if (thread.startsWith("Target University:")) {
-      connection = `I noticed we are both connected to ${mentor.college || 'the same university'}! `;
-    } else if (thread.startsWith("University System:")) {
-      connection = `I noticed we are both connected to colleges in similar university leagues/tiers! `;
-    } else if (thread.startsWith("Career Path Alignment:")) {
-      connection = `I'm highly interested in your career path as a ${mentor.current_position || 'professional'} and saw your profile on Chap Connect. `;
-    } else if (thread.startsWith("Academic Synergy:")) {
-      connection = `I saw your academic background and share a major interest in studying similar subjects! `;
-    } else if (thread.startsWith("Field Synergy:")) {
-      connection = `I noticed your background is highly aligned with my interests in this field, and saw your profile on Chap Connect. `;
-    } else if (thread.startsWith("Professional Mentoring:")) {
-      connection = `I saw your profile on Chap Connect and was very inspired by your work as a ${mentor.current_position}. `;
-    } else {
-      connection = `I came across your profile on Chap Connect and wanted to reach out to connect as part of the WHS alumni network. `;
-    }
-  } else {
-    connection = `I saw your profile on Chap Connect and was really inspired by your journey. `;
-  }
+  const mentorFirstName = mentor.name ? mentor.name.split(' ')[0] : 'Alumni';
+  const studentFirstName = userProfile.name ? userProfile.name.split(' ')[0] : 'a student';
+  const studentFullName = userProfile.name || 'A fellow Chap';
+  const gradYearVal = userProfile.gradYear || userProfile.grad_year || '';
 
-  const topicField = mentor.college || mentor.current_position || 'your career journey';
-  const ask = `Would you be open to a brief 15-minute virtual coffee chat sometime next week? I'd love to ask a few questions about your experiences at WHS and with ${topicField}.`;
+  const parseArray = (str) => {
+    if (Array.isArray(str)) return str.filter(s => typeof s === 'string' && s.trim() !== '');
+    if (typeof str === 'string') return str.split(',').map(s => s.trim()).filter(s => s.trim() !== '');
+    return [];
+  };
 
-  const signoff = `Best regards,\n${userProfile.name || 'A fellow Chap'}`;
+  const activities = parseArray(userProfile.activities || userProfile.high_school_activities);
+  const act1 = activities[0] || 'clubs';
+  const act2 = activities[1] || 'extracurriculars';
 
-  return `${greeting}\n\n${intro} ${connection}${ask}\n\n${signoff}`;
+  const sharedCollege = mentor.college || 'your university';
+  const major = parseArray(userProfile.targetMajors || userProfile.major)[0] || 'my intended major';
+
+  return `Hi ${mentorFirstName},\n\nI hope your week is going well! My name is ${studentFirstName}, and I’m a student at Westlake (Class of ${gradYearVal}) involved in ${act1} and ${act2}. Since ${sharedCollege} is at the top of my list and I’m very interested in ${major}, I wanted to reach out.\n\nWould you be open to a quick, 15-minute virtual coffee chat sometime soon? I’m trying to learn as much as I can about the path ahead and would love to hear about your experiences and your transition from WHS.\n\nBest,\n\n${studentFullName}`;
 }

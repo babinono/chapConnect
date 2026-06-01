@@ -498,6 +498,10 @@ export default function OnboardingFlow({ session }) {
             <label className={labelClass}>Intended Major</label>
             <Autocomplete name="targetMajors" onChange={handleChange} value={formData.targetMajors || ''} suggestions={MAJORS} placeholder="e.g. Economics (comma separated)" />
           </div>
+          <div>
+            <label className={labelClass}>Intended Career</label>
+            <input name="targetCareers" type="text" onChange={handleChange} value={formData.targetCareers || ''} className={inputClass} placeholder="e.g. Software Engineer (comma separated)" />
+          </div>
         </div>
       );
     } else {
