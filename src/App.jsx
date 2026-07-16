@@ -9,6 +9,7 @@ import Dashboard from './pages/Dashboard';
 import Directory from './pages/Directory';
 import AdminCRM from './pages/AdminCRM';
 import ThemeToggle from './components/ThemeToggle';
+import IntroSplash from './components/IntroSplash';
 import { Loader2 } from 'lucide-react';
 
 // Cross-fade + slide between routes; exit is quick so back/forward stays snappy.
@@ -64,6 +65,12 @@ function ensureLocalSession() {
 function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showIntro, setShowIntro] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShowIntro(false), 2000);
+    return () => clearTimeout(t);
+  }, []);
 
   useEffect(() => {
     // 1. Use a real Supabase session if one exists; otherwise auto-enter locally.
@@ -92,6 +99,7 @@ function App() {
 
   return (
     <div className="relative">
+      <AnimatePresence>{showIntro && <IntroSplash key="intro" />}</AnimatePresence>
       <ThemeToggle />
       <BrowserRouter>
         <AnimatedRoutes session={session} />
