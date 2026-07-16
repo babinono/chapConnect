@@ -5,6 +5,7 @@ import { checkLimit, recordMatch } from '../utils/rateLimiter';
 import { supabase } from '../utils/supabaseClient';
 import MatchCard from '../components/MatchCard';
 import OutreachMessage from '../components/OutreachMessage';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ArrowLeft, Loader2, Calendar, ShieldAlert, Home } from 'lucide-react';
 
 export default function MatchPage({ session }) {
@@ -68,7 +69,7 @@ export default function MatchPage({ session }) {
           result = await findBestMatch(location.state.profile);
         } catch (err) {
           const errMsg = err.message || '';
-          const isServerError = errMsg.includes('503') || errMsg.includes('502') || errMsg.includes('504') || errMsg.includes('500') || errMsg.includes('fetch') || errMsg.includes('Failed to fetch') || errMsg.includes('connection');
+          const isServerError = errMsg.includes('503') || errMsg.includes('429') || errMsg.includes('502') || errMsg.includes('504') || errMsg.includes('500') || errMsg.includes('fetch') || errMsg.includes('Failed to fetch') || errMsg.includes('connection');
           
           if (location.state.profile.matchType === 'ai' && isServerError) {
             console.warn("MatchPage: Gemini AI Match failed with server error. Falling back to Quick Algo Match...", err);
@@ -76,6 +77,7 @@ export default function MatchPage({ session }) {
             result = await findBestMatch(fallbackProfile);
             if (result) {
               result.fallbackToAlgo = true;
+              result.fallbackError = errMsg;
             }
           } else {
             throw err;
@@ -159,10 +161,42 @@ export default function MatchPage({ session }) {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50">
-        <Loader2 className="w-16 h-16 text-blue-600 animate-spin mb-6 stroke-[3]" />
-        <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Finding Your Match...</h2>
-        <p className="text-blue-600 font-bold mt-2 uppercase tracking-wider text-xs transition-all duration-300 ease-in-out">{loadingStep}</p>
+      <div className="min-h-screen flex flex-col items-center justify-center p-6">
+        <motion.div
+          initial={{ scale: 0, rotate: -180, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 16 }}
+          className="relative mb-8"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ repeat: Infinity, duration: 2.4, ease: 'linear' }}
+            className="w-20 h-20 rounded-2xl gradient-brand flex items-center justify-center brutal-shadow"
+          >
+            <Sparkles className="w-9 h-9 text-white fill-current" />
+          </motion.div>
+          <motion.span
+            className="absolute inset-0 rounded-2xl border-2 border-blue-500/40"
+            animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
+            transition={{ repeat: Infinity, duration: 1.6, ease: 'easeOut' }}
+          />
+        </motion.div>
+        <motion.h2
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight"
+        >
+          Finding Your Match...
+        </motion.h2>
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={loadingStep}
+            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.3 }}
+            className="text-blue-600 dark:text-blue-400 font-bold mt-3 tracking-wide text-xs"
+          >
+            {loadingStep}
+          </motion.p>
+        </AnimatePresence>
       </div>
     );
   }
@@ -170,29 +204,29 @@ export default function MatchPage({ session }) {
   // Rate limit screen
   if (rateLimitData) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50">
-        <div className="bg-white border-4 border-slate-900 brutal-shadow p-8 rounded-2xl max-w-md w-full text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6">
+        <div className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 brutal-shadow p-8 rounded-2xl max-w-md w-full text-center">
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-red-500 border-4 border-slate-900 rounded-2xl brutal-shadow-sm rotate-[4deg]">
+            <div className="p-4 bg-red-500 border border-slate-200 dark:border-white/10 rounded-2xl brutal-shadow-sm">
               <ShieldAlert className="w-12 h-12 text-white" />
             </div>
           </div>
-          <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tight mb-4">Rate Limit Exceeded</h2>
-          <p className="text-slate-700 font-bold mb-6">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-4">Rate Limit Exceeded</h2>
+          <p className="text-slate-700 dark:text-slate-300 font-bold mb-6">
             To keep connections meaningful, Chap Connect limits matchmaking to **2 matches every 2 weeks**. 
           </p>
           {rateLimitData.nextAvailableDate && (
-            <div className="bg-slate-100 border-2 border-slate-900 rounded-xl p-4 mb-8 flex items-center justify-center space-x-3">
+            <div className="bg-slate-100 dark:bg-[#18213a] border border-slate-200 dark:border-white/10 rounded-xl p-4 mb-8 flex items-center justify-center space-x-3">
               <Calendar className="w-6 h-6 text-blue-600" />
               <div className="text-left">
-                <div className="text-xs uppercase font-black text-slate-500">Next Match Available</div>
-                <div className="font-bold text-slate-900 text-sm">
+                <div className="text-xs font-bold text-slate-500 dark:text-slate-400">Next Match Available</div>
+                <div className="font-bold text-slate-900 dark:text-slate-100 text-sm">
                   {rateLimitData.nextAvailableDate.toLocaleDateString()} at {rateLimitData.nextAvailableDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
               </div>
             </div>
           )}
-          <Link to={session ? "/dashboard" : "/"} className="inline-block w-full bg-blue-600 text-white py-4 rounded-xl font-black border-2 border-slate-900 brutal-shadow hover:translate-y-0.5 active:translate-y-1 transition-all uppercase tracking-wide">
+          <Link to={session ? "/dashboard" : "/"} className="inline-block w-full bg-blue-600 text-white py-4 rounded-xl font-bold border border-slate-200 dark:border-white/10 brutal-shadow hover:translate-y-0.5 active:translate-y-1 transition-all tracking-wide">
             Back to Dashboard
           </Link>
         </div>
@@ -202,18 +236,18 @@ export default function MatchPage({ session }) {
 
   if (error || !matchData || !matchData.mentor) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50">
-        <div className="bg-white border-4 border-slate-900 brutal-shadow p-8 rounded-2xl max-w-md w-full text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center p-6">
+        <div className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 brutal-shadow p-8 rounded-2xl max-w-md w-full text-center">
           <div className="flex justify-center mb-6">
-            <div className="p-4 bg-red-500 border-4 border-slate-900 rounded-2xl brutal-shadow-sm rotate-[-4deg]">
+            <div className="p-4 bg-red-500 border border-slate-200 dark:border-white/10 rounded-2xl brutal-shadow-sm">
               <ShieldAlert className="w-12 h-12 text-white" />
             </div>
           </div>
-          <h2 className="text-3xl font-black text-red-600 uppercase tracking-tight mb-4">Oops!</h2>
-          <p className="text-slate-900 font-bold mb-8">
+          <h2 className="text-3xl font-bold text-red-600 tracking-tight mb-4">Oops!</h2>
+          <p className="text-slate-900 dark:text-slate-100 font-bold mb-8">
             {errorMessage || "We couldn't establish a successful alumni match right now."}
           </p>
-          <Link to={session ? "/dashboard" : "/"} className="inline-block w-full bg-blue-600 text-white py-4 rounded-xl font-black border-2 border-slate-900 brutal-shadow uppercase tracking-wide hover:translate-y-0.5 active:translate-y-1 transition-all">
+          <Link to={session ? "/dashboard" : "/"} className="inline-block w-full bg-blue-600 text-white py-4 rounded-xl font-bold border border-slate-200 dark:border-white/10 brutal-shadow tracking-wide hover:translate-y-0.5 active:translate-y-1 transition-all">
             Return to Dashboard
           </Link>
         </div>
@@ -222,33 +256,60 @@ export default function MatchPage({ session }) {
   }
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 flex flex-col items-center bg-slate-50">
+    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
       <div className="w-full max-w-4xl">
-        <Link to={session ? "/dashboard" : "/"} className="inline-flex items-center text-sm font-black uppercase tracking-widest text-slate-900 hover:text-blue-600 mb-8 transition-colors border-2 border-slate-900 px-4 py-2 bg-white brutal-shadow-sm rounded-lg hover:translate-y-[1px] active:translate-y-[2px]">
+        <Link to={session ? "/dashboard" : "/"} className="inline-flex items-center text-sm font-bold tracking-wide text-slate-900 dark:text-slate-100 hover:text-blue-600 mb-8 transition-colors border border-slate-200 dark:border-white/10 px-4 py-2 bg-white dark:bg-[#111a30] brutal-shadow-sm rounded-lg hover:translate-y-[1px] active:translate-y-[2px]">
           <ArrowLeft className="w-5 h-5 mr-2" /> Back to Dashboard
         </Link>
         
-        <div className="text-center mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <div className="inline-flex items-center justify-center p-4 bg-red-500 border-4 border-slate-900 brutal-shadow rounded-full mb-6 rotate-[-3deg]">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+          className="text-center mb-8"
+        >
+          <motion.div
+            initial={{ scale: 0, rotate: -30 }}
+            animate={{ scale: 1, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.1 }}
+            className="inline-flex items-center justify-center p-4 gradient-brand brutal-shadow rounded-full mb-6"
+          >
             <Sparkles className="w-10 h-10 text-white fill-current animate-spin" style={{ animationDuration: '6s' }} />
-          </div>
-          <h1 className="text-5xl font-black text-slate-900 tracking-tight uppercase mb-2">It's a Match!</h1>
+          </motion.div>
+          <motion.h1
+            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.2 }}
+            className="text-5xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-2"
+          >It's a Match!</motion.h1>
           {matchData?.fallbackToAlgo && (
-            <div className="inline-flex items-center space-x-1.5 bg-yellow-400 border-2 border-slate-900 text-slate-900 px-3 py-1 font-black text-xs uppercase tracking-widest rounded-md brutal-shadow-sm rotate-[1.5deg] mb-4">
-              <span>⚡ High-Speed Fallback Match Active</span>
+            <div className="flex flex-col items-center gap-2 mb-4">
+              <div className="inline-flex items-center space-x-1.5 bg-red-600 border border-slate-200 dark:border-white/10 text-white px-3 py-1 font-bold text-xs tracking-wide rounded-md brutal-shadow-sm">
+                <span>⚡ High-Speed Fallback Match Active</span>
+              </div>
+              {import.meta.env.DEV && matchData?.fallbackError && (
+                <div className="text-xs font-bold text-red-600 bg-red-50 border-2 border-red-500 rounded-lg px-4 py-1.5 max-w-md mx-auto brutal-shadow-sm tracking-wider">
+                  ⚠️ Dev Diagnostic: {matchData.fallbackError}
+                </div>
+              )}
             </div>
           )}
-          <p className="text-slate-600 font-bold uppercase tracking-wider text-sm">We found a great connection for you</p>
-        </div>
+          <p className="text-slate-600 dark:text-slate-400 font-bold tracking-wide text-sm">We found a great connection for you</p>
+        </motion.div>
 
 
-        <div className="flex flex-col md:flex-row gap-8 items-stretch justify-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
-          <div className="flex-1 max-w-sm mx-auto w-full">
+        <div className="flex flex-col md:flex-row gap-8 items-stretch justify-center">
+          <motion.div
+            initial={{ opacity: 0, x: -40, rotate: -2 }} animate={{ opacity: 1, x: 0, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 180, damping: 20, delay: 0.35 }}
+            className="flex-1 max-w-sm mx-auto w-full"
+          >
             <MatchCard matchData={matchData} />
-          </div>
-          <div className="flex-1 max-w-sm mx-auto w-full">
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, x: 40, rotate: 2 }} animate={{ opacity: 1, x: 0, rotate: 0 }}
+            transition={{ type: 'spring', stiffness: 180, damping: 20, delay: 0.5 }}
+            className="flex-1 max-w-sm mx-auto w-full"
+          >
             <OutreachMessage matchData={matchData} userProfile={location.state.profile} />
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

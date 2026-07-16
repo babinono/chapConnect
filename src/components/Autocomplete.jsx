@@ -116,16 +116,16 @@ export default function Autocomplete({
         placeholder={placeholder}
         required={required}
         autoComplete="off"
-        className="w-full px-4 py-3 rounded-xl border-2 border-slate-900 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-slate-50 font-medium transition-all"
+        className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-slate-50 dark:bg-[#0c1324] font-medium transition-all"
       />
       {showSuggestions && (
-        <ul className="absolute z-50 w-full mt-2 bg-white border-4 border-slate-900 rounded-xl brutal-shadow overflow-hidden">
+        <ul className="absolute z-50 w-full mt-2 bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow overflow-hidden">
           {filteredSuggestions.map((suggestion, index) => (
             <li
               key={suggestion}
               onClick={() => selectSuggestion(suggestion)}
-              className={`px-4 py-3 font-bold text-sm text-slate-800 cursor-pointer border-b-2 border-slate-200 last:border-0 uppercase tracking-wide transition-colors ${
-                index === activeIndex ? 'bg-blue-600 text-white' : 'hover:bg-slate-100'
+              className={`px-4 py-3 font-bold text-sm text-slate-800 dark:text-slate-200 cursor-pointer border-b border-slate-100 last:border-0 transition-colors ${
+                index === activeIndex ? 'bg-blue-700 text-white' : 'hover:bg-slate-100 dark:bg-[#18213a]'
               }`}
             >
               {suggestion}

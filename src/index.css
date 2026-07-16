@@ -1,32 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap');
 @import "tailwindcss";
 
+/* Dark mode toggled by a `.dark` class on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-  --color-brand-blue: #2563eb;
-  --color-brand-red: #ef4444;
+  /* Typography — Lexend (headings) + Source Sans 3 (body) */
+  --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: 'Lexend', ui-sans-serif, system-ui, sans-serif;
+
+  /* Eanes / Westlake red-white-navy palette */
+  --color-brand-navy: #0d1b3e;
+  --color-brand-red: #c8102e;
+  --color-brand-blue: #1e3a8a;
+
+  /* Retune default primaries to collegiate navy + Eanes red. */
+  --color-slate-900: #0d1b3e;
+  --color-red-500: #c8102e;
+  --color-red-600: #a30d24;
+  --color-blue-600: #1e3a8a;
+  --color-blue-700: #16306e;
+
+  --radius: 0.9rem;
+
+  /* Custom keyframes exposed as Tailwind animate-* utilities */
+  --animate-fade-up: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in: fade-in 0.5s ease both;
+  --animate-scale-in: scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-gradient: gradient-pan 12s ease infinite;
+  --animate-shimmer: shimmer 1.6s linear infinite;
 }
+
+@keyframes fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes scale-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
+@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes gradient-pan { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
 body {
-  @apply text-slate-900;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  background-color: #f8fafc;
-  background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
-  background-size: 20px 20px;
+  color: #0d1b3e;
+  font-family: var(--font-sans);
+  background-color: #f4f6fb;
+  background-image:
+    radial-gradient(1100px 550px at 85% -12%, rgba(200, 16, 46, 0.07), transparent 60%),
+    radial-gradient(1000px 520px at -12% 8%, rgba(30, 58, 138, 0.09), transparent 60%);
+  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
+.dark body {
+  color: #e8eefc;
+  background-color: #070b18;
+  background-image:
+    radial-gradient(1100px 550px at 85% -12%, rgba(200, 16, 46, 0.16), transparent 60%),
+    radial-gradient(1000px 520px at -12% 8%, rgba(37, 99, 235, 0.18), transparent 60%);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  letter-spacing: -0.02em;
+}
+
+/* Elevation — soft in light, luminous in dark. */
 .brutal-shadow {
-  box-shadow: 6px 6px 0px 0px rgba(15, 23, 42, 1);
+  box-shadow: 0 10px 30px -10px rgba(13, 27, 62, 0.18), 0 4px 10px -6px rgba(13, 27, 62, 0.10);
 }
-
 .brutal-shadow-sm {
-  box-shadow: 3px 3px 0px 0px rgba(15, 23, 42, 1);
+  box-shadow: 0 2px 8px -2px rgba(13, 27, 62, 0.12), 0 1px 2px -1px rgba(13, 27, 62, 0.08);
 }
-
 .brutal-shadow:hover {
-  transform: translate(-2px, -2px);
-  box-shadow: 8px 8px 0px 0px rgba(15, 23, 42, 1);
+  box-shadow: 0 18px 44px -14px rgba(13, 27, 62, 0.28), 0 8px 16px -8px rgba(13, 27, 62, 0.14);
+}
+.dark .brutal-shadow {
+  box-shadow: 0 12px 34px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+.dark .brutal-shadow-sm {
+  box-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+}
+.dark .brutal-shadow:hover {
+  box-shadow: 0 20px 48px -14px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
 }
 
-.brutal-shadow:active {
-  transform: translate(2px, 2px);
-  box-shadow: 4px 4px 0px 0px rgba(15, 23, 42, 1);
+/* Reusable animated gradient text/surfaces */
+.gradient-brand {
+  background-image: linear-gradient(120deg, #c8102e, #1e3a8a, #0d1b3e, #c8102e);
+  background-size: 300% 300%;
+  animation: var(--animate-gradient);
+}
+.text-gradient-brand {
+  background-image: linear-gradient(100deg, #c8102e, #2563eb);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Staggered entrance helper: set --i on children */
+.stagger > * { animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) both; animation-delay: calc(var(--i, 0) * 60ms); }
+
+:focus-visible { outline: 2px solid var(--color-brand-red); outline-offset: 2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
