@@ -13,6 +13,10 @@
           if (t === 'dark' || (!t && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
           }
+          // Colour-and-type scheme, independent of light/dark.
+          if (localStorage.getItem('cc_scheme') === 'ivy') {
+            document.documentElement.classList.add('ivy');
+          }
         } catch (e) {}
       })();
     </script>

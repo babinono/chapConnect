@@ -1,24 +1,25 @@
 import React, { useEffect, useState } from 'react';
+import Magnetic from '../components/ui/Magnetic';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { supabase } from '../utils/supabaseClient';
+import { supabase, signOutToWelcome } from '../utils/supabaseClient';
 import Autocomplete from '../components/Autocomplete';
 import { 
   Briefcase, 
   GraduationCap, 
   MapPin, 
   Save, 
-  Sparkles, 
-  BookOpen, 
   Plus, 
   Loader2, 
   Trash2, 
   User,
   FolderHeart,
   CheckCircle2,
-  Home
+  Home,
+  LogOut
 } from 'lucide-react';
 import { cn } from '../utils/cn';
+import TabBar from '../components/ui/TabBar';
 import { COLLEGES, MAJORS } from '../utils/colleges';
 
 export default function Dashboard({ session }) {
@@ -329,6 +330,13 @@ export default function Dashboard({ session }) {
     }
   };
 
+  // Plain sign-out: keeps the profile, just ends the session and returns to the
+  // welcome screen so a different person can sign in.
+  const handleLogOut = async () => {
+    if (!window.confirm('Log out of Chap Connect?')) return;
+    await signOutToWelcome();
+  };
+
   const handleResetDevMode = async () => {
     if (!window.confirm("Are you sure you want to reset your profile and onboarding data? This will delete your matches and profile from the database so you can start onboarding completely from scratch.")) return;
     
@@ -363,17 +371,18 @@ export default function Dashboard({ session }) {
         
       // 3. Clear rate limiters and localStorage
       localStorage.removeItem('match_rate_limit');
-      localStorage.removeItem('mock_user_id');
-      localStorage.setItem('dev_profile_reset', 'true');
       for (let i = localStorage.length - 1; i >= 0; i--) {
         const key = localStorage.key(i);
         if (key && key.includes(`_milestones_`)) {
           localStorage.removeItem(key);
         }
       }
-      
-      // 4. Force hard redirect to home screen
-      window.location.href = '/';
+
+      // 4. Sign out as well and return to the welcome screen. Deleting the
+      // profile without ending the session left the user still authenticated,
+      // so the welcome screen kept greeting them by the account they had just
+      // wiped. signOutToWelcome clears both and hard-redirects.
+      await signOutToWelcome();
     } catch (err) {
       console.error("Failed to reset dev profile:", err);
       alert("Reset failed: " + err.message);
@@ -420,124 +429,95 @@ export default function Dashboard({ session }) {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-[#0c1324]">
-        <Loader2 className="w-16 h-16 text-blue-600 animate-spin mb-6" />
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Loading Networking Hub...</h2>
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-sunken panel">
+        <Loader2 className="w-16 h-16 text-ink-faint animate-spin mb-6" />
+        <h2 className="text-3xl font-semibold text-ink tracking-tight">Loading Networking Hub...</h2>
       </div>
     );
   }
 
-  const labelClass = "block text-sm font-bold text-slate-900 dark:text-slate-100 mb-2 tracking-wide";
-  const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-slate-50 dark:bg-[#0c1324] font-medium transition-all";
+  const labelClass = "block text-sm font-medium text-ink mb-2 tracking-wide";
+  const inputClass = "w-full px-4 py-3 border border-rule focus:outline-none focus:border-action bg-sunken font-medium transition-all panel";
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto flex flex-col">
-      <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-slate-200 dark:border-white/10 gap-6">
+    <div className="min-h-[100dvh] py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto flex flex-col">
+      <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-rule gap-6">
         <div>
-          <div className="inline-flex items-center space-x-2 bg-red-600 border border-slate-200 dark:border-white/10 text-white px-3 py-1 font-bold text-xs tracking-wide rounded-md brutal-shadow-sm mb-3">
-            <Sparkles className="w-4.5 h-4.5" />
-            <span>Alumni CRM</span>
-          </div>
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-slate-100 tracking-tight leading-none">
+          <h1 className="wordmark text-2xl text-ink leading-none">
             Chap Connect
           </h1>
-          <p className="text-slate-600 dark:text-slate-400 font-bold mt-2">
-            {isAlumniMentor
-              ? `Welcome back, ${profile?.name || 'Chap'}! Guide and mentor the next generation of Chaps.`
-              : isStudent
-                ? `Welcome back, ${profile?.name || 'Chap'}! Manage your profile and find your alumni outreach matches.`
-                : `Welcome back, ${profile?.name || 'Chap'}! Manage your profile and browse the Chap directory.`
-            }
+          <p className="text-sm text-ink-faint mt-1.5">
+            {isAlumniMentor ? 'Alumni mentor' : isStudent ? 'Student' : 'Alumni'}
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 self-start md:self-auto">
+          <button
+            onClick={handleLogOut}
+            className="bg-surface text-ink-muted font-medium py-2.5 px-4 text-sm border border-rule flex items-center justify-center gap-2 transition-colors hover:text-ink hover:border-ink cursor-pointer rounded-slight"
+          >
+            <LogOut className="w-4 h-4" strokeWidth={1.75} />
+            <span>Log Out</span>
+          </button>
+
           {(session?.user?.id === '11111111-1111-1111-1111-111111111111' || import.meta.env.DEV || window.location.hostname.includes('vercel.app')) && (
             <button
               onClick={handleResetDevMode}
-              className="bg-red-500 text-white font-bold py-4 px-6 border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all tracking-wider text-sm cursor-pointer"
+              className="border border-bad/40 text-bad font-medium py-2.5 px-4 text-sm flex items-center justify-center gap-2 transition-colors hover:border-bad hover:bg-sunken cursor-pointer rounded-slight"
             >
               <span>Reset Account</span>
             </button>
           )}
 
-          {/* Only HS students match; the Gemini AI match is kept private (button removed, backend intact). */}
+          {/* Algorithmic matching only. The Gemini path stays reachable in
+              matchingEngine (matchType 'ai'), but nothing in the UI requests it -
+              the local scorer needs no API key, no quota and no network round
+              trip, so it can't fail the way the AI path can. */}
           {isStudent && (
             <button
               onClick={() => handleFindMatch('algo')}
-              className="bg-blue-600 text-white font-bold py-4 px-5 border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all tracking-wider text-sm cursor-pointer"
+              className="bg-action text-action-ink font-medium py-4 px-5 border border-rule flex items-center justify-center space-x-2 transition-all tracking-normal text-sm cursor-pointer"
             >
-              <span>Find a Match</span>
+                            <span>Find My Match</span>
             </button>
           )}
 
-          {/* Recent grads + alumni don't match — they open the directory page. */}
+          {/* Recent grads + alumni don't match. they open the directory page. */}
           {canSeeDirectory && (
-            <button
+            <Magnetic
               onClick={() => navigate('/directory')}
-              className="bg-blue-600 text-white font-bold py-4 px-5 border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all tracking-wider text-sm cursor-pointer"
+              className="bg-action text-action-ink font-medium py-4 px-5 border border-rule flex items-center justify-center space-x-2 transition-all tracking-normal text-sm cursor-pointer"
             >
-              <FolderHeart className="w-5 h-5 stroke-[3]" />
+              <FolderHeart className="w-4 h-4" strokeWidth={1.75} />
               <span>View Directory</span>
-            </button>
+            </Magnetic>
           )}
         </div>
       </header>
 
-      {/* Tabs Menu */}
-      <div className="flex border-b border-slate-200 dark:border-white/10 mb-10 gap-3">
-        {!isStudent && (
-          <button
-            onClick={() => setActiveTab('home')}
-            className={cn(
-              "px-5 py-2.5 font-bold text-sm tracking-wide rounded-lg transition-all flex items-center space-x-2 cursor-pointer",
-              activeTab === 'home'
-                ? "bg-blue-700 text-white brutal-shadow-sm"
-                : "bg-white dark:bg-[#111a30] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10 hover:text-blue-700"
-            )}
-          >
-            <Home className="w-4 h-4" />
-            <span>Home</span>
-          </button>
-        )}
-        {isStudent && (
-          <button
-            onClick={() => setActiveTab('matches')}
-            className={cn(
-              "px-5 py-2.5 font-bold text-sm tracking-wide rounded-lg transition-all flex items-center space-x-2 cursor-pointer",
-              activeTab === 'matches'
-                ? "bg-blue-700 text-white brutal-shadow-sm"
-                : "bg-white dark:bg-[#111a30] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10 hover:text-blue-700"
-            )}
-          >
-            <FolderHeart className="w-4 h-4" />
-            <span>My Matches ({matches.length})</span>
-          </button>
-        )}
-        <button
-          onClick={() => setActiveTab('profile')}
-          className={cn(
-            "px-5 py-2.5 font-bold text-sm tracking-wide rounded-lg transition-all flex items-center space-x-2 cursor-pointer",
-            activeTab === 'profile' 
-              ? "bg-blue-700 text-white brutal-shadow-sm" 
-              : "bg-white dark:bg-[#111a30] text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-white/10 hover:text-blue-700"
-          )}
-        >
-          <User className="w-4 h-4" />
-          <span>My Profile</span>
-        </button>
+      {/* Tabs */}
+      <div className="mb-10">
+        <TabBar
+          active={activeTab}
+          onChange={setActiveTab}
+          items={[
+            ...(!isStudent ? [{ key: 'home', label: 'Home', Icon: Home }] : []),
+            ...(isStudent ? [{ key: 'matches', label: `My Matches (${matches.length})`, Icon: FolderHeart }] : []),
+            { key: 'profile', label: 'My Profile', Icon: User },
+          ]}
+        />
       </div>
 
       {activeTab === 'matches' ? (
         isAlumniMentor ? (
           <div className="space-y-8 animate-in fade-in duration-500">
             {/* Warm Welcome Banner */}
-            <div className="bg-gradient-to-r from-blue-700 to-blue-900 border border-slate-200 dark:border-white/10 rounded-2xl p-8 brutal-shadow text-white relative overflow-hidden">
-              <div className="absolute right-4 top-4 bg-white/20 text-white border border-white/30 text-xs font-bold px-3 py-1.5 tracking-wide rounded-md flex items-center space-x-1 backdrop-blur-sm">
-                <span>✨ Mentor Account Active</span>
+            <div className="navy-field p-8 relative">
+              <div className="absolute right-8 top-8 text-sm text-on-navy-muted">
+                <span>Mentor account active</span>
               </div>
-              <h2 className="text-4xl font-bold tracking-tight mb-2">Alumni Mentor Portal</h2>
-              <p className="text-indigo-100 font-bold max-w-2xl text-sm leading-relaxed">
+              <h2 className="font-heading text-title font-semibold tracking-tight text-on-navy mb-2">Alumni mentor portal</h2>
+              <p className="text-on-navy-muted max-w-prose leading-relaxed">
                 Thank you for giving back to the Westlake High School community! Your profile has been saved to the Chap Connect database, making you visible to current WHS students and recent grads seeking college and career insights.
               </p>
             </div>
@@ -555,86 +535,86 @@ export default function Dashboard({ session }) {
               return (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
                   {/* Profile Card */}
-                  <div className="md:col-span-2 bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 rounded-2xl brutal-shadow overflow-hidden flex flex-col">
-                    <div className="h-16 bg-slate-900 flex items-center px-6">
-                      <h3 className="text-white font-bold tracking-wide text-sm">Your Active Mentor Listing</h3>
+                  <div className="md:col-span-2 bg-surface border border-rule overflow-hidden flex flex-col panel">
+                    <div className="h-16 navy-field flex items-center px-6">
+                      <h3 className="text-white font-medium tracking-wide text-sm">Your Active Mentor Listing</h3>
                     </div>
                     <div className="p-6 space-y-6">
-                      <div className="flex items-center space-x-4 border-b-2 border-slate-100 pb-4">
+                      <div className="flex items-center space-x-4 border-b-2 border-rule pb-4">
                         <img
                           src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(profile?.name || '')}`}
                           alt={profile?.name}
-                          className="w-16 h-16 rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111a30] brutal-shadow-sm"
+                          className="w-16 h-16 rounded-full border border-rule bg-surface"
                         />
                         <div>
-                          <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 leading-none">{profile?.name}</h3>
+                          <h3 className="text-2xl font-semibold text-ink leading-none">{profile?.name}</h3>
                           <div className="flex flex-wrap gap-2 mt-2">
-                            <span className="bg-red-500 border border-slate-200 dark:border-white/10 text-white text-[10px] font-bold px-2 py-0.5 tracking-wide rounded brutal-shadow-sm">
-                              Class of {profile?.grad_year}
+                            <span className="text-ink-muted text-sm">
+                              Class of <span className="text-heritage-on-navy font-medium tabular">{profile?.grad_year}</span>
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-bold text-slate-800 dark:text-slate-200">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-medium text-ink">
                         <div className="flex items-center">
-                          <Briefcase className="w-5 h-5 mr-3 text-blue-600 stroke-[3] flex-shrink-0" />
+                          <Briefcase className="w-5 h-5 mr-3 text-ink-faint flex-shrink-0" />
                           <span>
                             {profile?.career || 'Position not specified'}
-                            {alumniMeta?.industry && <span className="text-slate-500 dark:text-slate-400 font-semibold"> ({alumniMeta.industry})</span>}
+                            {alumniMeta?.industry && <span className="text-ink-faint font-semibold"> ({alumniMeta.industry})</span>}
                             {profile?.company && ` @ ${profile.company}`}
                           </span>
                         </div>
                         <div className="flex items-start">
-                          <GraduationCap className="w-5 h-5 mr-3 text-blue-600 stroke-[3] flex-shrink-0 mt-0.5" />
+                          <GraduationCap className="w-5 h-5 mr-3 text-ink-faint flex-shrink-0 mt-0.5" />
                           <div className="flex flex-col">
                             <span>{profile?.college || 'College not specified'} {profile?.major && `(${profile.major})`}</span>
                             {alumniMeta?.firstGrad && (
-                              <span className="text-xs text-slate-600 dark:text-slate-400 font-semibold mt-0.5">Grad 1: {alumniMeta.firstGrad}</span>
+                              <span className="text-xs text-ink-muted font-semibold mt-0.5">Grad 1: {alumniMeta.firstGrad}</span>
                             )}
                             {alumniMeta?.secondGrad && (
-                              <span className="text-xs text-slate-600 dark:text-slate-400 font-semibold">Grad 2: {alumniMeta.secondGrad}</span>
+                              <span className="text-xs text-ink-muted font-semibold">Grad 2: {alumniMeta.secondGrad}</span>
                             )}
                           </div>
                         </div>
                         <div className="flex items-center">
-                          <MapPin className="w-5 h-5 mr-3 text-blue-600 stroke-[3] flex-shrink-0" />
+                          <MapPin className="w-5 h-5 mr-3 text-ink-faint flex-shrink-0" />
                           <span>{profile?.location || 'Location not specified'}</span>
                         </div>
                         <div className="flex items-center">
-                          <User className="w-5 h-5 mr-3 text-blue-600 stroke-[3] flex-shrink-0" />
-                          <span>Contact Platform: <span className="text-indigo-700 font-bold">{alumniMeta?.contactPlatform || 'Not specified'}</span></span>
+                          <User className="w-5 h-5 mr-3 text-ink-faint flex-shrink-0" />
+                          <span>Contact Platform: <span className="text-ink-muted font-medium">{alumniMeta?.contactPlatform || 'Not specified'}</span></span>
                         </div>
                       </div>
 
-                      <div className="bg-slate-100 dark:bg-[#18213a] border border-slate-200 dark:border-white/10 rounded-xl p-4">
-                        <h4 className="text-xs font-bold tracking-wider text-slate-900 dark:text-slate-100 mb-2 border-b border-slate-300 dark:border-white/10 pb-1">Preferred Contact Details</h4>
-                        <p className="text-sm font-bold text-slate-800 dark:text-slate-200 break-all">{alumniMeta?.contactInfo || 'No contact details provided yet.'}</p>
+                      <div className="bg-sunken border border-rule p-4 panel">
+                        <h4 className="text-xs font-medium tracking-normal text-ink mb-2 border-b border-rule-strong border-rule pb-1">Preferred Contact Details</h4>
+                        <p className="text-sm font-medium text-ink break-all">{alumniMeta?.contactInfo || 'No contact details provided yet.'}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Stats Card */}
-                  <div className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 rounded-2xl brutal-shadow p-6 space-y-6">
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 tracking-wide">Mentorship Status</h3>
+                  <div className="bg-surface border border-rule p-6 space-y-6 panel">
+                    <h3 className="text-xl font-semibold text-ink tracking-wide">Mentorship Status</h3>
                     
-                    <div className="bg-green-100 border border-slate-200 dark:border-white/10 rounded-xl p-4 text-center">
-                      <div className="text-xs font-bold text-slate-500 dark:text-slate-400">Profile Status</div>
-                      <div className="font-bold text-green-700 text-lg tracking-wider mt-1">Active & Ready</div>
+                    <div className="bg-sunken border border-rule p-4 panel">
+                      <div className="text-xs font-medium text-ink-faint">Profile Status</div>
+                      <div className="font-semibold text-good text-lg tracking-normal mt-1">Active & Ready</div>
                     </div>
 
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center font-bold text-xs text-slate-600 dark:text-slate-400 border-b border-slate-100 pb-2">
+                      <div className="flex justify-between items-center font-medium text-xs text-ink-muted border-b border-rule pb-2">
                         <span>Target Cohorts</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-100">WHS Students</span>
+                        <span className="font-medium text-ink">WHS Students</span>
                       </div>
-                      <div className="flex justify-between items-center font-bold text-xs text-slate-600 dark:text-slate-400 border-b border-slate-100 pb-2">
+                      <div className="flex justify-between items-center font-medium text-xs text-ink-muted border-b border-rule pb-2">
                         <span>Connected Students</span>
-                        <span className="font-bold text-slate-900 dark:text-slate-100">0 Active</span>
+                        <span className="font-medium text-ink">0 Active</span>
                       </div>
                     </div>
 
-                    <p className="text-xs font-bold text-slate-500 dark:text-slate-400 leading-relaxed text-center">
+                    <p className="text-xs font-medium text-ink-faint leading-relaxed text-center">
                       Students can request virtual coffee chats using the matched outreach templates. You will receive an email if a match request is generated!
                     </p>
                   </div>
@@ -643,21 +623,41 @@ export default function Dashboard({ session }) {
             })()}
 
             {/* Inactive Student Connections Notice */}
-            <div className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 p-8 rounded-2xl brutal-shadow text-center max-w-xl mx-auto w-full mt-8">
-              <FolderHeart className="w-16 h-16 text-blue-600 mx-auto mb-6" />
-              <h3 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-2">Looking to meet with a kid!</h3>
-              <p className="text-slate-700 dark:text-slate-300 font-bold text-sm leading-relaxed">
+            <div className="bg-surface border border-rule p-8 text-center max-w-xl mx-auto w-full mt-8 panel">
+              <FolderHeart className="w-16 h-16 text-ink-faint mx-auto mb-6" />
+              <h3 className="text-2xl font-semibold text-ink tracking-tight mb-2">Looking to meet with a kid!</h3>
+              <p className="text-ink-muted font-medium text-sm leading-relaxed">
                 We are actively matching you with students. As soon as a student initiates a match to connect with you, their details will appear here. Thank you for giving back and mentoring the next generation of Chaps!
               </p>
             </div>
           </div>
         ) : matches.length === 0 ? (
-          <div className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 brutal-shadow p-10 rounded-2xl text-center max-w-md mx-auto w-full mt-8">
-            <BookOpen className="w-16 h-16 text-blue-600 mx-auto mb-6" />
-            <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-2">No Matches Yet</h2>
-            <p className="text-slate-700 dark:text-slate-300 font-bold">
-              Click Find a Match at the top of the page to connect with Westlake High School graduates!
-            </p>
+          /* Empty state as a composed moment, not a card adrift in a void. It
+             names the next action instead of only reporting absence. */
+          <div className="navy-field panel overflow-hidden">
+            <div className="grid gap-8 p-8 sm:p-12 lg:grid-cols-[1.3fr_1fr] lg:items-center">
+              <div>
+                <p className="text-sm text-on-navy-muted">Nothing here yet</p>
+                <h2 className="mt-2 font-heading text-3xl sm:text-4xl font-semibold text-on-navy tracking-tight">
+                  Your first match is one click away.
+                </h2>
+                <p className="mt-5 max-w-prose text-on-navy-muted leading-relaxed">
+                  Chap Connect pairs you with a Westlake graduate who already walked
+                  the path you are starting. Matches you make will collect here.
+                </p>
+                {isStudent && (
+                  <Magnetic
+                    onClick={() => handleFindMatch('algo')}
+                    className="mt-8 bg-action text-action-ink font-medium py-3 px-6 inline-flex items-center gap-2 transition-colors hover:bg-action-hover active:translate-y-[1px] cursor-pointer rounded-slight"
+                  >
+                    Find my match
+                  </Magnetic>
+                )}
+              </div>
+              <div className="duotone panel hidden h-48 lg:block">
+                <img src="/WHSfield.jpg" alt="" aria-hidden="true" width={1200} height={630} loading="lazy" />
+              </div>
+            </div>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
@@ -670,16 +670,16 @@ export default function Dashboard({ session }) {
               )}`;
 
               return (
-                <div key={match.id} className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 rounded-2xl brutal-shadow flex flex-col overflow-hidden">
-                  <div className="h-16 bg-slate-900 flex items-center justify-between px-6 border-b border-slate-200 dark:border-white/10">
+                <div key={match.id} className="bg-surface border border-rule flex flex-col overflow-hidden panel">
+                  <div className="h-16 navy-field flex items-center justify-between px-6 border-b border-rule">
                     <div className="flex items-center space-x-2">
-                      <span className="text-white font-bold text-sm tracking-wide">
+                      <span className="text-white font-medium text-sm tracking-wide">
                         Status:
                       </span>
                       <select
                         value={match.status}
                         onChange={(e) => handleStatusChange(match.id, e.target.value)}
-                        className="bg-white dark:bg-[#111a30] text-slate-900 dark:text-slate-100 font-bold text-xs px-2 py-1 rounded border-2 border-white focus:outline-none"
+                        className="bg-surface text-ink font-medium text-xs px-2 py-1 border-2 border-white focus:outline-none rounded-slight"
                       >
                         <option value="Matched">Matched</option>
                         <option value="Contacted">Contacted</option>
@@ -690,7 +690,7 @@ export default function Dashboard({ session }) {
 
                     <button
                       onClick={() => handleDeleteMatch(match.id)}
-                      className="text-red-500 hover:text-red-400 p-1 cursor-pointer"
+                      className="text-bad hover:text-action p-1 cursor-pointer"
                       title="Remove match"
                     >
                       <Trash2 className="w-5 h-5" />
@@ -698,41 +698,41 @@ export default function Dashboard({ session }) {
                   </div>
 
                   <div className="p-6 flex-grow flex flex-col">
-                    <div className="flex items-center space-x-4 mb-4 border-b-2 border-slate-100 pb-4">
+                    <div className="flex items-center space-x-4 mb-4 border-b-2 border-rule pb-4">
                       <img
                         src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(m.name)}`}
                         alt={m.name}
-                        className="w-14 h-14 rounded-full border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111a30]"
+                        className="w-14 h-14 rounded-full border border-rule bg-surface"
                       />
                       <div>
-                        <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 leading-none">{m.name}</h3>
-                        <span className="inline-block mt-1 bg-red-500 border border-slate-900 text-white text-[10px] font-bold px-2 py-0.5 tracking-wide rounded">
-                          Class of {m.grad_year}
+                        <h3 className="text-xl font-semibold text-ink leading-none">{m.name}</h3>
+                        <span className="inline-block mt-1 text-ink-muted text-sm">
+                          Class of <span className="text-heritage font-medium tabular">{m.grad_year}</span>
                         </span>
                       </div>
                     </div>
 
-                    <div className="space-y-2 mb-6 text-xs text-slate-700 dark:text-slate-300 font-bold flex-grow">
+                    <div className="space-y-2 mb-6 text-xs text-ink-muted font-medium flex-grow">
                       <div className="flex items-center">
-                        <Briefcase className="w-4.5 h-4.5 mr-2 text-blue-600 stroke-[3] flex-shrink-0" />
+                        <Briefcase className="w-4.5 h-4.5 mr-2 text-ink-faint flex-shrink-0" />
                         <span>{m.current_position || 'Established Alumni'}</span>
                       </div>
                       {m.college && (
                         <div className="flex items-start">
-                          <GraduationCap className="w-4.5 h-4.5 mr-2 text-blue-600 stroke-[3] flex-shrink-0 mt-0.5" />
+                          <GraduationCap className="w-4.5 h-4.5 mr-2 text-ink-faint flex-shrink-0 mt-0.5" />
                           <div className="flex flex-col">
                             <span>{m.college}</span>
                             {m.first_grad_education && (
-                              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold mt-0.5">Grad: {m.first_grad_education}</span>
+                              <span className="text-xs text-ink-faint font-semibold mt-0.5">Grad: {m.first_grad_education}</span>
                             )}
                             {m.second_grad_education && (
-                              <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold">Grad 2: {m.second_grad_education}</span>
+                              <span className="text-xs text-ink-faint font-semibold">Grad 2: {m.second_grad_education}</span>
                             )}
                           </div>
                         </div>
                       )}
                       <div className="flex items-center">
-                        <MapPin className="w-4.5 h-4.5 mr-2 text-blue-600 stroke-[3] flex-shrink-0" />
+                        <MapPin className="w-4.5 h-4.5 mr-2 text-ink-faint flex-shrink-0" />
                         <span>{m.location}</span>
                       </div>
                     </div>
@@ -741,7 +741,7 @@ export default function Dashboard({ session }) {
                       href={linkedInSearchUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="w-full py-2.5 px-4 mb-6 rounded-xl font-bold text-xs tracking-wider flex items-center justify-center space-x-2 border border-slate-200 dark:border-white/10 bg-white dark:bg-[#111a30] text-slate-900 dark:text-slate-100 brutal-shadow-sm hover:translate-y-[1px] hover:brutal-shadow-none transition-all cursor-pointer"
+                      className="w-full py-2.5 px-4 mb-6 font-medium text-xs tracking-normal flex items-center justify-center space-x-2 border border-rule bg-surface text-ink transition-all cursor-pointer panel"
                     >
                       <svg className="w-4 h-4 fill-slate-900" viewBox="0 0 24 24">
                         <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
@@ -749,20 +749,20 @@ export default function Dashboard({ session }) {
                       <span>Find on LinkedIn</span>
                     </a>
 
-                    <div className="border-t-2 border-slate-200 dark:border-white/10 pt-4 flex flex-col">
-                      <label className="block text-[10px] font-bold text-slate-500 dark:text-slate-400 tracking-wide mb-2">My Meeting Logs & Notes</label>
+                    <div className="border-t-2 border-rule pt-4 flex flex-col">
+                      <label className="block text-xs font-medium text-ink-faint tracking-wide mb-2">My Meeting Logs & Notes</label>
                       <textarea
                         value={notesState[match.id] || ''}
                         onChange={(e) => handleNotesChange(match.id, e.target.value)}
                         placeholder="e.g. Sent email. Coffee chat scheduled for next Tuesday!"
-                        className="w-full px-3 py-2 text-xs border border-slate-200 dark:border-white/10 rounded-lg focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-slate-50 dark:bg-[#0c1324] font-medium min-h-[80px] resize-none mb-3"
+                        className="w-full px-3 py-2 text-xs border border-rule focus:outline-none focus:border-action bg-sunken font-medium min-h-[80px] resize-none mb-3 panel"
                       />
                       <button
                         onClick={() => handleSaveNotes(match.id)}
                         disabled={savingNoteId === match.id}
                         className={cn(
-                          "self-end py-1.5 px-3 rounded-lg font-bold text-[10px] tracking-wide border border-slate-900 brutal-shadow-sm flex items-center space-x-1 cursor-pointer transition-all",
-                          savingNoteId === match.id ? "bg-slate-200" : "bg-blue-700 text-white"
+                          "self-end py-1.5 px-3 font-medium text-xs tracking-wide border border-rule-strong flex items-center space-x-1 cursor-pointer transition-all",
+                          savingNoteId === match.id ? "bg-sunken" : "text-ink border-action"
                         )}
                       >
                         {savingNoteId === match.id ? (
@@ -786,20 +786,20 @@ export default function Dashboard({ session }) {
         )
       ) : activeTab === 'profile' ? (
         /* My Profile Editor Tab */
-        <div className="max-w-xl mx-auto bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 p-8 rounded-2xl brutal-shadow w-full">
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-6 border-b-2 border-slate-200 dark:border-white/10 pb-3 flex items-center space-x-2">
-            <User className="w-7 h-7 text-blue-600" />
+        <div className="max-w-xl mx-auto bg-surface border border-rule p-8 w-full panel">
+          <h2 className="text-3xl font-semibold text-ink tracking-tight mb-6 border-b-2 border-rule pb-3 flex items-center space-x-2">
+            <User className="w-7 h-7 text-ink-faint" />
             <span>Profile Manager</span>
           </h2>
           {isAlumniMentor && (
-            <p className="text-slate-700 dark:text-slate-300 font-bold text-sm mb-6 leading-relaxed bg-slate-50 dark:bg-[#0c1324] border border-slate-200 dark:border-white/10 rounded-xl p-4 brutal-shadow-sm">
+            <p className="text-ink-muted font-medium text-sm mb-6 leading-relaxed bg-sunken border border-rule p-4 panel">
               Keep your profile up to date so students can connect with you for mentorship, advice, and new opportunities. Your guidance helps shape their future.
             </p>
           )}
 
           {profileSaveSuccess && (
-            <div className="bg-green-500 text-white font-bold p-4 rounded-xl border border-slate-200 dark:border-white/10 brutal-shadow-sm mb-6 flex items-center space-x-2 animate-in fade-in duration-300">
-              <CheckCircle2 className="w-6 h-6 stroke-[3]" />
+            <div className="bg-signal-good text-white font-medium p-4 border border-rule mb-6 flex items-center space-x-2 animate-in fade-in duration-300">
+              <CheckCircle2 className="w-6 h-6" />
               <span>Profile updated successfully!</span>
             </div>
           )}
@@ -835,7 +835,7 @@ export default function Dashboard({ session }) {
                 name="flow_type"
                 value={profileForm.flow_type || 'student'}
                 onChange={handleProfileFormChange}
-                className={`${inputClass} font-bold`}
+                className={` font-medium`}
               >
                 <option value="student">Current High School Student</option>
                 <option value="recent">Current College Student</option>
@@ -979,7 +979,7 @@ export default function Dashboard({ session }) {
                     name="post_grad_school"
                     value={profileForm.post_grad_school || ''}
                     onChange={handleProfileFormChange}
-                    className={`${inputClass} font-bold`}
+                    className={` font-medium`}
                   >
                     <option value="">-- Select Graduate School --</option>
                     <option value="UT Austin">University of Texas at Austin</option>
@@ -1013,7 +1013,7 @@ export default function Dashboard({ session }) {
                     name="post_grad_program"
                     value={profileForm.post_grad_program || ''}
                     onChange={handleProfileFormChange}
-                    className={`${inputClass} font-bold`}
+                    className={` font-medium`}
                   >
                     <option value="">-- Select Program Type --</option>
                     <option value="Medicine">Medicine (Med School)</option>
@@ -1050,7 +1050,7 @@ export default function Dashboard({ session }) {
                     name="working"
                     value={profileForm.working || ''}
                     onChange={handleProfileFormChange}
-                    className={`${inputClass} font-bold`}
+                    className={` font-medium`}
                   >
                     <option value="">-- Select --</option>
                     <option value="yes">Yes</option>
@@ -1122,7 +1122,7 @@ export default function Dashboard({ session }) {
                     name="contactPlatform"
                     value={profileForm.contactPlatform || ''}
                     onChange={handleProfileFormChange}
-                    className={`${inputClass} font-bold`}
+                    className={` font-medium`}
                   >
                     <option value="">-- Select Contact Method --</option>
                     <option value="LinkedIn">LinkedIn</option>
@@ -1159,14 +1159,14 @@ export default function Dashboard({ session }) {
                     required
                   />
                 </div>
-                <div className="space-y-4 pt-2 border-t-2 border-slate-200 dark:border-white/10">
-                  <label className="flex items-start space-x-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0c1324] cursor-pointer">
+                <div className="space-y-4 pt-2 border-t-2 border-rule">
+                  <label className="flex items-start space-x-3 p-4 border border-rule bg-sunken cursor-pointer panel">
                     <input type="checkbox" name="newsletterConsent" checked={!!profileForm.newsletterConsent} onChange={handleProfileFormChange} className="mt-0.5 w-5 h-5 accent-blue-600" />
-                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">I give permission to use my email to send me the alumni newsletter and publications.</span>
+                    <span className="text-sm font-medium text-ink">I give permission to use my email to send me the alumni newsletter and publications.</span>
                   </label>
-                  <label className="flex items-start space-x-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0c1324] cursor-pointer">
+                  <label className="flex items-start space-x-3 p-4 border border-rule bg-sunken cursor-pointer rounded-slight">
                     <input type="checkbox" name="contactConsent" checked={!!profileForm.contactConsent} onChange={handleProfileFormChange} className="mt-0.5 w-5 h-5 accent-blue-600" />
-                    <span className="text-sm font-bold text-slate-800 dark:text-slate-200">I allow students to occasionally contact me when Chap Connect matches them with me.</span>
+                    <span className="text-sm font-medium text-ink">I allow students to occasionally contact me when Chap Connect matches them with me.</span>
                   </label>
                 </div>
               </>
@@ -1175,7 +1175,7 @@ export default function Dashboard({ session }) {
             <button
               type="submit"
               disabled={isSavingProfile}
-              className="w-full bg-blue-600 text-white font-bold py-4 px-6 border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow flex items-center justify-center space-x-2 hover:translate-y-0.5 active:translate-y-1 transition-all tracking-wider text-sm cursor-pointer mt-8"
+              className="w-full bg-action text-action-ink font-medium py-4 px-6 border border-rule flex items-center justify-center space-x-2 transition-all tracking-normal text-sm cursor-pointer mt-8"
             >
               {isSavingProfile ? (
                 <>
@@ -1184,7 +1184,7 @@ export default function Dashboard({ session }) {
                 </>
               ) : (
                 <>
-                  <Save className="w-5 h-5 stroke-[3]" />
+                  <Save className="w-5 h-5" />
                   <span>Save Changes</span>
                 </>
               )}
@@ -1193,98 +1193,81 @@ export default function Dashboard({ session }) {
         </div>
       ) : null}
 
-      {/* HOME TAB — alumni landing page with official links */}
+      {/* HOME TAB. alumni landing page with official links */}
       {activeTab === 'home' && (
         <div>
-          {/* Welcome banner */}
+          {/* Masthead. a full-bleed navy field, the peak of this page. */}
           <motion.div
-            initial={{ opacity: 0, y: 22, scale: 0.99 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 220, damping: 22 }}
-            className="gradient-brand border border-white/10 rounded-2xl p-8 brutal-shadow text-white mb-10"
+            initial={{ opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="navy-field -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-14 mb-14"
           >
-            <h2 className="text-4xl font-bold tracking-tight mb-2">
-              Welcome, {profile?.name?.split(' ')[0] || 'Chap'}!
+            {(profile?.grad_year || profile?.gradYear) && (
+              <p className="text-sm text-on-navy-muted">
+                Class of{' '}
+                <span className="tabular text-heritage-on-navy font-medium">
+                  {profile.grad_year || profile.gradYear}
+                </span>
+              </p>
+            )}
+            <h2 className="mt-3 font-heading text-4xl sm:text-5xl lg:text-title font-semibold text-on-navy">
+              Welcome back, {profile?.name?.split(' ')[0] || 'Chap'}.
             </h2>
-            <p className="text-white/85 font-bold max-w-2xl text-sm leading-relaxed">
-              Your home base as a Westlake alum. Browse the Chap directory, keep your profile current, and explore the official Eanes resources below.
+            <span className="rule-draw mt-7 block h-0.5 w-24 bg-accent-navy" aria-hidden="true" />
+            <p className="mt-7 max-w-prose text-lg leading-relaxed text-on-navy-muted">
+              Your home base as a Westlake alum. Browse the Chap directory, keep your
+              profile current, and explore the official Eanes resources below.
             </p>
           </motion.div>
 
-          <div className="inline-flex items-center space-x-2 bg-blue-700 border border-slate-200 dark:border-white/10 text-white px-3 py-1 font-bold text-xs tracking-wide rounded-md brutal-shadow-sm mb-4">
-            <span>📚 Official Resources</span>
-          </div>
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-8">
-            Eanes ISD & Alumni Portal
+          <h2 className="font-heading text-2xl font-semibold text-ink tracking-tight mb-1">
+            Eanes ISD &amp; alumni portal
           </h2>
+          <p className="text-ink-muted mb-8">Official district and foundation resources.</p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 stagger">
-            {/* Alumni Website */}
-            <div style={{ '--i': 0 }} className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow p-6 flex flex-col justify-between transition-transform hover:-translate-y-1">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-wide mb-3 flex items-center">
-                  🎓 EEF Alumni Portal
-                </h3>
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-                  The official Eanes Education Foundation Alumni page is the ultimate registry for former Chaps. 
-                  It is perfect for staying updated on WHS reunions, accessing alumni networking registers, and keeping your connection to the community alive. 
-                  Click this to tap back into your WHS heritage and see what other graduates are up to!
-                </p>
-              </div>
-              <a 
-                href="https://eaneseducationfoundation.org/alumni/" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="w-full bg-blue-600 text-white py-2 rounded-lg font-bold border border-slate-200 dark:border-white/10 brutal-shadow-sm text-center text-xs tracking-wider hover:translate-y-[1px] hover:brutal-shadow-none transition-all block cursor-pointer"
+          <dl className="border-t-2 border-rule-strong">
+            {[
+              {
+                term: 'EEF Alumni Portal',
+                href: 'https://eaneseducationfoundation.org/alumni/',
+                cta: 'Visit EEF Alumni',
+                desc: 'The official Eanes Education Foundation alumni page. the registry for former Chaps. Reunion news, networking registers, and what other graduates are up to.',
+              },
+              {
+                term: 'Eanes ISD Website',
+                href: 'https://www.eanesisd.net/',
+                cta: 'Visit Eanes ISD',
+                desc: 'District announcements, academic calendars, board updates, athletic schedules, and campus news from the current generation of WHS students.',
+              },
+              {
+                term: 'Support the Foundation',
+                href: 'https://eaneseducationfoundation.org/donate/',
+                cta: 'Donate',
+                desc: 'Donations to the Eanes Education Foundation fund teacher salaries and the classroom resources that keep district programs running.',
+              },
+            ].map((item) => (
+              <div
+                key={item.href}
+                className="group border-b border-rule py-7 sm:grid sm:grid-cols-[15rem_1fr_auto] sm:gap-10 sm:items-baseline"
               >
-                Visit EEF Alumni
-              </a>
-            </div>
-
-            {/* Eanes ISD */}
-            <div style={{ '--i': 1 }} className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow p-6 flex flex-col justify-between transition-transform hover:-translate-y-1">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-wide mb-3 flex items-center">
-                  🏫 Eanes ISD Website
-                </h3>
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-                  The home base for all official district announcements, academic calendars, and school board updates. 
-                  It is the go-to portal if you want to check out district achievements, athletic schedules, or campus innovations. 
-                  Click this to keep tabs on the current generation of WHS students and see how the district continues to excel!
-                </p>
+                <dt className="font-heading text-lg font-semibold text-ink">{item.term}</dt>
+                <dd className="mt-1.5 sm:mt-0 text-ink-muted leading-relaxed max-w-prose">
+                  {item.desc}
+                </dd>
+                <dd className="mt-3 sm:mt-0 sm:text-right">
+                  <a
+                    href={item.href}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-sm font-medium text-action border-b border-action/30 group-hover:border-action pb-0.5 transition-colors whitespace-nowrap"
+                  >
+                    {item.cta}
+                  </a>
+                </dd>
               </div>
-              <a 
-                href="https://www.eanesisd.net/" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="w-full bg-red-600 text-white py-2 rounded-lg font-bold border border-slate-200 dark:border-white/10 brutal-shadow-sm text-center text-xs tracking-wider hover:translate-y-[1px] hover:brutal-shadow-none transition-all block cursor-pointer"
-              >
-                Visit Eanes ISD
-              </a>
-            </div>
-
-            {/* Donate Page */}
-            <div style={{ '--i': 2 }} className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow p-6 flex flex-col justify-between transition-transform hover:-translate-y-1">
-              <div>
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 tracking-wide mb-3 flex items-center">
-                  💸 Support the Foundation
-                </h3>
-                <p className="text-xs font-bold text-slate-700 dark:text-slate-300 leading-relaxed mb-4">
-                  Look, we all know Eanes is great, but premium public education doesn't just fund itself, and these amazing WHS students deserve the best.
-                  Your donation to the Eanes Education Foundation directly funds critical teacher salaries and resources that keep school programs alive.
-                  Click this to invest in the future of the district—your wallet will recover, and the students will thank you!
-                </p>
-              </div>
-              <a 
-                href="https://eaneseducationfoundation.org/donate/" 
-                target="_blank" 
-                rel="noreferrer" 
-                className="w-full bg-red-500 text-white py-2 rounded-lg font-bold border border-slate-200 dark:border-white/10 brutal-shadow-sm text-center text-xs tracking-wider hover:translate-y-[1px] hover:brutal-shadow-none transition-all block cursor-pointer"
-              >
-                Donate Cash Here
-              </a>
-            </div>
-          </div>
+            ))}
+          </dl>
         </div>
       )}
     </div>

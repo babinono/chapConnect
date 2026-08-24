@@ -53,10 +53,10 @@ export default function Directory() {
   const current = filtered.slice(start, start + PAGE_SIZE);
 
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
+    <div className="min-h-[100dvh] py-12 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
       <button
         onClick={() => navigate('/dashboard')}
-        className="mb-6 flex items-center space-x-2 text-slate-600 dark:text-slate-400 font-bold tracking-wide text-sm hover:text-blue-700 transition-colors cursor-pointer"
+        className="mb-6 flex items-center space-x-2 text-ink-muted font-medium tracking-wide text-sm hover:text-ink transition-colors cursor-pointer"
       >
         <ArrowLeft className="w-5 h-5" />
         <span>Back to Dashboard</span>
@@ -65,51 +65,50 @@ export default function Directory() {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-        className="gradient-brand border border-white/10 rounded-2xl p-8 brutal-shadow text-white mb-8"
+        transition={{ duration: 0.3, ease: 'easeOut' }}
+        className="gradient-brand border border-white/10 p-8 text-white mb-8"
       >
-        <h1 className="text-4xl font-bold tracking-tight mb-2">Chap Directory</h1>
-        <p className="text-white/80 font-bold max-w-2xl text-sm leading-relaxed">
+        <h1 className="text-4xl font-semibold tracking-tight mb-2">Chap Directory</h1>
+        <p className="text-white/80 font-medium max-w-2xl text-sm leading-relaxed">
           Browse the full network of Westlake alumni and mentors. Search by name to find a specific Chap.
         </p>
       </motion.div>
 
       <div className="mb-6 relative">
-        <Search className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+        <Search className="w-5 h-5 text-ink-faint absolute left-4 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           value={search}
           onChange={handleSearch}
           placeholder="Search alumni by name..."
-          className="w-full pl-12 pr-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-slate-50 dark:bg-[#0c1324] font-medium"
+          className="w-full pl-12 pr-4 py-3 border border-rule focus:outline-none focus:border-action bg-sunken font-medium panel"
         />
       </div>
 
       {loading ? (
         <div className="flex items-center justify-center py-16">
-          <Loader2 className="w-10 h-10 text-blue-600 animate-spin" />
+          <Loader2 className="w-10 h-10 text-ink-faint animate-spin" />
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 brutal-shadow p-10 rounded-2xl text-center">
-          <p className="font-bold text-slate-700 dark:text-slate-300">
+        <div className="bg-surface border border-rule p-10 text-center panel">
+          <p className="font-medium text-ink-muted">
             {rows && rows.length === 0 ? 'No one in the directory yet.' : 'No one matches your search.'}
           </p>
         </div>
       ) : (
         <>
-          <div className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 rounded-2xl brutal-shadow overflow-hidden divide-y divide-slate-100 dark:divide-white/10">
+          <div className="bg-surface border border-rule overflow-hidden divide-y divide-slate-100 dark:divide-white/10 panel">
             {current.map((r, i) => (
               <motion.div
                 key={r.key}
                 initial={{ opacity: 0, x: -12 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: Math.min(i * 0.03, 0.4), duration: 0.3 }}
-                whileHover={{ backgroundColor: 'rgba(37,99,235,0.06)' }}
                 className="flex items-center justify-between px-6 py-4"
               >
-                <span className="font-bold text-slate-900 dark:text-slate-100">{r.name}</span>
-                <span className="text-sm font-bold text-slate-500 dark:text-slate-400 tracking-wide">
-                  {r.gradYear ? `Class of ${r.gradYear}` : '—'}
+                <span className="font-medium text-ink">{r.name}</span>
+                <span className="text-sm font-medium text-ink-faint tracking-wide">
+                  {r.gradYear ? `Class of ${r.gradYear}` : '-'}
                 </span>
               </motion.div>
             ))}
@@ -120,20 +119,20 @@ export default function Directory() {
             <button
               onClick={() => setPage(p => Math.max(0, p - 1))}
               disabled={safePage === 0}
-              className="flex items-center space-x-2 bg-white dark:bg-[#111a30] text-slate-900 dark:text-slate-100 font-bold py-2.5 px-4 border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow-sm tracking-wide text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:text-blue-700 transition-colors cursor-pointer"
+              className="flex items-center space-x-2 bg-surface text-ink font-medium py-2.5 px-4 border border-rule tracking-wide text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:text-ink transition-colors cursor-pointer rounded-slight"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Prev</span>
             </button>
 
-            <span className="text-sm font-bold tracking-wide text-slate-500 dark:text-slate-400">
+            <span className="text-sm font-medium tracking-wide text-ink-faint">
               Page {safePage + 1} of {pageCount} · {filtered.length} total
             </span>
 
             <button
               onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))}
               disabled={safePage >= pageCount - 1}
-              className="flex items-center space-x-2 bg-blue-600 text-white font-bold py-2.5 px-4 border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow-sm tracking-wide text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:translate-y-0.5 transition-all cursor-pointer"
+              className="flex items-center space-x-2 bg-action text-action-ink font-medium py-2.5 px-4 border border-rule tracking-wide text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
             >
               <span>Next</span>
               <ArrowRight className="w-4 h-4" />

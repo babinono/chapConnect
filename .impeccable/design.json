@@ -1,0 +1,657 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-23T00:00:00Z",
+  "title": "Design System: Chap Connect",
+  "extensions": {
+    "colorMeta": {
+      "eanes-navy": {
+        "role": "primary",
+        "displayName": "Eanes Navy",
+        "canonical": "#102047",
+        "tonalRamp": [
+          "#dee0e5",
+          "#bcc1cb",
+          "#9ba1b2",
+          "#798298",
+          "#58637e",
+          "#364464",
+          "#102047",
+          "#0d1a3a"
+        ]
+      },
+      "eanes-red": {
+        "role": "secondary",
+        "displayName": "Eanes Red",
+        "canonical": "#A6192E",
+        "tonalRamp": [
+          "#f3dfe2",
+          "#e6bfc4",
+          "#da9ea7",
+          "#cd7e8a",
+          "#c15e6d",
+          "#b43e4f",
+          "#a6192e",
+          "#881426"
+        ]
+      },
+      "eanes-blue": {
+        "role": "tertiary",
+        "displayName": "Eanes Blue",
+        "canonical": "#003087",
+        "tonalRamp": [
+          "#dbe2ee",
+          "#b8c5dd",
+          "#94a8cd",
+          "#708bbc",
+          "#4c6eab",
+          "#29519a",
+          "#003087",
+          "#00276f"
+        ]
+      },
+      "eanes-red-deep": {
+        "role": "secondary",
+        "displayName": "Eanes Red Deep",
+        "canonical": "#8d1527",
+        "tonalRamp": [
+          "#efdee1",
+          "#dfbdc3",
+          "#cf9da4",
+          "#bf7c86",
+          "#af5b68",
+          "#9f3a4a",
+          "#8d1527",
+          "#741120"
+        ]
+      },
+      "eanes-red-light": {
+        "role": "secondary",
+        "displayName": "Eanes Red Light",
+        "canonical": "#ba4c5c",
+        "tonalRamp": [
+          "#f5e6e8",
+          "#eccdd1",
+          "#e2b4bb",
+          "#d89ba4",
+          "#cf828d",
+          "#c56976",
+          "#ba4c5c",
+          "#993e4b"
+        ]
+      },
+      "eanes-red-soft": {
+        "role": "secondary",
+        "displayName": "Eanes Red Soft",
+        "canonical": "#c8707d",
+        "tonalRamp": [
+          "#f7ebed",
+          "#f0d7db",
+          "#e8c3c8",
+          "#e0afb6",
+          "#d89ba4",
+          "#d18792",
+          "#c8707d",
+          "#a45c67"
+        ]
+      },
+      "sky-blue": {
+        "role": "support",
+        "displayName": "Sky Blue",
+        "canonical": "#00ADEF",
+        "tonalRamp": [
+          "#dbf4fd",
+          "#b8e8fb",
+          "#94ddf8",
+          "#70d1f6",
+          "#4cc6f4",
+          "#29baf2",
+          "#00adef",
+          "#008ec4"
+        ]
+      },
+      "forest-green": {
+        "role": "support",
+        "displayName": "Forest Green",
+        "canonical": "#097F42",
+        "tonalRamp": [
+          "#ddede5",
+          "#badbca",
+          "#98c9b0",
+          "#75b795",
+          "#53a57b",
+          "#309360",
+          "#097f42",
+          "#076836"
+        ]
+      },
+      "bright-gold": {
+        "role": "support",
+        "displayName": "Bright Gold",
+        "canonical": "#F0A81E",
+        "tonalRamp": [
+          "#fdf3e0",
+          "#fbe7c0",
+          "#f9daa0",
+          "#f7ce81",
+          "#f4c262",
+          "#f2b642",
+          "#f0a81e",
+          "#c58a19"
+        ]
+      },
+      "medium-gray": {
+        "role": "neutral",
+        "displayName": "Medium Gray",
+        "canonical": "#A7A9AB",
+        "tonalRamp": [
+          "#f3f3f3",
+          "#e6e7e7",
+          "#dadbdc",
+          "#cecfd0",
+          "#c1c3c4",
+          "#b5b7b8",
+          "#a7a9ab",
+          "#898b8c"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Paper",
+        "canonical": "#f7f7f9",
+        "tonalRamp": [
+          "#fefefe",
+          "#fdfdfd",
+          "#fcfcfc",
+          "#fbfbfc",
+          "#f9f9fb",
+          "#f8f8fa",
+          "#f7f7f9",
+          "#cbcbcc"
+        ]
+      },
+      "paper-raised": {
+        "role": "neutral",
+        "displayName": "Paper Raised",
+        "canonical": "#fdfdfd",
+        "tonalRamp": [
+          "#ffffff",
+          "#fefefe",
+          "#fefefe",
+          "#fefefe",
+          "#fefefe",
+          "#fdfdfd",
+          "#fdfdfd",
+          "#cfcfcf"
+        ]
+      },
+      "paper-sunken": {
+        "role": "neutral",
+        "displayName": "Paper Sunken",
+        "canonical": "#edeef1",
+        "tonalRamp": [
+          "#fcfdfd",
+          "#fafafb",
+          "#f7f8f9",
+          "#f5f5f7",
+          "#f2f3f5",
+          "#f0f1f3",
+          "#edeef1",
+          "#c2c3c6"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#dee0e5",
+        "tonalRamp": [
+          "#fafbfb",
+          "#f6f6f8",
+          "#f1f2f4",
+          "#edeef0",
+          "#e8e9ed",
+          "#e3e5e9",
+          "#dee0e5",
+          "#b6b8bc"
+        ]
+      },
+      "ink-muted": {
+        "role": "neutral",
+        "displayName": "Ink Muted",
+        "canonical": "#525d79",
+        "tonalRamp": [
+          "#e7e8ec",
+          "#cfd2d9",
+          "#b6bbc7",
+          "#9ea4b4",
+          "#868ea1",
+          "#6e778e",
+          "#525d79",
+          "#434c63"
+        ]
+      },
+      "ink-faint": {
+        "role": "neutral",
+        "displayName": "Ink Faint",
+        "canonical": "#606a84",
+        "tonalRamp": [
+          "#e9eaee",
+          "#d2d5dd",
+          "#bcc0cb",
+          "#a6acba",
+          "#9097a9",
+          "#798298",
+          "#606a84",
+          "#4f576c"
+        ]
+      },
+      "night": {
+        "role": "neutral",
+        "displayName": "Night",
+        "canonical": "#0a152e",
+        "tonalRamp": [
+          "#dddee2",
+          "#babdc4",
+          "#989da7",
+          "#767c8a",
+          "#545b6d",
+          "#313a4f",
+          "#0a152e",
+          "#081126"
+        ]
+      },
+      "night-surface": {
+        "role": "neutral",
+        "displayName": "Night Surface",
+        "canonical": "#0e1d40",
+        "tonalRamp": [
+          "#dddfe4",
+          "#bcc0ca",
+          "#9aa0af",
+          "#788094",
+          "#566179",
+          "#35415f",
+          "#0e1d40",
+          "#0b1834"
+        ]
+      },
+      "field-night": {
+        "role": "primary",
+        "displayName": "Eanes Navy Lifted",
+        "canonical": "#16294f",
+        "tonalRamp": [
+          "#dee1e6",
+          "#bec3ce",
+          "#9da5b5",
+          "#7d879c",
+          "#5c6984",
+          "#3b4b6b",
+          "#16294f",
+          "#122241"
+        ]
+      },
+      "on-navy": {
+        "role": "neutral",
+        "displayName": "On Navy",
+        "canonical": "#f5f6f8",
+        "tonalRamp": [
+          "#fefefe",
+          "#fcfcfd",
+          "#fbfbfc",
+          "#f9fafb",
+          "#f8f9fa",
+          "#f7f7f9",
+          "#f5f6f8",
+          "#c9cacb"
+        ]
+      },
+      "on-navy-muted": {
+        "role": "neutral",
+        "displayName": "On Navy Muted",
+        "canonical": "#A7A9AB",
+        "tonalRamp": [
+          "#f3f3f3",
+          "#e6e7e7",
+          "#dadbdc",
+          "#cecfd0",
+          "#c1c3c4",
+          "#b5b7b8",
+          "#a7a9ab",
+          "#898b8c"
+        ]
+      },
+      "cursor-mark": {
+        "role": "secondary",
+        "displayName": "Cursor Mark",
+        "canonical": "#ba4c5c",
+        "tonalRamp": [
+          "#f5e6e8",
+          "#eccdd1",
+          "#e2b4bb",
+          "#d89ba4",
+          "#cf828d",
+          "#c56976",
+          "#ba4c5c",
+          "#993e4b"
+        ]
+      },
+      "signal-good": {
+        "role": "semantic",
+        "displayName": "Signal Good",
+        "canonical": "#08773e",
+        "tonalRamp": [
+          "#dcece4",
+          "#bad9c9",
+          "#97c6ae",
+          "#75b393",
+          "#52a078",
+          "#308d5d",
+          "#08773e",
+          "#076233"
+        ]
+      },
+      "signal-warn": {
+        "role": "semantic",
+        "displayName": "Signal Warn",
+        "canonical": "#845c11",
+        "tonalRamp": [
+          "#eee8de",
+          "#ddd1bc",
+          "#cbbb9b",
+          "#baa47a",
+          "#a98d58",
+          "#987637",
+          "#845c11",
+          "#6c4b0e"
+        ]
+      },
+      "signal-bad": {
+        "role": "semantic",
+        "displayName": "Signal Bad",
+        "canonical": "#A6192E",
+        "tonalRamp": [
+          "#f3dfe2",
+          "#e6bfc4",
+          "#da9ea7",
+          "#cd7e8a",
+          "#c15e6d",
+          "#b43e4f",
+          "#a6192e",
+          "#881426"
+        ]
+      },
+      "signal-info": {
+        "role": "semantic",
+        "displayName": "Signal Info",
+        "canonical": "#003087",
+        "tonalRamp": [
+          "#dbe2ee",
+          "#b8c5dd",
+          "#94a8cd",
+          "#708bbc",
+          "#4c6eab",
+          "#29519a",
+          "#003087",
+          "#00276f"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Page peaks only \u2014 one per page, always inside a navy field."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Section mastheads and terminal states (rate limit, no result)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Card and panel headings, register entry names."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All prose, constrained to ~65ch."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Field labels, metadata, inline links. Sentence case."
+      },
+      "micro": {
+        "displayName": "Micro",
+        "purpose": "Dense data only \u2014 CRM table headers and chart legends. Never for prose."
+      },
+      "figure": {
+        "displayName": "Figure",
+        "purpose": "Any number a reader compares \u2014 class years, dates, currency. Tabular."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-exit",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The only easing. Exponential ease-out for every entrance and state change."
+      },
+      {
+        "name": "duration-entrance",
+        "value": "400ms",
+        "purpose": "Section and page entrances."
+      },
+      {
+        "name": "duration-state",
+        "value": "200ms",
+        "purpose": "Hover and focus colour transitions."
+      },
+      {
+        "name": "rule-draw",
+        "value": "scaleX(0) -> scaleX(1) over 600ms, transform-origin left",
+        "purpose": "The signature gesture: the Eanes rule drawing itself beneath a masthead. One per page."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "all animation and transition durations collapse to 0.001ms",
+        "purpose": "Honoured globally via prefers-reduced-motion; never gated per-component."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ],
+    "chartSeries": {
+      "description": "Six-step categorical scale for the CRM. Eanes Navy, Red and Blue lead; the campus colours fill the remaining three, because six categories need six distinguishable hues and no identity role is involved. Bright Gold and Sky Blue appear darkened on light grounds, where raw they reach only 1.97:1 and 2.47:1.",
+      "light": [
+        "#102047",
+        "#A6192E",
+        "#003087",
+        "#097F42",
+        "#845c11",
+        "#006b94"
+      ],
+      "dark": [
+        "#8ca2c9",
+        "#c8707d",
+        "#00ADEF",
+        "#5dab82",
+        "#F0A81E",
+        "#b7bcc8"
+      ]
+    }
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single red element in a view. One per screen, always the primary action.",
+      "html": "<button class=\"ds-btn-primary\">Continue</button>",
+      "css": ".ds-btn-primary{background:var(--action,oklch(0.52 0.208 21));color:var(--action-ink,#fff);font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:.875rem;font-weight:500;line-height:1.4;padding:14px 28px;border:none;border-radius:var(--radius-slight,3px);cursor:pointer;transition:background 200ms cubic-bezier(0.16,1,0.3,1)}.ds-btn-primary:hover{background:var(--action-hover,oklch(0.47 0.190 21))}.ds-btn-primary:focus-visible{outline:2px solid var(--focus,oklch(0.52 0.208 21));outline-offset:2px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Bordered alternative for non-primary actions. Border darkens to full ink on hover; no fill change.",
+      "html": "<button class=\"ds-btn-secondary\"><svg viewBox=\"0 0 24 24\" width=\"18\" height=\"18\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4\"/><polyline points=\"10 17 15 12 10 7\"/><line x1=\"15\" y1=\"12\" x2=\"3\" y2=\"12\"/></svg>Continue with Google</button>",
+      "css": ".ds-btn-secondary{display:inline-flex;align-items:center;gap:12px;background:var(--surface,#fff);color:var(--ink,oklch(0.22 0.058 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:.875rem;font-weight:500;padding:14px 16px;border:1px solid var(--rule-strong,oklch(0.84 0.030 268));border-radius:var(--radius-slight,3px);cursor:pointer;transition:border-color 200ms cubic-bezier(0.16,1,0.3,1)}.ds-btn-secondary:hover{border-color:var(--ink,oklch(0.22 0.058 268))}.ds-btn-secondary:focus-visible{outline:2px solid var(--focus,oklch(0.52 0.208 21));outline-offset:2px}"
+    },
+    {
+      "name": "Inline Link",
+      "kind": "button",
+      "refersTo": "link-inline",
+      "description": "Preferred over a third button. A transparent bottom border fills in on hover.",
+      "html": "<a href=\"#\" class=\"ds-link-inline\">Visit EEF Alumni</a>",
+      "css": ".ds-link-inline{color:var(--action,oklch(0.52 0.208 21));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:.875rem;font-weight:500;text-decoration:none;border-bottom:1px solid color-mix(in oklch,var(--action,oklch(0.52 0.208 21)) 30%,transparent);padding-bottom:2px;transition:border-color 200ms cubic-bezier(0.16,1,0.3,1)}.ds-link-inline:hover{border-bottom-color:var(--action,oklch(0.52 0.208 21))}"
+    },
+    {
+      "name": "Underline Input",
+      "kind": "input",
+      "refersTo": "input-underline",
+      "description": "A single bottom rule that shifts to Eanes Red on focus. No box, no ring, no glow.",
+      "html": "<div class=\"ds-field\"><label class=\"ds-field-label\" for=\"ds-year\">Graduating class</label><input class=\"ds-field-input ds-tabular\" id=\"ds-year\" type=\"text\" placeholder=\"2024\"></div>",
+      "css": ".ds-field{display:flex;flex-direction:column}.ds-field-label{color:var(--ink-muted,oklch(0.38 0.010 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:.875rem;font-weight:500;margin-bottom:4px}.ds-field-input{background:transparent;color:var(--ink,oklch(0.22 0.058 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:1.125rem;border:0;border-bottom:1px solid var(--rule,oklch(0.885 0.006 268));border-radius:var(--radius-slight,3px);padding:10px 0;caret-color:var(--action,oklch(0.52 0.208 21));transition:border-color 200ms cubic-bezier(0.16,1,0.3,1)}.ds-field-input::placeholder{color:var(--ink-faint,oklch(0.515 0.010 268))}.ds-field-input:focus{outline:none;border-bottom-color:var(--action,oklch(0.52 0.208 21))}.ds-tabular{font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Navy Field",
+      "kind": "custom",
+      "refersTo": "navy-field",
+      "description": "The signature peak: a large committed navy region with display type and the drawn Eanes rule. One per page.",
+      "html": "<section class=\"ds-navy-field\"><p class=\"ds-navy-kicker\">Class of <span class=\"ds-brass ds-tabular\">2019</span></p><h2 class=\"ds-navy-display\">Welcome back, Jane.</h2><span class=\"ds-rule-draw\" aria-hidden=\"true\"></span><p class=\"ds-navy-body\">Your home base as a Westlake alum. Browse the Chap directory and keep your profile current.</p></section>",
+      "css": ".ds-navy-field{background:var(--color-navy-900,oklch(0.22 0.058 268));color:var(--on-navy,oklch(0.97 0.010 268));padding:56px 32px;border-radius:0}.ds-navy-kicker{color:var(--on-navy-muted,oklch(0.80 0.035 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:.875rem;margin:0}.ds-brass{color:var(--color-brass-400,oklch(0.72 0.088 78));font-weight:500}.ds-tabular{font-variant-numeric:tabular-nums}.ds-navy-display{font-family:Lexend,ui-sans-serif,system-ui,sans-serif;font-size:2.5rem;font-weight:600;line-height:1.04;letter-spacing:-0.028em;margin:12px 0 0}.ds-rule-draw{display:block;width:6rem;height:2px;margin-top:28px;background:var(--color-eanes-400,oklch(0.62 0.185 21));transform-origin:left center;animation:ds-rule-in 600ms cubic-bezier(0.16,1,0.3,1) both}@keyframes ds-rule-in{from{transform:scaleX(0)}to{transform:scaleX(1)}}.ds-navy-body{color:var(--on-navy-muted,oklch(0.80 0.035 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:1.125rem;line-height:1.6;max-width:65ch;margin:28px 0 0}@media (prefers-reduced-motion:reduce){.ds-rule-draw{animation-duration:.001ms}}"
+    },
+    {
+      "name": "Register Card",
+      "kind": "card",
+      "refersTo": "card-register",
+      "description": "Square-cornered surface with hairline-divided regions. No shadow, no nesting.",
+      "html": "<article class=\"ds-card\"><header class=\"ds-card-head\"><p class=\"ds-card-eyebrow\">The mentor</p><h2 class=\"ds-card-title\">Jane Doe</h2><p class=\"ds-card-meta\">Class of <span class=\"ds-brass-dark ds-tabular\">2011</span></p></header><div class=\"ds-card-body\"><p class=\"ds-quote\">Both moved from consulting into product design.</p></div></article>",
+      "css": ".ds-card{background:var(--surface,#fff);border:1px solid var(--rule,oklch(0.885 0.006 268));border-radius:var(--radius-slight,3px)}.ds-card-head{padding:24px;border-bottom:1px solid var(--rule,oklch(0.885 0.006 268))}.ds-card-eyebrow{color:var(--ink-faint,oklch(0.515 0.010 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:.875rem;margin:0}.ds-card-title{font-family:Lexend,ui-sans-serif,system-ui,sans-serif;font-size:1.5rem;font-weight:600;line-height:1.2;letter-spacing:-0.02em;color:var(--ink,oklch(0.22 0.058 268));margin:2px 0 0}.ds-card-meta{color:var(--ink-muted,oklch(0.38 0.010 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:.875rem;margin:4px 0 0}.ds-brass-dark{color:var(--color-brass-600,oklch(0.52 0.085 78));font-weight:500}.ds-tabular{font-variant-numeric:tabular-nums}.ds-card-body{padding:24px}.ds-quote{border-left:2px solid var(--color-brass-600,oklch(0.52 0.085 78));padding-left:16px;margin:0;color:var(--ink-muted,oklch(0.38 0.010 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;line-height:1.6}"
+    },
+    {
+      "name": "Register List",
+      "kind": "custom",
+      "refersTo": "card-register",
+      "description": "The double-top-rule convention: a 2px rule opens the list, hairlines divide entries. Replaces card grids.",
+      "html": "<dl class=\"ds-register\"><div class=\"ds-register-row\"><dt class=\"ds-register-term\">EEF Alumni Portal</dt><dd class=\"ds-register-desc\">The official Eanes Education Foundation alumni page \u2014 the registry for former Chaps.</dd><dd class=\"ds-register-act\"><a href=\"#\" class=\"ds-link-inline\">Visit EEF Alumni</a></dd></div><div class=\"ds-register-row\"><dt class=\"ds-register-term\">Eanes ISD Website</dt><dd class=\"ds-register-desc\">District announcements, calendars, and campus news.</dd><dd class=\"ds-register-act\"><a href=\"#\" class=\"ds-link-inline\">Visit Eanes ISD</a></dd></div></dl>",
+      "css": ".ds-register{border-top:2px solid var(--rule-strong,oklch(0.84 0.030 268));margin:0}.ds-register-row{border-bottom:1px solid var(--rule,oklch(0.885 0.006 268));padding:28px 0;display:grid;grid-template-columns:15rem 1fr auto;gap:40px;align-items:baseline}@media (max-width:640px){.ds-register-row{display:block}}.ds-register-term{font-family:Lexend,ui-sans-serif,system-ui,sans-serif;font-size:1.125rem;font-weight:600;color:var(--ink,oklch(0.22 0.058 268))}.ds-register-desc{color:var(--ink-muted,oklch(0.38 0.010 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;line-height:1.6;max-width:65ch;margin:0}.ds-register-act{margin:0;text-align:right}.ds-link-inline{color:var(--action,oklch(0.52 0.208 21));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:.875rem;font-weight:500;text-decoration:none;border-bottom:1px solid color-mix(in oklch,var(--action,oklch(0.52 0.208 21)) 30%,transparent);padding-bottom:2px;white-space:nowrap}.ds-link-inline:hover{border-bottom-color:var(--action,oklch(0.52 0.208 21))}"
+    },
+    {
+      "name": "Tab Strip",
+      "kind": "nav",
+      "refersTo": "button-secondary",
+      "description": "Target navigation treatment: hairline strip, active tab marked by a 2px Eanes Red bottom rule. No pills.",
+      "html": "<nav class=\"ds-tabs\"><button class=\"ds-tab ds-tab-active\">Home</button><button class=\"ds-tab\">Directory</button><button class=\"ds-tab\">Profile</button></nav>",
+      "css": ".ds-tabs{display:flex;gap:32px;border-bottom:1px solid var(--rule,oklch(0.885 0.006 268))}.ds-tab{background:none;border:0;border-bottom:2px solid transparent;border-radius:var(--radius-slight,3px);color:var(--ink-faint,oklch(0.515 0.010 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:.875rem;font-weight:500;padding:0 0 12px;margin-bottom:-1px;cursor:pointer;transition:color 200ms cubic-bezier(0.16,1,0.3,1),border-color 200ms cubic-bezier(0.16,1,0.3,1)}.ds-tab:hover{color:var(--ink,oklch(0.22 0.058 268))}.ds-tab-active{color:var(--ink,oklch(0.22 0.058 268));border-bottom-color:var(--action,oklch(0.52 0.208 21))}.ds-tab:focus-visible{outline:2px solid var(--focus,oklch(0.52 0.208 21));outline-offset:2px}"
+    },
+    {
+      "name": "Heritage Marker",
+      "kind": "chip",
+      "refersTo": "chip-heritage",
+      "description": "The brass class-year marker \u2014 the register's index. Never more than one per view.",
+      "html": "<p class=\"ds-heritage\">Class of <span class=\"ds-heritage-year\">2019</span></p>",
+      "css": ".ds-heritage{color:var(--ink-muted,oklch(0.38 0.010 268));font-family:'Source Sans 3',ui-sans-serif,system-ui,sans-serif;font-size:.875rem;margin:0}.ds-heritage-year{color:var(--color-brass-600,oklch(0.52 0.085 78));font-family:Lexend,ui-sans-serif,system-ui,sans-serif;font-size:1.25rem;font-weight:500;font-variant-numeric:tabular-nums}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Alumni Register",
+    "overview": "Chap Connect imitates a bound institutional register \u2014 the kind of ledger a school keeps of the people who passed through it. Navy fields open a page the way a cover opens a book. Hairline rules separate entries. Graduation years are set in brass with figures that line up in a column. The design's job is to make a record of people feel kept properly, not to make a database feel fun.\n\nThe system is flat and precise by construction, but it is not austere. A small, closed vocabulary of ornamental marks carries the brand: a red rule that draws itself beneath a masthead, brass figures indexing a class year, a doubled rule opening a list. Ornament here is always load-bearing \u2014 it marks a peak, an index, or a boundary. Decoration that encodes nothing is not part of the language.\n\nDensity is generous at the peaks and tight in the entries. Every screen has exactly one loud thing: either a navy field or a red action, never both competing. The visual world was arrived at by removing an accumulated layer of generated-looking effects \u2014 animated gradients, glow, float, emoji standing in for icons, drop shadows, uppercase micro-labels. Those are not stylistic preferences to revisit; they are the confirmed anti-reference.",
+    "keyCharacteristics": [
+      "Flat by construction \u2014 no shadows anywhere, depth from rules and tonal surface steps",
+      "Navy owns whole regions; red appears once per view",
+      "A 3px radius \u2014 present but only just; larger steps are a defect",
+      "Display type at real size (up to 4.25rem) carries emphasis, never font weight",
+      "Tabular figures wherever numbers are compared",
+      "A closed set of four ornamental marks, each carrying meaning",
+      "Contrast verified by computation, never by eye"
+    ],
+    "rules": [
+      {
+        "name": "The One Red Rule",
+        "body": "Exactly one red element per view, and it is always the primary action. If a screen has two reds, one of them is decoration and must be removed.",
+        "section": "colors"
+      },
+      {
+        "name": "The No Gray On Color Rule",
+        "body": "Secondary text on a navy field is derived from the navy's own hue, never from the neutral ramp. Gray on color reads as washed-out, not quiet.",
+        "section": "colors"
+      },
+      {
+        "name": "The Computed Contrast Rule",
+        "body": "No color pair ships without a computed WCAG ratio. Body text clears 4.5:1 and controls clear 3:1 on every surface they can land on, in both themes. Eyeballing a ratio is not verification \u2014 convert OKLCH to sRGB and calculate.",
+        "section": "colors"
+      },
+      {
+        "name": "The Weight Ceiling Rule",
+        "body": "Nothing exceeds 600. Emphasis comes from size and space; font-bold and font-black are both banned. A heading that needs more presence gets larger, not heavier.",
+        "section": "typography"
+      },
+      {
+        "name": "The Sentence Case Rule",
+        "body": "No uppercase, no letter-spaced micro-labels. Headings and labels are sentence case. The one exception would be a genuine acronym.",
+        "section": "typography"
+      },
+      {
+        "name": "The Lining Figures Rule",
+        "body": "Any figure that appears in a column or invites comparison carries tabular-nums via the .tabular class. Ragged digits are a register's most visible failure.",
+        "section": "typography"
+      },
+      {
+        "name": "The Proximity Before Container Rule",
+        "body": "Group by space first. A container is only justified when proximity alone cannot express the grouping \u2014 which, in a register, is rare.",
+        "section": "layout"
+      },
+      {
+        "name": "The Full-Bleed Peak Rule",
+        "body": "A navy field bleeds to the container edge via negative margins that exactly cancel the parent's padding. Its inner text stays on the measure. Mismatched values produce horizontal overflow, so the two must be edited together.",
+        "section": "layout"
+      },
+      {
+        "name": "The No Shadow Rule",
+        "body": "There is no shadow token because there is no shadow. A request for 'more depth' is answered with a rule, a tonal step, or overlap \u2014 never by reintroducing box-shadow.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Slight Radius Rule",
+        "body": "Surfaces and controls get rounded-slight (3px) \u2014 never a larger step. Controls receive it from a base rule. Exceptions: rounded-full on avatars and spinners, and full-bleed navy fields which stay at 0.",
+        "section": "shapes"
+      },
+      {
+        "name": "The Photo Band Rule",
+        "body": "Photography lives in its own band, welded to the field above it by a top fade. Text never sits on top of a photo, so contrast never depends on image content.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do reference semantic roles (text-ink, bg-canvas, bg-action, border-rule, text-on-navy) in components. Primitives (navy-900, eanes-500) belong in src/index.css only, so a theme change remaps roles without editing a component.",
+      "Do give every page exactly one peak \u2014 a navy field or a display heading, not both.",
+      "Do compute contrast before shipping a color. Every pair clears AA on every surface it can land on, in both themes.",
+      "Do use Eanes Red Light for red marks on navy; full-strength Eanes Red fails there (2.83:1).",
+      "Do reach for a rule, a tonal step, or overlap when something needs depth.",
+      "Do apply .tabular to any figure a reader will compare.",
+      "Do keep ornament to the four sanctioned marks, and make each instance carry meaning.",
+      "Do compose the dark theme by redefining semantic roles in the .dark block."
+    ],
+    "donts": [
+      "Don't reintroduce any AI-slop tell: animated or text gradients, glow, float, box-shadow, emoji-as-icon, uppercase micro-labels, font-bold/font-black, spring pop-ins, whileHover scale, hover-lift cards, or an eyebrow label above a heading. This is the confirmed anti-reference, not a preference.",
+      "Don't build toward the generic SaaS dashboard: purple/indigo gradients, pill buttons, stat-tile hero rows, sparkline decoration, or a grid of three equal icon+heading+text cards as page structure.",
+      "Don't use rounded-* in new code. Square corners are the form language.",
+      "Don't exceed weight 600, or use color as the only carrier of information.",
+      "Don't put gray text on a colored ground \u2014 derive it from the ground's hue.",
+      "Don't treat .brutal-shadow as live styling. It is an intentional no-op retained for unmigrated markup; remove it when you touch a file rather than restoring its effect.",
+      "Don't add a second brass element to a view, or a second red one."
+    ]
+  }
+}

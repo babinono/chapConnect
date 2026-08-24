@@ -9,7 +9,9 @@ import Dashboard from './pages/Dashboard';
 import Directory from './pages/Directory';
 import AdminCRM from './pages/AdminCRM';
 import ThemeToggle from './components/ThemeToggle';
+import SchemeToggle from './components/ui/SchemeToggle';
 import IntroSplash from './components/IntroSplash';
+import BubbleCursor from './components/ui/BubbleCursor';
 import { Loader2 } from 'lucide-react';
 
 // Cross-fade + slide between routes; exit is quick so back/forward stays snappy.
@@ -68,7 +70,9 @@ function App() {
   const [showIntro, setShowIntro] = useState(true);
 
   useEffect(() => {
-    const t = setTimeout(() => setShowIntro(false), 2000);
+    // Slightly after the intro's own 2.2s CSS fade, so unmount is never the
+    // thing the user is waiting on.
+    const t = setTimeout(() => setShowIntro(false), 2400);
     return () => clearTimeout(t);
   }, []);
 
@@ -90,16 +94,18 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-[#0c1324]">
-        <Loader2 className="w-16 h-16 text-blue-600 animate-spin mb-6" />
-        <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Initializing Session...</h2>
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center p-6 bg-sunken panel">
+        <Loader2 className="w-16 h-16 text-ink-faint animate-spin mb-6" />
+        <h2 className="text-3xl font-semibold text-ink tracking-tight">Initializing Session...</h2>
       </div>
     );
   }
 
   return (
     <div className="relative">
-      <AnimatePresence>{showIntro && <IntroSplash key="intro" />}</AnimatePresence>
+      {showIntro && <IntroSplash />}
+      <BubbleCursor />
+      <SchemeToggle />
       <ThemeToggle />
       <BrowserRouter>
         <AnimatedRoutes session={session} />

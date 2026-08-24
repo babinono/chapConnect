@@ -5,10 +5,11 @@ import { checkLimit, recordMatch } from '../utils/rateLimiter';
 import { supabase } from '../utils/supabaseClient';
 import MatchCard from '../components/MatchCard';
 import OutreachMessage from '../components/OutreachMessage';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, ArrowLeft, Loader2, Calendar, ShieldAlert, Home } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
+import { ArrowLeft } from 'lucide-react';
 
 export default function MatchPage({ session }) {
+  const reduce = useReducedMotion();
   const location = useLocation();
   const navigate = useNavigate();
   const [matchData, setMatchData] = useState(null);
@@ -161,42 +162,33 @@ export default function MatchPage({ session }) {
   
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6">
-        <motion.div
-          initial={{ scale: 0, rotate: -180, opacity: 0 }}
-          animate={{ scale: 1, rotate: 0, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 200, damping: 16 }}
-          className="relative mb-8"
-        >
-          <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ repeat: Infinity, duration: 2.4, ease: 'linear' }}
-            className="w-20 h-20 rounded-2xl gradient-brand flex items-center justify-center brutal-shadow"
-          >
-            <Sparkles className="w-9 h-9 text-white fill-current" />
-          </motion.div>
-          <motion.span
-            className="absolute inset-0 rounded-2xl border-2 border-blue-500/40"
-            animate={{ scale: [1, 1.5], opacity: [0.6, 0] }}
-            transition={{ repeat: Infinity, duration: 1.6, ease: 'easeOut' }}
-          />
-        </motion.div>
-        <motion.h2
-          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-          className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight"
-        >
-          Finding Your Match...
-        </motion.h2>
-        <AnimatePresence mode="wait">
-          <motion.p
-            key={loadingStep}
-            initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.3 }}
-            className="text-blue-600 dark:text-blue-400 font-bold mt-3 tracking-wide text-xs"
-          >
-            {loadingStep}
-          </motion.p>
-        </AnimatePresence>
+      <div className="min-h-[100dvh] bg-canvas flex flex-col items-center justify-center px-6">
+        <div className="w-full max-w-md">
+          <div className="flex items-center gap-4">
+            <motion.span
+              animate={{ rotate: 360 }}
+              transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+              className="w-5 h-5 flex-shrink-0 rounded-full border-2 border-rule border-t-action"
+              aria-hidden="true"
+            />
+            <h2 className="font-heading text-3xl font-semibold text-ink tracking-tight">
+              Finding your match
+            </h2>
+          </div>
+          <AnimatePresence mode="wait">
+            <motion.p
+              key={loadingStep}
+              initial={reduce ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.25 }}
+              className="mt-4 border-l-2 border-rule-strong pl-4 text-ink-muted"
+              role="status"
+            >
+              {loadingStep}
+            </motion.p>
+          </AnimatePresence>
+        </div>
       </div>
     );
   }
@@ -204,30 +196,36 @@ export default function MatchPage({ session }) {
   // Rate limit screen
   if (rateLimitData) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6">
-        <div className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 brutal-shadow p-8 rounded-2xl max-w-md w-full text-center">
-          <div className="flex justify-center mb-6">
-            <div className="p-4 bg-red-500 border border-slate-200 dark:border-white/10 rounded-2xl brutal-shadow-sm">
-              <ShieldAlert className="w-12 h-12 text-white" />
-            </div>
-          </div>
-          <h2 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-4">Rate Limit Exceeded</h2>
-          <p className="text-slate-700 dark:text-slate-300 font-bold mb-6">
-            To keep connections meaningful, Chap Connect limits matchmaking to **2 matches every 2 weeks**. 
+      <div className="min-h-[100dvh] bg-canvas flex flex-col items-center justify-center px-6 py-14">
+        <div className="w-full max-w-md">
+          <p className="text-sm text-ink-faint">Matchmaking paused</p>
+          <h2 className="mt-2 font-heading text-title font-semibold text-ink tracking-tight">
+            You have used both matches
+          </h2>
+          <span className="mt-6 block h-0.5 w-20 bg-action" aria-hidden="true" />
+          <p className="mt-6 text-ink-muted leading-relaxed">
+            To keep connections meaningful, Chap Connect allows two matches every two
+            weeks.
           </p>
+
           {rateLimitData.nextAvailableDate && (
-            <div className="bg-slate-100 dark:bg-[#18213a] border border-slate-200 dark:border-white/10 rounded-xl p-4 mb-8 flex items-center justify-center space-x-3">
-              <Calendar className="w-6 h-6 text-blue-600" />
-              <div className="text-left">
-                <div className="text-xs font-bold text-slate-500 dark:text-slate-400">Next Match Available</div>
-                <div className="font-bold text-slate-900 dark:text-slate-100 text-sm">
-                  {rateLimitData.nextAvailableDate.toLocaleDateString()} at {rateLimitData.nextAvailableDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                </div>
-              </div>
-            </div>
+            <dl className="mt-8 border-t border-rule pt-5">
+              <dt className="text-sm text-ink-faint">Next match available</dt>
+              <dd className="mt-1 font-heading text-xl text-ink tabular">
+                {rateLimitData.nextAvailableDate.toLocaleDateString()} at{' '}
+                {rateLimitData.nextAvailableDate.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </dd>
+            </dl>
           )}
-          <Link to={session ? "/dashboard" : "/"} className="inline-block w-full bg-blue-600 text-white py-4 rounded-xl font-bold border border-slate-200 dark:border-white/10 brutal-shadow hover:translate-y-0.5 active:translate-y-1 transition-all tracking-wide">
-            Back to Dashboard
+
+          <Link
+            to={session ? '/dashboard' : '/'}
+            className="mt-10 inline-block bg-action text-action-ink font-medium py-3.5 px-7 transition-colors hover:bg-action-hover"
+          >
+            Back to dashboard
           </Link>
         </div>
       </div>
@@ -236,19 +234,21 @@ export default function MatchPage({ session }) {
 
   if (error || !matchData || !matchData.mentor) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6">
-        <div className="bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 brutal-shadow p-8 rounded-2xl max-w-md w-full text-center">
-          <div className="flex justify-center mb-6">
-            <div className="p-4 bg-red-500 border border-slate-200 dark:border-white/10 rounded-2xl brutal-shadow-sm">
-              <ShieldAlert className="w-12 h-12 text-white" />
-            </div>
-          </div>
-          <h2 className="text-3xl font-bold text-red-600 tracking-tight mb-4">Oops!</h2>
-          <p className="text-slate-900 dark:text-slate-100 font-bold mb-8">
-            {errorMessage || "We couldn't establish a successful alumni match right now."}
+      <div className="min-h-[100dvh] bg-canvas flex flex-col items-center justify-center px-6 py-14">
+        <div className="w-full max-w-md">
+          <p className="text-sm text-ink-faint">No result</p>
+          <h2 className="mt-2 font-heading text-title font-semibold text-ink tracking-tight">
+            No match right now
+          </h2>
+          <span className="mt-6 block h-0.5 w-20 bg-action" aria-hidden="true" />
+          <p className="mt-6 text-ink-muted leading-relaxed">
+            {errorMessage || "We couldn't find an alumni match for you this time. Trying again usually works."}
           </p>
-          <Link to={session ? "/dashboard" : "/"} className="inline-block w-full bg-blue-600 text-white py-4 rounded-xl font-bold border border-slate-200 dark:border-white/10 brutal-shadow tracking-wide hover:translate-y-0.5 active:translate-y-1 transition-all">
-            Return to Dashboard
+          <Link
+            to={session ? '/dashboard' : '/'}
+            className="mt-10 inline-block bg-action text-action-ink font-medium py-3.5 px-7 transition-colors hover:bg-action-hover"
+          >
+            Return to dashboard
           </Link>
         </div>
       </div>
@@ -256,57 +256,78 @@ export default function MatchPage({ session }) {
   }
 
   return (
-    <div className="min-h-screen py-10 px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-      <div className="w-full max-w-4xl">
-        <Link to={session ? "/dashboard" : "/"} className="inline-flex items-center text-sm font-bold tracking-wide text-slate-900 dark:text-slate-100 hover:text-blue-600 mb-8 transition-colors border border-slate-200 dark:border-white/10 px-4 py-2 bg-white dark:bg-[#111a30] brutal-shadow-sm rounded-lg hover:translate-y-[1px] active:translate-y-[2px]">
-          <ArrowLeft className="w-5 h-5 mr-2" /> Back to Dashboard
-        </Link>
-        
-        <motion.div
-          initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
-          className="text-center mb-8"
-        >
-          <motion.div
-            initial={{ scale: 0, rotate: -30 }}
-            animate={{ scale: 1, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 14, delay: 0.1 }}
-            className="inline-flex items-center justify-center p-4 gradient-brand brutal-shadow rounded-full mb-6"
+    <div className="min-h-[100dvh] bg-canvas">
+      {/* The peak: a full-bleed navy field announcing the result, with the
+          display type at real size. Everything below it is quiet by design. */}
+      <div className="navy-field px-4 sm:px-6 lg:px-8 pt-8 pb-16">
+        <div className="mx-auto w-full max-w-5xl">
+          <Link
+            to={session ? '/dashboard' : '/'}
+            className="inline-flex items-center text-sm text-on-navy-muted hover:text-on-navy transition-colors"
           >
-            <Sparkles className="w-10 h-10 text-white fill-current animate-spin" style={{ animationDuration: '6s' }} />
-          </motion.div>
-          <motion.h1
-            initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: 'spring', stiffness: 200, damping: 18, delay: 0.2 }}
-            className="text-5xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-2"
-          >It's a Match!</motion.h1>
-          {matchData?.fallbackToAlgo && (
-            <div className="flex flex-col items-center gap-2 mb-4">
-              <div className="inline-flex items-center space-x-1.5 bg-red-600 border border-slate-200 dark:border-white/10 text-white px-3 py-1 font-bold text-xs tracking-wide rounded-md brutal-shadow-sm">
-                <span>⚡ High-Speed Fallback Match Active</span>
-              </div>
-              {import.meta.env.DEV && matchData?.fallbackError && (
-                <div className="text-xs font-bold text-red-600 bg-red-50 border-2 border-red-500 rounded-lg px-4 py-1.5 max-w-md mx-auto brutal-shadow-sm tracking-wider">
-                  ⚠️ Dev Diagnostic: {matchData.fallbackError}
-                </div>
-              )}
-            </div>
-          )}
-          <p className="text-slate-600 dark:text-slate-400 font-bold tracking-wide text-sm">We found a great connection for you</p>
-        </motion.div>
+            <ArrowLeft className="w-4 h-4 mr-2" /> Back to dashboard
+          </Link>
 
-
-        <div className="flex flex-col md:flex-row gap-8 items-stretch justify-center">
           <motion.div
-            initial={{ opacity: 0, x: -40, rotate: -2 }} animate={{ opacity: 1, x: 0, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 180, damping: 20, delay: 0.35 }}
-            className="flex-1 max-w-sm mx-auto w-full"
+            initial={reduce ? false : { opacity: 0, y: 14 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-12"
+          >
+            <p className="text-sm text-on-navy-muted">
+              {matchData?.isAIPowered ? 'Matched on your profile' : 'Matched from the directory'}
+            </p>
+            <h1 className="mt-3 font-heading text-5xl sm:text-6xl lg:text-display font-semibold text-on-navy">
+              Your match
+            </h1>
+            <span className="rule-draw mt-8 block h-0.5 w-28 bg-accent-navy" aria-hidden="true" />
+            <p className="mt-8 max-w-xl text-lg leading-relaxed text-on-navy-muted">
+              One Chap who has already stood where you are standing. Reach out. the
+              message on the right is yours to send.
+            </p>
+
+            {matchData?.fallbackToAlgo && (
+              <div className="mt-8 border-l-2 border-heritage pl-4">
+                <p className="text-sm text-on-navy">Fallback match</p>
+                <p className="text-sm text-on-navy-muted">
+                  Matched by the directory algorithm rather than the AI pass.
+                </p>
+                {import.meta.env.DEV && matchData?.fallbackError && (
+                  <p className="mt-1.5 text-xs text-on-navy-muted">
+                    Dev diagnostic: {matchData.fallbackError}
+                  </p>
+                )}
+              </div>
+            )}
+          </motion.div>
+        </div>
+
+        {/* Photographic band. */}
+        <div className="duotone mt-14 h-48 w-full sm:h-64 lg:h-80">
+          <img
+            src="/WHSfield.jpg"
+            alt=""
+            aria-hidden="true"
+            width={1200}
+            height={630}
+            loading="lazy"
+          />
+        </div>
+      </div>
+
+      <div className="px-4 sm:px-6 lg:px-8 pb-16">
+        <div className="mx-auto w-full max-w-5xl pt-14 grid gap-8 md:grid-cols-2 items-start">
+          <motion.div
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.15 }}
           >
             <MatchCard matchData={matchData} />
           </motion.div>
           <motion.div
-            initial={{ opacity: 0, x: 40, rotate: 2 }} animate={{ opacity: 1, x: 0, rotate: 0 }}
-            transition={{ type: 'spring', stiffness: 180, damping: 20, delay: 0.5 }}
-            className="flex-1 max-w-sm mx-auto w-full"
+            initial={reduce ? false : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1], delay: 0.25 }}
           >
             <OutreachMessage matchData={matchData} userProfile={location.state.profile} />
           </motion.div>
@@ -315,4 +336,3 @@ export default function MatchPage({ session }) {
     </div>
   );
 }
-

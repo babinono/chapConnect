@@ -10,15 +10,39 @@ import { COLLEGES, MAJORS } from '../utils/colleges';
 export default function OnboardingFlow({ session }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const state = location.state || {};
+
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-
-  if (!location.state) return <Navigate to="/" replace />;
-  
-  const { name, gradYear, flow } = location.state;
-
   const [dir, setDir] = useState(1); // 1 = forward, -1 = back (drives slide direction)
+
+  // Grad year drives which flow the onboarding runs. When someone arrives via
+  // Google sign-in we only have their name, so grad year / flow are collected in
+  // a first step here (stateful) instead of on the welcome screen.
+  const computeFlow = (yr) => {
+    const y = parseInt(yr, 10);
+    if (!y) return null;
+    if (y <= 2023) return 'post_college';
+    if (y <= 2026) return 'recent';
+    return 'student';
+  };
+  const sourceName = state.name || session?.user?.user_metadata?.full_name || '';
+  const [firstName, setFirstName] = useState(sourceName.split(' ')[0] || '');
+  const [lastName, setLastName] = useState(sourceName.split(' ').slice(1).join(' '));
+  const [nickname, setNickname] = useState('');
+  const [identityConfirmed, setIdentityConfirmed] = useState(false);
+  const [gradYear, setGradYear] = useState(state.gradYear || '');
+  const [flow, setFlow] = useState(state.flow || null);
+
+  // What the app calls you. A nickname wins over the legal first name, because
+  // every greeting in the product reads the first token of this.
+  const name = [nickname.trim() || firstName.trim(), lastName.trim()]
+    .filter(Boolean)
+    .join(' ');
+
+  // Need either welcome-screen state or a signed-in session to onboard.
+  if (!location.state && !session?.user?.id) return <Navigate to="/" replace />;
   const handleNext = () => { setDir(1); setStep(s => s + 1); };
   const handlePrev = () => { setDir(-1); setStep(s => Math.max(1, s - 1)); };
   const handleChange = (e) => {
@@ -162,12 +186,12 @@ export default function OnboardingFlow({ session }) {
     navigate('/dashboard');
   };
 
-  const inputClass = "w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-white/10 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-slate-50 dark:bg-[#0c1324] font-medium transition-all";
-  const labelClass = "block text-sm font-bold text-slate-900 dark:text-slate-100 mb-2 tracking-wide";
+  const inputClass = "w-full px-4 py-3 border border-rule focus:outline-none focus:border-action bg-sunken font-medium transition-all panel";
+  const labelClass = "block text-sm font-medium text-ink mb-2 tracking-wide";
 
   const renderFields = () => {
     if (flow === 'post_college') {
-      const checkboxClass = "flex items-start space-x-3 p-4 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0c1324] cursor-pointer";
+      const checkboxClass = "flex items-start space-x-3 p-4 border border-rule bg-sunken cursor-pointer panel";
 
       // STEP 1 — Undergrad (required for everyone)
       if (step === 1) {
@@ -193,20 +217,20 @@ export default function OnboardingFlow({ session }) {
       if (step === 2) {
         return (
           <div className="space-y-5">
-            <p className="text-slate-600 dark:text-slate-400 font-bold text-sm">
+            <p className="text-ink-muted font-medium text-sm">
               Did you study anything beyond your undergrad? Add grad school, med/law school, an MBA, etc. Leave blank if none.
             </p>
             {gradPrograms.length === 0 && (
-              <p className="text-slate-400 font-bold text-sm italic">No additional degrees added yet.</p>
+              <p className="text-ink-faint font-medium text-sm italic">No additional degrees added yet.</p>
             )}
             {gradPrograms.map((g, i) => (
-              <div key={i} className="rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-[#0c1324] p-4 space-y-3 relative">
+              <div key={i} className="border border-rule bg-sunken p-4 space-y-3 relative panel">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold tracking-wide text-slate-500 dark:text-slate-400">Degree {i + 1}</span>
+                  <span className="text-xs font-medium tracking-wide text-ink-faint">Degree {i + 1}</span>
                   <button
                     type="button"
                     onClick={() => removeGradProgram(i)}
-                    className="text-red-600 text-xs font-bold tracking-wide hover:underline cursor-pointer"
+                    className="text-bad text-xs font-medium tracking-wide hover:underline cursor-pointer"
                   >
                     Remove
                   </button>
@@ -230,7 +254,7 @@ export default function OnboardingFlow({ session }) {
             <button
               type="button"
               onClick={addGradProgram}
-              className="w-full py-3 rounded-xl border border-dashed border-slate-400 text-slate-700 dark:text-slate-300 font-bold tracking-wide text-sm hover:border-blue-600 hover:text-blue-700 transition-colors cursor-pointer"
+              className="w-full py-3 border border-dashed border-rule-strong text-ink-muted font-medium tracking-wide text-sm hover:border-ink hover:text-ink transition-colors cursor-pointer"
             >
               + Add {gradPrograms.length > 0 ? 'another ' : ''}degree
             </button>
@@ -244,7 +268,7 @@ export default function OnboardingFlow({ session }) {
         <div className="space-y-5">
           <div>
             <label className={labelClass}>Are you currently working?</label>
-            <select name="working" required onChange={handleChange} value={formData.working || ''} className={`${inputClass} font-bold`}>
+            <select name="working" required onChange={handleChange} value={formData.working || ''} className={` font-medium`}>
               <option value="">-- Select --</option>
               <option value="yes">Yes</option>
               <option value="no">No</option>
@@ -268,10 +292,10 @@ export default function OnboardingFlow({ session }) {
             </>
           )}
 
-          <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-white/10">
+          <div className="space-y-4 pt-4 border-t border-rule">
             <div>
               <label className={labelClass}>Preferred Contact (Optional)</label>
-              <select name="contactPlatform" onChange={handleChange} value={formData.contactPlatform || ''} className={`${inputClass} font-bold`}>
+              <select name="contactPlatform" onChange={handleChange} value={formData.contactPlatform || ''} className={` font-medium`}>
                 <option value="">-- Select Platform --</option>
                 <option value="Email">Email</option>
                 <option value="LinkedIn">LinkedIn</option>
@@ -296,11 +320,11 @@ export default function OnboardingFlow({ session }) {
 
             <label className={checkboxClass}>
               <input type="checkbox" name="newsletterConsent" checked={!!formData.newsletterConsent} onChange={handleChange} className="mt-0.5 w-5 h-5 accent-blue-600" />
-              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">I give permission to use my email to send me the alumni newsletter and publications.</span>
+              <span className="text-sm font-medium text-ink">I give permission to use my email to send me the alumni newsletter and publications.</span>
             </label>
             <label className={checkboxClass}>
               <input type="checkbox" name="contactConsent" checked={!!formData.contactConsent} onChange={handleChange} className="mt-0.5 w-5 h-5 accent-blue-600" />
-              <span className="text-sm font-bold text-slate-800 dark:text-slate-200">I allow students to occasionally contact me when Chap Connect matches them with me.</span>
+              <span className="text-sm font-medium text-ink">I allow students to occasionally contact me when Chap Connect matches them with me.</span>
             </label>
           </div>
         </div>
@@ -339,7 +363,7 @@ export default function OnboardingFlow({ session }) {
                 required 
                 onChange={handleChange} 
                 value={formData.industry || ''} 
-                className={`${inputClass} font-bold`}
+                className={` font-medium`}
               >
                 <option value="">-- Select Industry --</option>
                 <option value="Technology">Technology</option>
@@ -388,7 +412,7 @@ export default function OnboardingFlow({ session }) {
                 required 
                 onChange={handleChange} 
                 value={formData.contactPlatform || ''} 
-                className={`${inputClass} font-bold`}
+                className={` font-medium`}
               >
                 <option value="">-- Select Platform --</option>
                 <option value="Email">Email</option>
@@ -439,9 +463,9 @@ export default function OnboardingFlow({ session }) {
               <label className={labelClass}>Career Interest</label>
               <input name="targetCareers" type="text" onChange={handleChange} value={formData.targetCareers || ''} className={inputClass} placeholder="e.g. Consulting (comma separated)" />
             </div>
-            <div className="pt-4 border-t border-slate-200 dark:border-white/10">
+            <div className="pt-4 border-t border-rule">
               <label className={labelClass}>Social Media (Optional)</label>
-              <select name="contactPlatform" onChange={handleChange} value={formData.contactPlatform || ''} className={`${inputClass} font-bold`}>
+              <select name="contactPlatform" onChange={handleChange} value={formData.contactPlatform || ''} className={` font-medium`}>
                 <option value="">-- Select Platform --</option>
                 <option value="Instagram">Instagram</option>
                 <option value="LinkedIn">LinkedIn</option>
@@ -500,17 +524,117 @@ export default function OnboardingFlow({ session }) {
     }
   };
 
+  // Grad-year gate: shown when we don't yet know the year (e.g. arriving from
+  // Google sign-in). Once entered, it derives the flow and drops into step 1.
+  if (!identityConfirmed || !flow) {
+    const needsYear = !flow;
+    const handleYear = (e) => {
+      e.preventDefault();
+      if (!firstName.trim()) return;
+      if (needsYear) {
+        const f = computeFlow(gradYear);
+        if (!f) return;
+        setFlow(f);
+      }
+      setIdentityConfirmed(true);
+      setStep(1);
+    };
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center p-6">
+        <div className="w-full max-w-md bg-surface border border-rule p-8 panel">
+          <h1 className="font-heading text-3xl font-semibold text-ink tracking-tight mb-2">
+            {firstName ? `Hi, ${firstName}.` : 'Welcome.'}
+          </h1>
+          <p className="text-ink-muted mb-8">
+            Check we have your name right. This is what other Chaps will see.
+          </p>
+          <form onSubmit={handleYear} className="space-y-6">
+            <div className="grid gap-5 sm:grid-cols-2">
+              <div className="flex flex-col gap-2">
+                <label htmlFor="ob-first" className={labelClass}>First name</label>
+                <input
+                  id="ob-first"
+                  type="text"
+                  required
+                  autoFocus
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  className={inputClass}
+                  placeholder="Katherine"
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label htmlFor="ob-last" className={labelClass}>Last name</label>
+                <input
+                  id="ob-last"
+                  type="text"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  className={inputClass}
+                  placeholder="Taylor"
+                />
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-2">
+              <label htmlFor="ob-nick" className={labelClass}>
+                Go by something else? <span className="text-ink-faint font-normal">(optional)</span>
+              </label>
+              <input
+                id="ob-nick"
+                type="text"
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                className={inputClass}
+                placeholder="Kate"
+              />
+              <p className="text-sm text-ink-faint">
+                {nickname.trim()
+                  ? `We'll call you ${nickname.trim()}.`
+                  : 'Leave blank to use your first name.'}
+              </p>
+            </div>
+
+            {needsYear && (
+              <div className="flex flex-col gap-2">
+                <label htmlFor="ob-year" className={labelClass}>High school graduating class</label>
+                <input
+                  id="ob-year"
+                  type="number"
+                  min="1950"
+                  max="2035"
+                  required
+                  value={gradYear}
+                  onChange={(e) => setGradYear(e.target.value)}
+                  className={`${inputClass} tabular`}
+                  placeholder="2024"
+                />
+              </div>
+            )}
+            <button
+              type="submit"
+              className="w-full bg-action text-action-ink font-medium py-4 px-4 flex items-center justify-center space-x-2 tracking-wide cursor-pointer"
+            >
+              <span>Continue</span>
+              <ArrowRight className="w-5 h-5" />
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   const isSelectorStep = false;
   const isLastStep = (flow === 'post_college' && step === 3) || (flow === 'established' && step === 3) || (flow === 'recent' && step === 2) || (flow === 'student' && step === 2);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6">
-      <div className="w-full max-w-xl bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 rounded-2xl p-8 brutal-shadow relative">
-        <div className="absolute top-4 right-4 bg-slate-900 text-white font-bold px-3 py-1 text-xs rounded-md">
+    <div className="min-h-[100dvh] flex items-center justify-center p-6">
+      <div className="w-full max-w-xl bg-surface border border-rule p-8 relative panel">
+        <div className="absolute top-4 right-4 navy-field font-medium px-3 py-1 text-xs">
           Step {step} of {flow === 'post_college' ? 3 : (flow === 'established' ? 3 : 2)}
         </div>
 
-        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight mb-8">
+        <h1 className="text-3xl font-semibold text-ink tracking-tight mb-8">
           Tell Us About Yourself
         </h1>
 
@@ -534,12 +658,12 @@ export default function OnboardingFlow({ session }) {
           </AnimatePresence>
 
           {!isSelectorStep && (
-            <div className="flex justify-between pt-4 border-t-2 border-slate-200 dark:border-white/10">
+            <div className="flex justify-between pt-4 border-t-2 border-rule">
               {step > 1 ? (
                 <button
                   type="button"
                   onClick={handlePrev}
-                  className="bg-white dark:bg-[#111a30] text-slate-900 dark:text-slate-100 font-bold py-3 px-5 border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow-sm flex items-center space-x-2 transition-all tracking-wider"
+                  className="bg-surface text-ink font-medium py-3 px-5 border border-rule flex items-center space-x-2 transition-all tracking-normal rounded-slight"
                 >
                   <ArrowRight className="w-5 h-5 rotate-180" />
                   <span>Back</span>
@@ -551,7 +675,7 @@ export default function OnboardingFlow({ session }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-blue-600 text-white font-bold py-3 px-5 border border-slate-200 dark:border-white/10 rounded-xl brutal-shadow flex items-center space-x-2 transition-all tracking-wider"
+                className="bg-action text-action-ink font-medium py-3 px-5 border border-rule flex items-center space-x-2 transition-all tracking-normal"
               >
                 {isSubmitting ? (
                   <>

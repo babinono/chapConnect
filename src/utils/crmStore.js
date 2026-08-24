@@ -10,11 +10,12 @@
 // to hydrate the cache.
 
 import { supabase } from './supabaseClient';
+import { generateDonations } from './demoDonations';
 
 const K_DON = 'cc_crm_donations';
 const K_NOTES = 'cc_crm_notes';
 const K_TAGS = 'cc_crm_tags';
-const K_SEEDED = 'cc_crm_seeded_v1';
+const K_SEEDED = 'cc_crm_seeded_v3';
 
 export const CAMPAIGNS = ['Annual Fund', 'Scholarship Fund', 'Athletics', 'Fine Arts', 'Capital Campaign', 'Teacher Grants'];
 export const METHODS = ['Credit Card', 'Check', 'Cash', 'Stock', 'Payroll', 'Wire'];
@@ -132,25 +133,43 @@ export function totalsByCampaign(donations) {
 }
 export function money(n) { return '$' + Math.round(n || 0).toLocaleString('en-US'); }
 
-/* ---------- One-time demo seed (localStorage mode only) ---------- */
+/* ---------- Demo data ---------- */
+// Gift generation lives in demoDonations.js — it's a pure function of the
+// contacts, so the same people always produce the same giving history.
+
+// localStorage mode: fill an empty cache so demos have something to analyse.
+// Regenerated from scratch rather than stored, so it can never drift.
 export function seedIfEmpty(contacts) {
-  if (_mode !== 'local') return;                 // never auto-seed a real Supabase DB
+  if (_mode !== 'local') return;              // never auto-write a real database
   if (localStorage.getItem(K_SEEDED) || !contacts || contacts.length === 0) return;
-  const pick = (arr, i) => arr[i % arr.length];
-  const sample = contacts.slice(0, Math.min(contacts.length, 40));
-  const amounts = [50, 100, 250, 500, 1000, 75, 2500, 150, 5000, 300, 1200, 40, 800, 600, 3500, 200];
-  let n = 0;
-  for (let i = 0; i < sample.length && n < 22; i += 2) {
-    const c = sample[i];
-    const year = 2022 + (i % 4);
-    const month = ((i * 3) % 12) + 1;
-    const day = ((i * 7) % 27) + 1;
-    _don.push({ id: uuid(), contactId: c.id, contactName: c.name, amount: pick(amounts, i), date: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`, campaign: pick(CAMPAIGNS, i), method: pick(METHODS, i), note: '' });
-    if (i % 6 === 0) {
-      _don.push({ id: uuid(), contactId: c.id, contactName: c.name, amount: pick(amounts, i + 5), date: `${year + 1 <= 2025 ? year + 1 : 2025}-0${(i % 8) + 1}-1${i % 5}`, campaign: pick(CAMPAIGNS, i + 2), method: pick(METHODS, i + 1), note: '' });
-    }
-    n++;
-  }
+  _don = generateDonations(contacts);
   lwrite(K_DON, _don);
   localStorage.setItem(K_SEEDED, '1');
+}
+
+// Supabase mode: push the identical generated history to the server so every
+// device sees the same numbers. Deliberately NOT automatic — it's wired to an
+// explicit admin button, because writing synthetic gifts into a live donations
+// table should always be a decision someone makes on purpose.
+//
+// Gift ids are derived from the contact, so re-running upserts the same rows
+// instead of stacking duplicates. Returns { inserted } or throws.
+export async function seedSupabaseDemo(contacts, { replace = false } = {}) {
+  if (_mode !== 'supabase') throw new Error('Not connected to Supabase — run supabase/crm_setup.sql first.');
+  const rows = generateDonations(contacts);
+  if (replace) {
+    const { error } = await supabase.from('donations').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (error) throw error;
+  }
+  // Chunked: a single 1000-row insert can exceed the request size limit.
+  for (let i = 0; i < rows.length; i += 200) {
+    const chunk = rows.slice(i, i + 200).map(r => ({
+      id: r.id, contact_id: r.contactId, contact_name: r.contactName, amount: r.amount,
+      date: r.date, campaign: r.campaign, method: r.method, note: r.note,
+    }));
+    const { error } = await supabase.from('donations').upsert(chunk, { onConflict: 'id' });
+    if (error) throw error;
+  }
+  _don = rows;
+  return { inserted: rows.length };
 }

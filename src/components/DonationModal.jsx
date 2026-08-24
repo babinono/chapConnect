@@ -29,33 +29,33 @@ export default function DonationModal({ contacts = [], fixedContact = null, onCl
     onSave({ ...form, contactId, contactName: contactName || 'Anonymous' });
   };
 
-  const label = 'block text-sm font-bold text-slate-900 dark:text-slate-100 mb-1.5 tracking-wide';
-  const input = 'w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 focus:outline-none focus:ring-4 focus:ring-blue-500/20 bg-slate-50 dark:bg-[#0c1324] font-medium';
+  const label = 'block text-sm font-medium text-ink mb-1.5 tracking-wide';
+  const input = 'w-full px-4 py-2.5 border border-rule focus:outline-none focus:border-action bg-sunken font-medium panel';
 
   return (
     <motion.div
-      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-navy-950/60"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.94, opacity: 0, y: 12 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.94, opacity: 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 26 }}
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} exit={{ scale: 0.94, opacity: 0 }}
+        transition={{ duration: 0.3, ease: 'easeOut' }}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md bg-white dark:bg-[#111a30] border border-slate-200 dark:border-white/10 rounded-2xl brutal-shadow p-6"
+        className="w-full max-w-md bg-surface border border-rule p-6 panel"
       >
         <div className="flex items-center justify-between mb-5">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
-            <DollarSign className="w-5 h-5 text-green-600 dark:text-green-400" /> Log Donation
+          <h3 className="text-xl font-semibold text-ink flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-good" /> Log Donation
           </h3>
-          <button onClick={onClose} className="text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 cursor-pointer"><X className="w-5 h-5" /></button>
+          <button onClick={onClose} className="text-ink-faint hover:text-ink cursor-pointer"><X className="w-5 h-5" /></button>
         </div>
 
         <form onSubmit={submit} className="space-y-4">
           <div>
             <label className={label}>Donor</label>
             {fixedContact ? (
-              <div className={`${input} bg-slate-100 dark:bg-white/5`}>{fixedContact.name}</div>
+              <div className={`${input} bg-sunken`}>{fixedContact.name}</div>
             ) : (
               <>
                 <input list="crm-contacts" name="contactName" value={form.contactName} onChange={change} className={input} placeholder="Search a name (or leave for Anonymous)" />
@@ -80,13 +80,13 @@ export default function DonationModal({ contacts = [], fixedContact = null, onCl
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className={label}>Campaign</label>
-              <select name="campaign" value={form.campaign} onChange={change} className={`${input} font-bold`}>
+              <select name="campaign" value={form.campaign} onChange={change} className={` font-medium`}>
                 {CAMPAIGNS.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             <div>
               <label className={label}>Method</label>
-              <select name="method" value={form.method} onChange={change} className={`${input} font-bold`}>
+              <select name="method" value={form.method} onChange={change} className={` font-medium`}>
                 {METHODS.map(m => <option key={m} value={m}>{m}</option>)}
               </select>
             </div>
@@ -98,8 +98,8 @@ export default function DonationModal({ contacts = [], fixedContact = null, onCl
           </div>
 
           <div className="flex gap-3 pt-2">
-            <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-xl border border-slate-200 dark:border-white/10 font-bold text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5">Cancel</button>
-            <button type="submit" className="flex-1 py-2.5 rounded-xl bg-green-600 text-white font-bold brutal-shadow cursor-pointer hover:translate-y-[1px]">Save Donation</button>
+            <button type="button" onClick={onClose} className="flex-1 py-2.5 border border-rule font-medium text-ink-muted cursor-pointer hover:bg-sunken rounded-slight">Cancel</button>
+            <button type="submit" className="flex-1 py-2.5 bg-signal-good text-white font-medium cursor-pointer">Save Donation</button>
           </div>
         </form>
       </motion.div>

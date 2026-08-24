@@ -1,62 +1,403 @@
-@import url('https://fonts.googleapis.com/css2?family=Lexend:wght@400;500;600;700;800&family=Source+Sans+3:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Sanchez:ital@0;1&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400;1,6..72,500&family=Inter:wght@400;500;600&display=swap');
 @import "tailwindcss";
 
 /* Dark mode toggled by a `.dark` class on <html>. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
-  /* Typography — Lexend (headings) + Source Sans 3 (body) */
-  --font-sans: 'Source Sans 3', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-heading: 'Lexend', ui-sans-serif, system-ui, sans-serif;
+  /* Typography — the Eanes ISD brand faces.
+     The brand guide specifies Gotham for written communication. Gotham is a
+     commercial Typography.com licence and cannot be served from here, so the
+     stack asks for it first (drop in a licensed webfont and it takes over with
+     no other change), then Montserrat as the closest free geometric sans, then
+     Arial, which the guide itself names as the sanctioned substitute.
 
-  /* Eanes / Westlake red-white-navy palette */
-  --color-brand-navy: #0d1b3e;
-  --color-brand-red: #c8102e;
-  --color-brand-blue: #1e3a8a;
+     One family carries both display and body, which is how a Gotham-based
+     system is meant to work: hierarchy comes from size and weight, not from a
+     second face. Sanchez is the slab in the Eanes logo and ships in ONE weight
+     (400), so it is reserved for the wordmark. Setting headings in it would
+     make every `font-semibold` heading a synthesised fake bold. */
+  --font-sans: 'Gotham', 'Montserrat', Arial, Helvetica, ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Gotham', 'Montserrat', Arial, Helvetica, ui-sans-serif, system-ui, sans-serif;
+  --font-wordmark: 'Sanchez', Georgia, 'Times New Roman', serif;
 
-  /* Retune default primaries to collegiate navy + Eanes red. */
-  --color-slate-900: #0d1b3e;
-  --color-red-500: #c8102e;
-  --color-red-600: #a30d24;
-  --color-blue-600: #1e3a8a;
-  --color-blue-700: #16306e;
+  /* ---- Eanes ISD brand palette ------------------------------------------
+     The official logo palette, verbatim, with its Pantone lineage:
+       Eanes Red      PMS 187 C   #A6192E
+       Eanes Blue     PMS 287 C   #003087
+       Eanes Navy     PMS 2766 C  #102047
+       Bright Gold    PMS 7409 C  #F0A81E
+       Forest Green   PMS 348 C   #097F42
+       Sky Blue       PMS 306 C   #00ADEF
+       Medium Gray    Cool Gray 6 #A7A9AB
+       Black          PMS Black 6 #000000
+     Identity belongs to the three Eanes-named colours. The campus colours
+     (gold, green, sky) support them: they carry semantic signals and chart
+     categories, where six distinguishable hues are a hard requirement.
+     Westlake Red and Westlake Blue are Westlake High's own marks and are
+     deliberately absent, since this scheme is the district's. */
+  --color-eanes-red: #A6192E;
+  --color-eanes-blue: #003087;
+  --color-eanes-navy: #102047;
+  --color-eanes-gold: #F0A81E;
+  --color-eanes-green: #097F42;
+  --color-eanes-sky: #00ADEF;
+  --color-eanes-gray: #A7A9AB;
+  --color-eanes-black: #000000;
 
-  --radius: 0.9rem;
+  /* Derived values. Every one is a lift or a darkening of a brand colour, not
+     a new hue, and each is the least change that clears a measured threshold.
+     Three of the official colours cannot be body text on a light ground:
+     Bright Gold reaches 1.97:1, Sky Blue 2.47:1 and Medium Gray 2.28:1. They
+     are fills and on-dark colours only. */
+  --color-eanes-red-deep: #8d1527;   /* action hover */
+  --color-eanes-red-lift: #ba4c5c;   /* 3.24 on the navy field, 4.59 on canvas */
+  --color-eanes-red-dark: #b64254;   /* dark-mode action: 3.36 shape, 5.39 with white */
+  --color-eanes-red-soft: #c8707d;   /* dark text and marks: 4.79 on the raised surface, 4.15 on the dark field */
+  --color-eanes-green-ink: #08773e;  /* 4.87 on the sunken surface; raw green is 4.39 */
+  --color-eanes-green-soft: #5dab82;
+  --color-eanes-gold-ink: #845c11;   /* 5.77 on canvas; raw gold is unusable as text */
+  --color-eanes-sky-ink: #006b94;    /* chart series on a light ground */
+  --color-eanes-blue-soft: #8ca2c9;  /* Eanes Blue fails at 1.68:1 in dark */
 
-  /* Custom keyframes exposed as Tailwind animate-* utilities */
-  --animate-fade-up: fade-up 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-fade-in: fade-in 0.5s ease both;
-  --animate-scale-in: scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-gradient: gradient-pan 12s ease infinite;
-  --animate-shimmer: shimmer 1.6s linear infinite;
+  /* Neutrals are the Eanes Navy carried to near-white and to near-black, so
+     every gray in the product is the brand navy at low chroma rather than a
+     borrowed gray ramp. */
+  --color-paper: #f7f7f9;
+  --color-paper-raised: #fdfdfd;
+  --color-paper-sunken: #edeef1;
+  --color-hairline: #dee0e5;
+  --color-hairline-strong: #c5cad6;
+  --color-night: #0a152e;
+  --color-night-raised: #0e1d40;
+  --color-night-sunken: #080f22;
+  --color-night-rule: #24304d;
+  --color-night-rule-strong: #35426a;
+  --color-night-ink: #f5f6f8;
+  --color-night-muted: #b7bcc8;
+  --color-night-faint: #9ba1b2;
+  /* The navy field. In dark it sits just ABOVE the canvas so the region still
+     reads; Eanes Navy itself is only 1.14:1 against the night ground. */
+  --color-field-night: #16294f;
+
+  /* Kept so the two remaining direct primitive references and the compat
+     brand-* utilities keep resolving. */
+  --color-navy-950: #071023;
+  --color-brand-navy: #102047;
+  --color-brand-red: #A6192E;
+  --color-brand-blue: #003087;
+  --color-slate-900: #102047;
+  --color-red-500: #A6192E;
+  --color-red-600: #8d1527;
+  --color-blue-600: #003087;
+  --color-blue-700: #002670;
+
+  /* Display scale. Bold lives here, in size, not in weight. */
+  --text-display: 4.25rem;
+  --text-display--line-height: 0.94;
+  --text-display--letter-spacing: -0.035em;
+  --text-title: 2.5rem;
+  --text-title--line-height: 1.04;
+  --text-title--letter-spacing: -0.028em;
+
+  --radius: 0.375rem;
+  --radius-slight: 0.375rem;   /* controls: buttons, inputs, chips */
+  --radius-panel: 0.625rem;    /* cards, panels, tiles */
+  --radius-full: 999px;        /* avatars, spinners, the pointer bubble */
+
+  --animate-fade-up: fade-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-fade-in: fade-in 0.3s ease both;
+  --animate-rule: rule-in 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+
+  /* ---- Ivy primitives ---------------------------------------------------
+     The second scheme. Same navy/red family, matured off "flag": a warm Cream
+     ground instead of cool paper, with Oxblood as the variator and Westlake
+     Red carried further than the default scheme allows. The warmth lives in
+     the paper only; everything printed on it is navy or red. Every value below was
+     chosen by computing its contrast, not by eye. Two golds remain because
+     ivy-gold is a FILL and fails as text (2.92:1 on cream), so ivy-gold-ink
+     is its text-safe darkening; gold now appears only as the warning signal
+     and the last chart series. */
+  --color-ivy-navy: #16233d;
+  --color-ivy-navy-bright: #2c4a7c;
+  --color-ivy-red: #a8202f;
+  --color-ivy-oxblood: #6e1a24;
+  --color-ivy-gold: #b0873f;        /* fill only */
+  --color-ivy-gold-ink: #7d5e28;    /* text-safe: 5.32 on cream */
+  --color-ivy-cream: #f6f1e6;
+  --color-ivy-parchment: #efe7d5;
+  --color-ivy-card: #fffdf8;
+  --color-ivy-text: #26221c;
+  --color-ivy-green: #3f6b45;
+  /* Neutrals in the NAVY family, not the warm family. Body ink is Ink Navy
+     itself, and the secondary tones are that navy held at real chroma rather
+     than mixed toward Cream, which cancels the blue and lands on gray. This
+     is where most of the scheme's blue actually comes from: ink and hairlines
+     cover more surface than any accent ever will. */
+  --color-ivy-slate: #3d4a63;       /* secondary text: 7.24 on Parchment */
+  --color-ivy-slate-soft: #55617a;  /* tertiary text: 5.05 on Parchment */
+  --color-ivy-hairline: #cdd4e2;    /* 1.32 on Cream: the warm line's weight, in blue */
+  --color-ivy-hairline-strong: #aab4ca;
+  /* Lightenings of Westlake Red and Oxblood, not new hues. Full-strength red
+     reaches only 2.17:1 on the navy field and 2.55:1 on the night ground, so
+     red cannot appear as a mark or as text there without being lifted. Each
+     value is the least lift that clears its target. */
+  --color-ivy-red-lift: #c2404e;    /* 3.08 on navy, 4.99 on card: both grounds */
+  --color-ivy-red-on-navy: #d4737d; /* 4.88 on navy: red as TEXT on the field */
+  --color-ivy-ox-lift: #c9737d;     /* 5.45 on the night ground */
+  --color-ivy-navy-lift: #4468a8;   /* 3.32 on night: the fill still reads as a shape */
+  /* Dark ivy: the same rooms at night. Grounds are the navy carried down to
+     near-black, so the scheme stays blue rather than turning brown. */
+  --color-ivy-night: #0d1424;
+  --color-ivy-night-surface: #111a2e;
+  --color-ivy-night-sunken: #0a1120;
+  --color-ivy-night-rule: #263248;
 }
 
-@keyframes fade-up { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: none; } }
+/* ---- Semantic roles ----------------------------------------------------
+   Components reference these, never the primitives. A theme change remaps
+   the roles; it never rewrites a component. */
+:root {
+  --canvas: var(--color-paper);
+  --surface: var(--color-paper-raised);
+  --surface-sunken: var(--color-paper-sunken);
+  /* Body ink is Eanes Navy itself, so text and the navy field are the same
+     pigment at different scales. */
+  --ink: var(--color-eanes-navy);
+  --ink-muted: #525d79;
+  --ink-faint: #606a84;
+  --rule: var(--color-hairline);
+  --rule-strong: var(--color-hairline-strong);
+  --action: var(--color-eanes-red);
+  --action-hover: var(--color-eanes-red-deep);
+  --action-ink: #ffffff;
+  --focus: var(--color-eanes-red);
+  /* The index hue is Eanes Blue. It holds class years, heritage marks and
+     quoted edges: the roles brass held before the brand palette landed. */
+  --heritage: var(--color-eanes-blue);
+  /* Categorical chart series. Eanes Navy, Red and Blue lead; the campus
+     colours fill the remaining three, because six categories need six
+     distinguishable hues and identity roles are not involved here. Gold and
+     Sky appear darkened, since neither clears 3:1 on a light ground raw. */
+  --series-1: var(--color-eanes-navy);
+  --series-2: var(--color-eanes-red);
+  --series-3: var(--color-eanes-blue);
+  --series-4: var(--color-eanes-green);
+  --series-5: var(--color-eanes-gold-ink);
+  --series-6: var(--color-eanes-sky-ink);
+  --good: var(--color-eanes-green-ink);
+  --warn: var(--color-eanes-gold-ink);
+  --bad: var(--color-eanes-red);
+  --info: var(--color-eanes-blue);
+  /* Eanes Red reaches only 2.17:1 on the navy field, so a red mark there must
+     be lifted. Sky Blue is the one campus colour that is better on navy than
+     on paper: 6.23:1 against the field, 2.47:1 against the page. */
+  --accent-navy: var(--color-eanes-red-lift);
+  --heritage-on-navy: var(--color-eanes-sky);
+  --cursor-mark: var(--color-eanes-red-lift);
+  --cursor-halo: #A6192E24;
+  --cursor-rim: #fdfdfdbf;
+  --on-navy: var(--color-night-ink);
+  /* Medium Gray, straight from the palette: 6.75:1 on the field. */
+  --on-navy-muted: var(--color-eanes-gray);
+  --on-navy-rule: #ffffff29;
+}
+
+.dark {
+  --canvas: var(--color-night);
+  --surface: var(--color-night-raised);
+  --surface-sunken: var(--color-night-sunken);
+  --ink: var(--color-night-ink);
+  --ink-muted: var(--color-night-muted);
+  --ink-faint: var(--color-night-faint);
+  --rule: var(--color-night-rule);
+  --rule-strong: var(--color-night-rule-strong);
+  /* Eanes Red at full strength is 2.66:1 on the night ground, so the filled
+     button would have no shape. Lifted until it clears 3:1 while still
+     carrying white at 4.5:1, which is a narrow window. */
+  --action: var(--color-eanes-red-dark);
+  --action-hover: #bc5362;
+  --action-ink: #ffffff;
+  --focus: var(--color-eanes-red-dark);
+  /* Eanes Blue manages 1.68:1 here and simply cannot be used. Sky Blue is the
+     brand's own answer to that problem and reaches 7.09:1. */
+  --heritage: var(--color-eanes-sky);
+  --series-1: var(--color-eanes-blue-soft);
+  --series-2: var(--color-eanes-red-soft);
+  --series-3: var(--color-eanes-sky);
+  --series-4: var(--color-eanes-green-soft);
+  --series-5: var(--color-eanes-gold);
+  --series-6: var(--color-night-muted);
+  --good: var(--color-eanes-green-soft);
+  --warn: var(--color-eanes-gold);
+  --bad: var(--color-eanes-red-soft);
+  --info: var(--color-eanes-sky);
+  /* The dark field is LIGHTER than the light one, so the red mark on it has to
+     be lifted further: red-lift manages only 2.92:1 there. */
+  --accent-navy: var(--color-eanes-red-soft);
+  --heritage-on-navy: var(--color-eanes-sky);
+  --cursor-mark: var(--color-eanes-red-soft);
+  --cursor-halo: #A6192E2e;
+  --cursor-rim: #0a152ecc;
+  --on-navy: var(--color-night-ink);
+  --on-navy-muted: var(--color-eanes-gray);
+  --on-navy-rule: #ffffff24;
+}
+
+/* ---- Ivy scheme -------------------------------------------------------
+   Toggled by an `.ivy` class on <html>, independent of `.dark`, so all four
+   combinations resolve. Only roles are remapped here; no component knows
+   this scheme exists.
+
+   The hierarchy shifts deliberately versus the default scheme. There, Eanes
+   red owns primary action. Here Ink Navy owns it and red moves to emphasis,
+   heritage marks and the duotone. Keeping action blue is what separates the
+   two schemes: give Ivy a red button and it becomes Chaparral in a serif. */
+.ivy {
+  /* Cream is the ground, Card the raised surface, Parchment the recessed one.
+     The warmth stays where it belongs, in the paper. What changed is
+     everything printed ON it: ink and hairlines are navy rather than brown,
+     so the scheme reads blue and red without the ground giving up its cream.
+     Ink and rules cover far more area than any accent, which is why this
+     shifts the whole feel more than adding another red element would. */
+  --canvas: var(--color-ivy-cream);
+  --surface: var(--color-ivy-card);
+  --surface-sunken: var(--color-ivy-parchment);
+  --ink: var(--color-ivy-navy);
+  --ink-muted: var(--color-ivy-slate);
+  --ink-faint: var(--color-ivy-slate-soft);
+  --rule: var(--color-ivy-hairline);
+  --rule-strong: var(--color-ivy-hairline-strong);
+  --action: var(--color-ivy-navy);
+  --action-hover: var(--color-ivy-navy-bright);
+  --action-ink: var(--color-ivy-cream);
+  --focus: var(--color-ivy-oxblood);
+  /* Oxblood, not gold. This single role carries class years, heritage marks
+     and quoted edges, so it is the largest lever on how much red the scheme
+     shows. Gold held it before, which is why red was nearly absent. */
+  --heritage: var(--color-ivy-oxblood);
+  --accent-navy: var(--color-ivy-red-lift);
+  --heritage-on-navy: var(--color-ivy-red-on-navy);
+  --on-navy: var(--color-ivy-cream);
+  --on-navy-muted: #b9c2d4;
+  --on-navy-rule: oklch(1 0 0 / 0.18);
+  --good: var(--color-ivy-green);
+  /* The one surviving gold. Amber is the conventional warning signal, and a
+     semantic role is not decoration, so this is where gold earns its place. */
+  --warn: var(--color-ivy-gold-ink);
+  --bad: var(--color-ivy-red);
+  --info: var(--color-ivy-navy-bright);
+  /* Blue and red lead; gold is last and therefore rarest. Where two
+     neighbours sit close in lightness they are far apart in hue, which is
+     what actually separates them in a chart. */
+  --series-1: var(--color-ivy-navy);
+  --series-2: var(--color-ivy-red);
+  --series-3: var(--color-ivy-navy-bright);
+  --series-4: var(--color-ivy-oxblood);
+  --series-5: var(--color-ivy-green);
+  /* The text-safe gold, not the fill: on Cream the fill reaches only 2.92:1,
+     so restoring the cream ground disqualified it as a series. */
+  --series-6: var(--color-ivy-gold-ink);
+  /* Westlake Red lifted just enough to clear 3:1 on BOTH the light ground and
+     the navy field, both of which the pointer crosses. Full-strength red
+     manages 2.17 on navy and oxblood only 1.37, so neither can be used here. */
+  --cursor-mark: var(--color-ivy-red-lift);
+  --cursor-halo: #a8202f26;
+  --cursor-rim: #fffdf8bf;
+
+  /* Typography: Newsreader for display, Inter for body and data. Serif wants
+     far looser tracking than a geometric sans, so the display scale is retuned rather
+     than inherited. */
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-heading: 'Newsreader', 'Iowan Old Style', Georgia, serif;
+  --text-display--letter-spacing: -0.018em;
+  --text-display--line-height: 1.0;
+  --text-title--letter-spacing: -0.012em;
+  --text-title--line-height: 1.1;
+  /* Serif at weight 700 turns muddy; the register carries the emphasis. */
+  --ivy-display-weight: 500;
+}
+
+.dark.ivy {
+  --canvas: var(--color-ivy-night);
+  --surface: var(--color-ivy-night-surface);
+  --surface-sunken: var(--color-ivy-night-sunken);
+  --ink: var(--color-ivy-cream);
+  --ink-muted: #a8b2c6;
+  --ink-faint: #8c96ab;
+  --rule: var(--color-ivy-night-rule);
+  --rule-strong: #3a4a66;
+  /* Action stays blue in both forms of the scheme, but lifted: full navy on a
+     near-black navy ground has no shape at 1.4:1. Gold owned this before,
+     which pushed the night form away from the brand entirely. */
+  /* A filled control has to clear 3:1 against the page or it has no shape,
+     and its label has to clear 4.5:1 against the fill. Those two pull in
+     opposite directions and the window here is only a few steps wide: with
+     Cream as the label, exactly one value satisfies both. Card widens it to
+     four, which is the only reason a hover state fits at all. */
+  --action: var(--color-ivy-navy-lift);
+  --action-hover: #4a6eb0;
+  --action-ink: var(--color-ivy-card);
+  --focus: var(--color-ivy-red-on-navy);
+  --heritage: var(--color-ivy-ox-lift);
+  --accent-navy: var(--color-ivy-red-on-navy);
+  --heritage-on-navy: var(--color-ivy-red-on-navy);
+  --on-navy-muted: #b9c2d4;
+  --good: #7fb389;
+  --warn: #d9b678;
+  --bad: var(--color-ivy-red-on-navy);
+  --info: #8fb0e0;
+  --series-1: #8fb0e0;
+  --series-2: var(--color-ivy-red-on-navy);
+  --series-3: #5a86c9;
+  --series-4: var(--color-ivy-ox-lift);
+  --series-5: #7fb389;
+  --series-6: #d9b678;
+  --cursor-mark: var(--color-ivy-red-on-navy);
+  --cursor-halo: #a8202f33;
+  --cursor-rim: #0d1424cc;
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-sunken: var(--surface-sunken);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-faint: var(--ink-faint);
+  --color-rule: var(--rule);
+  --color-rule-strong: var(--rule-strong);
+  --color-action: var(--action);
+  --color-action-hover: var(--action-hover);
+  --color-action-ink: var(--action-ink);
+  --color-heritage: var(--heritage);
+  --color-accent-navy: var(--accent-navy);
+  --color-heritage-on-navy: var(--heritage-on-navy);
+  --color-series-1: var(--series-1);
+  --color-series-2: var(--series-2);
+  --color-series-3: var(--series-3);
+  --color-series-4: var(--series-4);
+  --color-series-5: var(--series-5);
+  --color-series-6: var(--series-6);
+  --color-good: var(--good);
+  --color-warn: var(--warn);
+  --color-bad: var(--bad);
+  --color-info: var(--info);
+  --color-on-navy: var(--on-navy);
+  --color-on-navy-muted: var(--on-navy-muted);
+}
+
+@keyframes fade-up { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-@keyframes scale-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: none; } }
-@keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
-@keyframes gradient-pan { 0%,100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
-@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+/* The one authored moment: a rule draws itself across the peak. */
+@keyframes rule-in { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
 body {
-  color: #0d1b3e;
+  color: var(--ink);
   font-family: var(--font-sans);
-  background-color: #f4f6fb;
-  background-image:
-    radial-gradient(1100px 550px at 85% -12%, rgba(200, 16, 46, 0.07), transparent 60%),
-    radial-gradient(1000px 520px at -12% 8%, rgba(30, 58, 138, 0.09), transparent 60%);
-  background-attachment: fixed;
+  background-color: var(--canvas);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-.dark body {
-  color: #e8eefc;
-  background-color: #070b18;
-  background-image:
-    radial-gradient(1100px 550px at 85% -12%, rgba(200, 16, 46, 0.16), transparent 60%),
-    radial-gradient(1000px 520px at -12% 8%, rgba(37, 99, 235, 0.18), transparent 60%);
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -64,44 +405,284 @@ h1, h2, h3, h4, h5, h6 {
   letter-spacing: -0.02em;
 }
 
-/* Elevation — soft in light, luminous in dark. */
-.brutal-shadow {
-  box-shadow: 0 10px 30px -10px rgba(13, 27, 62, 0.18), 0 4px 10px -6px rgba(13, 27, 62, 0.10);
-}
+/* Elevation — a hairline rule, not a drop shadow. */
+.brutal-shadow,
 .brutal-shadow-sm {
-  box-shadow: 0 2px 8px -2px rgba(13, 27, 62, 0.12), 0 1px 2px -1px rgba(13, 27, 62, 0.08);
+  box-shadow: none;
 }
-.brutal-shadow:hover {
-  box-shadow: 0 18px 44px -14px rgba(13, 27, 62, 0.28), 0 8px 16px -8px rgba(13, 27, 62, 0.14);
+/* The navy field: a large committed region, not a gradient. Its own hue at
+   very low alpha lifts the surface just enough to read as deliberate. */
+.gradient-brand,
+.navy-field {
+  background-color: var(--color-eanes-navy);
+  color: var(--on-navy);
+  /* Depth from one hue at two depths. Not a multi-hue gradient. */
+  background-image: radial-gradient(
+    120% 90% at 12% 0%,
+    #1b3163 0%,
+    transparent 62%
+  );
 }
-.dark .brutal-shadow {
-  box-shadow: 0 12px 34px -12px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-.dark .brutal-shadow-sm {
-  box-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
-}
-.dark .brutal-shadow:hover {
-  box-shadow: 0 20px 48px -14px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.06);
+/* In dark the field sits just ABOVE the canvas: Eanes Navy against the night
+   ground is 1.14:1, so a field painted in it would vanish into the page. */
+.dark .gradient-brand,
+.dark .navy-field {
+  background-color: var(--color-field-night);
+  background-image: radial-gradient(
+    120% 90% at 12% 0%,
+    #1e3564 0%,
+    transparent 62%
+  );
 }
 
-/* Reusable animated gradient text/surfaces */
-.gradient-brand {
-  background-image: linear-gradient(120deg, #c8102e, #1e3a8a, #0d1b3e, #c8102e);
-  background-size: 300% 300%;
-  animation: var(--animate-gradient);
+/* Duotone photography: the image is pushed into the brand's own hue so a photo
+   reads as authored art direction rather than dropped-in stock. */
+.duotone {
+  position: relative;
+  isolation: isolate;
+  /* Follows the field's own navy so the band never shows a seam. */
+  --duotone-ground: var(--color-eanes-navy);
+  background-color: var(--duotone-ground);
+}
+.dark .duotone {
+  --duotone-ground: var(--color-field-night);
+}
+.duotone > img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: grayscale(1) contrast(1.12) brightness(0.82);
+  mix-blend-mode: luminosity;
+  opacity: 0.62;
+}
+/* A top fade welds the band to the navy field above it. */
+.duotone::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    var(--duotone-ground) 0%,
+    transparent 42%
+  );
+  pointer-events: none;
+}
+
+/* Measure rule: the hairline that carries structure where a card would have
+   been. Animates once, on the peak only. */
+.rule-draw {
+  transform-origin: left center;
+  animation: var(--animate-rule);
 }
 .text-gradient-brand {
-  background-image: linear-gradient(100deg, #c8102e, #2563eb);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--color-brand-navy);
 }
-
+.dark .text-gradient-brand {
+  color: var(--color-night-ink);
+}
 /* Staggered entrance helper: set --i on children */
-.stagger > * { animation: fade-up 0.5s cubic-bezier(0.16,1,0.3,1) both; animation-delay: calc(var(--i, 0) * 60ms); }
+.stagger > * { animation: fade-up 0.35s ease both; }
 
-:focus-visible { outline: 2px solid var(--color-brand-red); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
 }
+
+/* Bubble cursor. A mid-tone blue so the same colour reads against both the
+   paper ground and a navy field; pointer-events:none so it can never intercept
+   a click. Only mounted on fine pointers with motion allowed. */
+.bubble-cursor-ring,
+.bubble-cursor-dot {
+  position: fixed;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  z-index: 900;
+  will-change: transform;
+}
+.bubble-cursor-ring {
+  width: 34px;
+  height: 34px;
+  margin: -17px 0 0 -17px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--cursor-mark);
+  background: var(--cursor-halo);
+}
+.bubble-cursor-dot {
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: var(--radius-full);
+  background: var(--cursor-mark);
+  box-shadow: 0 0 0 1.5px var(--cursor-rim);
+}
+
+
+/* The dot replaces the native arrow, so hide it only while the bubble is live.
+   Text carets and text selection are untouched. */
+.has-bubble-cursor,
+.has-bubble-cursor a,
+.has-bubble-cursor button,
+.has-bubble-cursor [role="button"] {
+  cursor: none;
+}
+
+/* Intro overlay. Deterministic CSS timeline, and pointer-events:none from the
+   first frame, so a stalled animation or a failed unmount can never trap the
+   user behind it. */
+.intro-splash {
+  pointer-events: none;
+  animation: intro-out 2.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.intro-word { animation: intro-rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) both; }
+.intro-rule {
+  transform-origin: left center;
+  animation: rule-in 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+}
+.intro-tag { animation: fade-in 0.4s ease 0.6s both; }
+
+@keyframes intro-out {
+  0%, 78%  { opacity: 1; }
+  100%     { opacity: 0; visibility: hidden; }
+}
+@keyframes intro-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .intro-word, .intro-rule, .intro-tag { animation: none; }
+}
+
+/* Softened corners. Controls and fields curve just enough to read as touchable;
+   the value is deliberately small so the register still feels ruled, not rounded. */
+button, input, select, textarea, .radius-slight {
+  border-radius: var(--radius-slight);
+}
+/* The Eanes logo slab, used for the wordmark only. Weight is pinned because
+   Sanchez ships a single weight and any heavier request is synthesised. */
+.wordmark {
+  font-family: var(--font-wordmark);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+/* Ivy has its own display face, so the wordmark defers to it there. */
+.ivy .wordmark {
+  font-family: var(--font-heading);
+  font-weight: var(--ivy-display-weight);
+  letter-spacing: -0.012em;
+}
+
+/* Panels sit one step softer than controls, so a card never reads as a button. */
+.panel {
+  border-radius: var(--radius-panel);
+}
+
+/* Browser surfaces: selection, caret, scrollbar and numerals are part of the
+   design, not defaults we inherit. */
+::selection { background: #A6192E33; color: var(--ink); }
+.dark ::selection { background: #c2637159; color: var(--ink); }
+
+input, textarea, select { caret-color: var(--action); }
+
+* { scrollbar-width: thin; scrollbar-color: color-mix(in oklch, var(--ink) 30%, transparent) transparent; }
+.dark * { scrollbar-color: color-mix(in oklch, var(--ink) 26%, transparent) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--ink) 30%, transparent);
+  border: 3px solid transparent;
+  background-clip: content-box;
+}
+.dark ::-webkit-scrollbar-thumb { background: color-mix(in oklch, var(--ink) 26%, transparent); background-clip: content-box; }
+
+/* Figures in tables and metrics line up. */
+table, .tabular { font-variant-numeric: tabular-nums; }
+
+/* ---- Ivy treatments ----------------------------------------------------
+   Everything below is scoped to `.ivy` and sits at the end of the file so it
+   wins over the default-scheme rules above by order rather than by weight.
+   These are the changes a role remap alone cannot make: a different type
+   register, a different photographic treatment, and a different way tables
+   and figures are ruled. */
+
+/* Serif display. Newsreader at 700 turns muddy at size, so emphasis comes
+   from the register and from italic, not from weight. */
+.ivy h1, .ivy h2, .ivy h3, .ivy h4, .ivy h5, .ivy h6 {
+  font-weight: var(--ivy-display-weight);
+  letter-spacing: -0.012em;
+}
+/* Italic serif is the scheme's emphatic voice, and it takes --heritage, so
+   emphasis now reads Oxblood rather than gold. */
+.ivy em, .ivy .ivy-em {
+  font-family: var(--font-heading);
+  font-style: italic;
+  font-weight: 500;
+  color: var(--heritage);
+}
+
+/* Corners: one notch softer than the default scheme. A library binding has a
+   rounded spine; a spreadsheet does not. */
+.ivy {
+  --radius-slight: 0.4375rem;
+  --radius-panel: 0.75rem;
+}
+
+/* The navy field takes Ink Navy, lifted at the corner by a brighter blue from
+   the same family. One hue at two depths, never a second hue. */
+.ivy .gradient-brand,
+.ivy .navy-field {
+  background-color: var(--color-ivy-navy);
+  background-image: radial-gradient(
+    120% 90% at 12% 0%,
+    #24365c 0%,
+    transparent 58%
+  );
+}
+/* Lifted above the night canvas: at #10192c this field sat 1.05:1 against the
+   page and the whole region was invisible. */
+.dark.ivy .gradient-brand,
+.dark.ivy .navy-field {
+  background-color: #152139;
+  background-image: radial-gradient(
+    120% 90% at 12% 0%,
+    #22314f 0%,
+    transparent 58%
+  );
+}
+/* Photography goes warm. A luminosity blend takes hue from the BACKDROP and
+   discards the source's, so warming the image with a sepia() filter would do
+   literally nothing here. The backdrop is what has to change: the band now
+   ranges navy at the top, where it welds to the field above, down to a warm
+   bister at the bottom. That is a true two-ink duotone, and the result reads
+   like a plate in a printed annual rather than a blue-tinted stock photo. */
+.ivy .duotone {
+  --duotone-ground: var(--color-ivy-navy);
+  background-image: linear-gradient(to bottom, #16233d 0%, #6e1a24 100%);
+}
+.dark.ivy .duotone {
+  --duotone-ground: #152139;
+  background-image: linear-gradient(to bottom, #152139 0%, #4a121a 100%);
+}
+.ivy .duotone > img {
+  filter: contrast(1.1) brightness(0.88);
+  mix-blend-mode: luminosity;
+  opacity: 0.68;
+}
+
+/* Tables get a warm zebra, which is the register of a printed roll of names.
+   The default scheme rules them with hairlines only.
+
+   The navy table head is NOT set here. It comes from `.navy-field` on the
+   thead itself, which is already scheme-aware, and duplicating it as a `th`
+   background would mean two mechanisms owning one surface. */
+.ivy thead th { letter-spacing: 0.09em; }
+.ivy tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--rule) 34%, transparent);
+}
+
+/* Selection and the caret follow the scheme's own accent. */
+.ivy ::selection { background: #a8202f33; color: var(--ink); }
+.dark.ivy ::selection { background: #c2404e4d; color: var(--ink); }

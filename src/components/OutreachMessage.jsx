@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Copy, Check, MessageSquare, Sparkles, GraduationCap, Coffee } from 'lucide-react';
+import Magnetic from './ui/Magnetic';
+import { Copy, Check } from 'lucide-react';
 import { cn } from '../utils/cn';
 
 export default function OutreachMessage({ matchData, userProfile }) {
@@ -126,16 +127,16 @@ export default function OutreachMessage({ matchData, userProfile }) {
   let casualIntroSegment = '';
   let casualIndustrySegment = '';
   if (isMajorMatch) {
-    casualIntroSegment = `noticed you went to ${sharedCollege} to study in the field of ${intendedMajor}—which is actually my top intended major!`;
+    casualIntroSegment = `noticed you went to ${sharedCollege} to study in the field of ${intendedMajor}, which is actually my top intended major!`;
     casualIndustrySegment = `since I'm really hoping to head down a similar path in ${studentIndustry}`;
   } else if (isUniMatch) {
-    casualIntroSegment = `${casualCollegePhrase}—which is actually one of my top dream schools!`;
+    casualIntroSegment = `${casualCollegePhrase}, which is actually one of my top dream schools!`;
     casualIndustrySegment = `since I'm currently exploring different career paths and really hoping to head to ${sharedCollege}`;
   } else if (isCareerMatch) {
-    casualIntroSegment = `noticed your career path as a ${mentorJobTitle}—which is actually the exact path I'm hoping to pursue!`;
+    casualIntroSegment = `noticed your career path as a ${mentorJobTitle}, which is actually the exact path I'm hoping to pursue!`;
     casualIndustrySegment = `since I'm really hoping to head down a similar path in ${studentIndustry}`;
   } else {
-    casualIntroSegment = `${casualCollegePhrase}—which is a fantastic school!`;
+    casualIntroSegment = `${casualCollegePhrase}, which is a fantastic school!`;
     casualIndustrySegment = `since I'm currently exploring different career options and would love to learn more about your field`;
   }
 
@@ -188,69 +189,61 @@ export default function OutreachMessage({ matchData, userProfile }) {
   };
 
   return (
-    <div className="bg-white border-4 border-slate-900 rounded-2xl brutal-shadow p-6 flex flex-col h-full">
-      <div className="flex items-center space-x-3 mb-6">
-        <div className="p-2 bg-red-500 border-2 border-slate-900 rounded-lg brutal-shadow-sm rotate-[-4deg]">
-          <MessageSquare className="w-6 h-6 text-white" />
-        </div>
-        <div>
-          <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight leading-none">Reach Out</h3>
-          <p className="text-xs font-bold text-slate-600 mt-1 uppercase tracking-widest">
-            {matchData.outreachMessage ? "✨ AI Customized Message" : "Tailored Connection Message"}
-          </p>
-        </div>
-      </div>
+    <div className="bg-surface border border-rule panel">
+      <header className="border-b border-rule px-6 py-6">
+        <p className="text-sm text-ink-faint">
+          {matchData.outreachMessage ? 'Tailored to this match' : 'Connection message'}
+        </p>
+        <h3 className="font-heading text-2xl font-semibold text-ink tracking-tight">Reach out</h3>
+      </header>
 
-      <div className="flex-grow flex flex-col space-y-4">
-        {/* Subject copy component */}
+      <div className="px-6 py-6 space-y-6">
         <div>
-          <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5">Email Subject</label>
-          <div className="flex border-2 border-slate-900 rounded-xl overflow-hidden brutal-shadow-sm">
-            <div className="bg-slate-100 px-3 py-2 flex-grow text-xs font-bold text-slate-700 truncate select-all">
-              {subjectText}
-            </div>
+          <label className="block text-sm font-medium text-ink-muted mb-2">Email subject</label>
+          <div className="flex items-stretch border-b border-rule-strong">
+            <p className="flex-grow py-2 text-ink truncate select-all">{subjectText}</p>
             <button
               onClick={handleCopySubject}
               className={cn(
-                "px-3 py-2 border-l-2 border-slate-900 font-black text-xs uppercase tracking-wider flex items-center space-x-1 cursor-pointer transition-all",
-                copiedSubject ? "bg-green-500 text-white" : "bg-blue-600 text-white hover:bg-blue-700"
+                'flex-shrink-0 flex items-center gap-1.5 pl-4 text-sm font-medium cursor-pointer transition-colors',
+                copiedSubject ? 'text-good' : 'text-action hover:text-action-hover'
               )}
             >
-              {copiedSubject ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : <Copy className="w-3.5 h-3.5 stroke-[3]" />}
+              {copiedSubject ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
               <span>{copiedSubject ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
         </div>
 
-        {/* Message body copy component */}
-        <div className="flex flex-col flex-grow">
-          <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-1.5">Message Body</label>
-          <div className="bg-slate-50 border-2 border-slate-900 rounded-xl p-4 text-slate-900 whitespace-pre-wrap font-semibold text-xs sm:text-sm leading-relaxed flex-grow shadow-[inset_3px_3px_0px_0px_rgba(0,0,0,0.1)] min-h-[220px]">
+        <div>
+          <label className="block text-sm font-medium text-ink-muted mb-2">Message body</label>
+          <div className="bg-sunken border-l-2 border-rule-strong px-5 py-5 text-ink whitespace-pre-wrap leading-relaxed min-h-[220px] select-all panel">
             {bodyText}
           </div>
         </div>
-        
-        <button
+
+        {/* The one red thing on this card. */}
+        <Magnetic strength={4}
           onClick={handleCopyBody}
           className={cn(
-            "w-full py-3.5 px-6 rounded-xl font-black uppercase tracking-wider flex items-center justify-center space-x-2 border-2 border-slate-900 brutal-shadow transition-all cursor-pointer text-sm sm:text-base",
-            copiedBody 
-              ? "bg-green-500 text-white" 
-              : "bg-blue-600 text-white hover:bg-blue-700"
+            'w-full py-4 px-6 font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors',
+            copiedBody
+              ? 'bg-signal-good text-white'
+              : 'bg-action text-action-ink hover:bg-action-hover'
           )}
         >
           {copiedBody ? (
             <>
-              <Check className="w-5 h-5 stroke-[3]" />
-              <span>Message Copied!</span>
+              <Check className="w-5 h-5" />
+              <span>Message copied</span>
             </>
           ) : (
             <>
-              <Copy className="w-5 h-5 stroke-[3]" />
-              <span>Copy Message Body</span>
+              <Copy className="w-5 h-5" />
+              <span>Copy message body</span>
             </>
           )}
-        </button>
+        </Magnetic>
       </div>
     </div>
   );
