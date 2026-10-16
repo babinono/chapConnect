@@ -32,7 +32,9 @@ export default function SendMessageModal({
   const recipientRole = recipient.career || recipient.current_position || recipient.role || recipient.primaryCareer || 'Westlake Alum';
   const recipientEmail = recipient.email || recipient.contactInfo || '';
   const isUnlocked = currentUser?.user?.id ? isContactUnlocked(currentUser.user.id, recipientId) : false;
-  const displayEmail = isUnlocked ? recipientEmail : (recipient.obscuredEmail || obscureEmail(recipientEmail));
+  const displayEmail = isUnlocked
+    ? (recipientEmail || 'Unlocked Direct Contact')
+    : (recipientEmail ? (recipient.obscuredEmail || obscureEmail(recipientEmail)) : 'chap-relay@chapconnect.org (Protected)');
 
   const senderName = currentUser?.user?.user_metadata?.full_name || currentUser?.name || 'A fellow Chap';
   const senderEmail = currentUser?.user?.email || currentUser?.email || 'chap@chapconnect.org';

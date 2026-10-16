@@ -789,7 +789,7 @@ export default function Dashboard({ session }) {
                                   <span className="truncate">Relayed (Awaiting Reply)</span>
                                 </div>
                                 <p className="text-[11px] text-ink-faint">
-                                  Obscured: {obscureEmail(m.candidate.email)}
+                                  Obscured: {m.candidate.email ? obscureEmail(m.candidate.email) : 'Direct Relay Active'}
                                 </p>
                                 <button
                                   type="button"
@@ -805,7 +805,11 @@ export default function Dashboard({ session }) {
                             ) : (
                               <div className="flex items-center gap-1.5 text-ink-faint p-1 font-mono text-[11px]">
                                 <Lock className="w-3 h-3 text-action shrink-0" />
-                                <span className="truncate">Email obscured: {obscureEmail(m.candidate.email)}</span>
+                                <span className="truncate">
+                                  {m.candidate.email
+                                    ? `Email obscured: ${obscureEmail(m.candidate.email)}`
+                                    : 'Email protected by Chap Relay'}
+                                </span>
                               </div>
                             )}
                           </div>

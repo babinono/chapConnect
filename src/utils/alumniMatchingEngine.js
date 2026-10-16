@@ -51,12 +51,18 @@ function extractAlumProfile(raw) {
     meta.undergradMajor,
   ].filter(Boolean).map(s => String(s).trim());
 
+  let company = (raw.company || meta.company || '').trim();
+  if (!company && (raw.current_position || raw.career)) {
+    const atMatch = (raw.current_position || raw.career || '').match(/(?:at|@)\s+([^,]+)/i);
+    if (atMatch) company = atMatch[1].trim();
+  }
+
   const careers = [
     raw.career,
     raw.current_position,
     raw.role,
     raw.industry,
-    raw.company,
+    company,
   ].filter(Boolean).map(s => String(s).trim());
 
   const locations = [
@@ -79,7 +85,7 @@ function extractAlumProfile(raw) {
     primaryMajor: majors[0] || '',
     careers,
     primaryCareer: raw.career || raw.current_position || careers[0] || 'Professional',
-    company: raw.company || '',
+    company,
     location: locations[0] || '',
     gradYear,
     activities: raw.high_school_activities || raw.activities || [],
@@ -286,7 +292,7 @@ export async function findAlumniMatches(userProfile, options = {}) {
     ),
     selectAll(
       'mentors',
-      'id, name, grad_year, college, education, current_position, location, role, company',
+      'id, name, grad_year, college, education, first_grad_education, second_grad_education, current_position, location, role',
     ),
   ]);
 
@@ -310,7 +316,7 @@ export async function findAlumniMatches(userProfile, options = {}) {
     });
   }
 
-  // Parse mentors table
+  // Parse mentors table (1,150+ real Westlake alumni in main database)
   for (const row of mentorsRes.data || []) {
     const candId = `m-${row.id}`;
     const candName = (row.name || '').trim().toLowerCase();
@@ -324,9 +330,10 @@ export async function findAlumniMatches(userProfile, options = {}) {
       grad_year: row.grad_year,
       college: row.college,
       education: row.education,
+      first_grad_education: row.first_grad_education,
+      second_grad_education: row.second_grad_education,
       career: row.current_position || row.role,
       current_position: row.current_position,
-      company: row.company,
       location: row.location,
     });
     candidates.push({
