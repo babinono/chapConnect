@@ -200,11 +200,32 @@ export default function Dashboard({ session }) {
     fetchDashboardData();
   }, [session]);
 
+  const getEffectiveProfile = () => {
+    if (profile && (profile.college || profile.name || profile.grad_year)) return profile;
+    if (profileForm && (profileForm.college || profileForm.name || profileForm.grad_year)) {
+      return {
+        ...profileForm,
+        grad_year: profileForm.grad_year || profile?.grad_year,
+        college: profileForm.college || profile?.college,
+        name: profileForm.name || profile?.name || session?.user?.user_metadata?.full_name || 'Alum',
+        post_grad_school: profileForm.post_grad_school || 'ALUMNI_METADATA',
+        post_grad_program: profileForm.post_grad_program || JSON.stringify({
+          undergradCollege: profileForm.college,
+          firstGrad: profileForm.firstGrad,
+          secondGrad: profileForm.secondGrad,
+          contactInfo: profileForm.contactInfo,
+        })
+      };
+    }
+    return profile;
+  };
+
   const runAlumniMatching = async () => {
-    if (!profile) return;
+    const targetProfile = getEffectiveProfile();
+    if (!targetProfile) return;
     setLoadingAlumniMatches(true);
     try {
-      const results = await findAlumniMatches(profile);
+      const results = await findAlumniMatches(targetProfile);
       setAlumniMatches(results);
     } catch (err) {
       console.error("Failed to run alumni matching:", err);
@@ -215,15 +236,16 @@ export default function Dashboard({ session }) {
 
   useEffect(() => {
     let active = true;
-    if (!isStudent && profile && alumniMatches.length === 0 && !loadingAlumniMatches) {
-      findAlumniMatches(profile).then(results => {
+    const targetProfile = getEffectiveProfile();
+    if (!isStudent && targetProfile && alumniMatches.length === 0 && !loadingAlumniMatches) {
+      findAlumniMatches(targetProfile).then(results => {
         if (active) setAlumniMatches(results);
       }).catch(err => {
         console.error("Failed to run alumni matching:", err);
       });
     }
     return () => { active = false; };
-  }, [profile, isStudent, alumniMatches.length, loadingAlumniMatches]);
+  }, [profile, profileForm, isStudent, alumniMatches.length, loadingAlumniMatches]);
 
   const checkUnlocked = (uid, cid) => {
     if (messageRelayTick < 0) return false;
@@ -354,18 +376,25 @@ export default function Dashboard({ session }) {
       favorite_classes: classesArr
     };
 
-    const { error } = await supabase
+    const profileToUpsert = {
+      ...updatedProfile,
+      user_id: session.user.id
+    };
+
+    const { data: savedProfile, error } = await supabase
       .from('user_profiles')
-      .update(updatedProfile)
-      .eq('user_id', session.user.id);
+      .upsert(profileToUpsert, { onConflict: 'user_id' })
+      .select()
+      .maybeSingle();
 
     setIsSavingProfile(false);
     if (error) {
-      console.error("Error updating profile:", error);
+      console.error("Error saving profile:", error);
       alert("Failed to update profile details.");
     } else {
-      // Sync local profile state with updated values (preserve id, is_admin, created_at, etc.)
-      setProfile(prev => ({ ...prev, ...updatedProfile }));
+      // Sync local profile state with updated values
+      const mergedProfile = savedProfile || { ...profile, ...profileToUpsert };
+      setProfile(mergedProfile);
       // Reflect any auto-correction (student → alumni) back into the form + view.
       if (effectiveFlow !== profileForm.flow_type) {
         setProfileForm(prev => ({ ...prev, flow_type: effectiveFlow }));

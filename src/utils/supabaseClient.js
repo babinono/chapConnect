@@ -1,7 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta?.env?.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta?.env?.VITE_SUPABASE_ANON_KEY || '';
+const supabaseUrl = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) || (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_URL) || '';
+const supabaseAnonKey = (typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_ANON_KEY) || (typeof process !== 'undefined' && process.env?.VITE_SUPABASE_ANON_KEY) || '';
 
 if (!supabaseUrl) {
   console.error("Missing VITE_SUPABASE_URL. Please set it in a .env file and restart the dev server.");
@@ -10,7 +10,7 @@ if (!supabaseAnonKey) {
   console.error("Missing VITE_SUPABASE_ANON_KEY. Please set it in a .env file and restart the dev server.");
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
 // PostgREST caps a plain select() at 1000 rows and gives no indication it
 // truncated — so a 1151-row table silently returns 1000. Page through with
