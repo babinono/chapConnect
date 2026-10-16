@@ -85,7 +85,14 @@ export default function MatchCard({ matchData }) {
         </ul>
       </div>
 
-      <div className="border-t border-rule p-6">
+      <div className="border-t border-rule p-6 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-2 text-xs text-ink-faint font-mono">
+          <svg className="w-3.5 h-3.5 text-action shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+          </svg>
+          <span>Email obscured for privacy until reply</span>
+        </div>
+
         <a
           href={`https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(
             `${mentor.name} ${mentor.college || ''} ${mentor.current_position || ''}`

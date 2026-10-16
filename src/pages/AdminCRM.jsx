@@ -14,6 +14,10 @@ import {
   retentionByYear, lapsedDonors, insights,
 } from '../utils/crmAnalytics';
 import {
+  monthlyVolume, mentorLoad, supplyDemand, networkComposition, matchQuality,
+  collegeDemand, outcomes,
+} from '../utils/matchAnalytics';
+import {
   ArrowLeft,
   Briefcase,
   CalendarDays,
@@ -35,11 +39,18 @@ import {
   School,
   Search,
   ShieldCheck,
+  Sparkles,
+  Users,
   Table2,
   Trash2,
   TrendingUp,
+  Newspaper,
+  Pin,
 } from 'lucide-react';
 import TabBar from '../components/ui/TabBar';
+import {
+  getBoardPosts, addBoardPost, deleteBoardPost, updateBoardPost, initMessageBoard,
+} from '../utils/messageBoardStore';
 
 const PAGE_SIZE = 25;
 
@@ -164,9 +175,31 @@ export default function AdminCRM() {
   const [campaignFilter, setCampaignFilter] = useState('all');
 
   // ui
+  // Matching dataset, loaded independently of the CRM contact list.
+  const [matchData, setMatchData] = useState(null);
+
   const [drawer, setDrawer] = useState(null);
   const [modal, setModal] = useState(null); // { fixedContact } | {}
   const [seeding, setSeeding] = useState(false);
+
+  // message board admin state
+  const [boardPosts, setBoardPosts] = useState([]);
+  const [showNewBoardPost, setShowNewBoardPost] = useState(false);
+  const [boardForm, setBoardForm] = useState({
+    title: '',
+    category: 'Alumni Magazine',
+    summary: '',
+    content: '',
+    author: 'Eanes Alumni Office',
+    linkUrl: '',
+    pinned: false,
+  });
+
+  useEffect(() => {
+    initMessageBoard().then(() => {
+      setBoardPosts(getBoardPosts());
+    });
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -210,6 +243,27 @@ export default function AdminCRM() {
       setTick(t => t + 1);  // recompute donation-derived memos now the cache is loaded
     }
     load();
+  }, []);
+
+  useEffect(() => {
+    async function loadMatching() {
+      const [mRes, mentorRes, sRes] = await Promise.all([
+        selectAll('student_matches', 'id, user_id, mentor_id, status, created_at'),
+        selectAll('mentors', 'id, name, grad_year, college, education, current_position, role, match_count'),
+        selectAll(
+          'user_profiles',
+          'user_id, name, grad_year, target_colleges, target_majors, target_careers, high_school_activities, favorite_classes',
+          q => q.eq('flow_type', 'student'),
+        ),
+      ]);
+      setMatchData({
+        matches: mRes.data || [],
+        mentors: mentorRes.data || [],
+        students: sRes.data || [],
+        error: mRes.error || mentorRes.error || sRes.error || null,
+      });
+    }
+    loadMatching();
   }, []);
 
   const donations = useMemo(() => getDonations(), [tick]);
@@ -349,6 +403,8 @@ export default function AdminCRM() {
     { key: 'contacts', label: 'Contacts', Icon: Table2 },
     { key: 'donations', label: 'Donations', Icon: DollarSign },
     { key: 'trends', label: 'Trends', Icon: LineChart },
+    { key: 'matching', label: 'Matching', Icon: Sparkles },
+    { key: 'board', label: 'Message Board', Icon: Newspaper },
   ];
 
   const maxYear = Math.max(1, ...yearData.map(d => d.value));
@@ -752,6 +808,278 @@ export default function AdminCRM() {
               );
             })()}
 
+            {/* ===================== MATCHING ===================== */}
+            {view === 'matching' && (() => {
+              if (!matchData) return (
+                <div className="flex items-center justify-center py-24"><Loader2 className="w-10 h-10 text-ink-faint animate-spin" /></div>
+              );
+              if (matchData.error) return (
+                <div className="bg-sunken border border-rule p-4 text-sm text-bad panel">
+                  Could not load matching data: {matchData.error.message}
+                </div>
+              );
+
+              const { matches, mentors: roster, students } = matchData;
+              const quality = matchQuality(matches, roster, students);
+              const load = mentorLoad(matches, roster);
+              const demand = supplyDemand(students, roster);
+              const comp = networkComposition(roster);
+              const colleges = collegeDemand(students, roster);
+              const volume = monthlyVolume(matches);
+              const out = outcomes(matches);
+              const thin = matches.length < 5;
+
+              const maxDemand = Math.max(1, ...demand.map(d => d.students));
+              const maxCollege = Math.max(1, ...colleges.slice(0, 12).map(d => d.students));
+              const maxVol = Math.max(1, ...volume.map(d => d.matches));
+              const maxLoad = Math.max(1, ...load.leaders.map(d => d.matches));
+              const starved = demand.filter(d => d.students > 0 && d.ratio >= 8);
+
+              return (
+                <div className="space-y-8">
+                  {thin && (
+                    <div className="bg-sunken border border-rule p-4 text-sm text-warn panel">
+                      Only {matches.length} match{matches.length === 1 ? '' : 'es'} on record. Volume and load cuts need more history; the supply and roster cuts below are already meaningful.
+                    </div>
+                  )}
+
+                  {/* Headline strip. Match quality leads because it is the one
+                      number that says whether the product is working. */}
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    <motion.div
+                      initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}
+                      className="navy-field panel p-6 lg:row-span-2 flex flex-col justify-between"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-on-navy-muted">Mean match quality</span>
+                        <Sparkles className="w-4 h-4 text-on-navy-muted" strokeWidth={1.75} />
+                      </div>
+                      <div>
+                        <div className="font-heading text-4xl lg:text-5xl font-semibold text-on-navy tabular">
+                          {quality.count ? quality.mean.toFixed(1) : '-'}
+                        </div>
+                        <div className="mt-3 flex items-baseline gap-2 text-sm text-on-navy-muted">
+                          <span className="tabular text-heritage-on-navy font-medium">{quality.bands.strong}</span>
+                          <span>strong,</span>
+                          <span className="tabular text-heritage-on-navy font-medium">{quality.bands.fair}</span>
+                          <span>fair,</span>
+                          <span className="tabular text-heritage-on-navy font-medium">{quality.bands.weak}</span>
+                          <span>weak</span>
+                        </div>
+                        <p className="mt-3 text-xs text-on-navy-muted">
+                          Re-scored live with the matching engine, not stored at match time.
+                        </p>
+                      </div>
+                    </motion.div>
+
+                    {[
+                      { label: 'Matches made', value: load.total },
+                      { label: 'Students served', value: new Set(matches.map(m => m.user_id)).size },
+                      { label: 'Mentors ever matched', value: `${load.distinctUsed} of ${load.rosterSize}` },
+                      { label: 'Same-college matches', value: pctText(quality.exactCollegeShare) },
+                    ].map((s2, i) => (
+                      <motion.div
+                        key={s2.label}
+                        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.05 + i * 0.04, duration: 0.3 }}
+                        className="bg-surface border border-rule panel p-5"
+                      >
+                        <div className="text-sm text-ink-faint">{s2.label}</div>
+                        <div className="font-heading text-2xl font-semibold text-ink tabular mt-1">{s2.value}</div>
+                      </motion.div>
+                    ))}
+                  </div>
+
+                  {/* Supply gaps: the cut that actually changes recruiting. */}
+                  <Panel
+                    title="Field supply vs student demand"
+                    subtitle="Students per working professional in each field. Above 8:1 those students start competing for the same few mentors."
+                    Icon={Users}
+                  >
+                    {starved.length > 0 && (
+                      <p className="mb-4 text-sm text-warn">
+                        Under-served: {starved.map(d => d.label).join(', ')}. Recruiting here moves match quality more than any tuning.
+                      </p>
+                    )}
+                    <TrendTable
+                      rows={demand}
+                      cols={[
+                        { label: 'Field', get: r => r.label, strong: true },
+                        { label: 'Students', align: 'right', get: r => r.students },
+                        { label: '', get: r => <Bar value={r.students} max={maxDemand} color={CHART_COLORS[0]} /> },
+                        { label: 'Mentors', align: 'right', get: r => r.mentors },
+                        { label: 'Professionals', align: 'right', get: r => r.professionals },
+                        {
+                          label: 'Ratio', align: 'right',
+                          get: r => r.professionals === 0
+                            ? (r.students > 0 ? <span className="text-bad">none</span> : '-')
+                            : <span className={r.ratio >= 8 ? 'text-warn' : ''}>{r.ratio.toFixed(1)}:1</span>,
+                        },
+                      ]}
+                    />
+                  </Panel>
+
+                  <div className="grid gap-8 lg:grid-cols-2">
+                    {/* Which blocks are earning their weight on real matches. */}
+                    <Panel
+                      title="Which signals are doing the work"
+                      subtitle="Share of recorded matches where each block contributed. A block near 0% is weight spent on data nobody has."
+                      Icon={LineChart}
+                    >
+                      <TrendTable
+                        rows={quality.blockHitRate}
+                        empty="No scored matches yet."
+                        cols={[
+                          { label: 'Signal', get: r => r.label, strong: true },
+                          { label: 'Weight', align: 'right', get: r => pctText(r.weight) },
+                          { label: 'Hit rate', align: 'right', get: r => pctText(r.share) },
+                          { label: '', get: r => <Bar value={r.share} max={1} color={CHART_COLORS[1]} /> },
+                        ]}
+                      />
+                    </Panel>
+
+                    {/* Roster composition and completeness. */}
+                    <Panel
+                      title="Roster composition"
+                      subtitle="What the network is made of, and how much of each record the matcher can actually read."
+                      Icon={GraduationCap}
+                    >
+                      <TrendTable
+                        rows={[
+                          { key: 'pros', label: 'Working professionals', value: comp.professionals, share: 1 - comp.studentShare },
+                          { key: 'cur', label: 'Current college students', value: comp.currentStudents, share: comp.studentShare },
+                          { key: 'clubs', label: 'Records with clubs', value: comp.withClubs, share: comp.clubShare },
+                          { key: 'classes', label: 'Records with classes', value: comp.withClasses, share: comp.classShare },
+                        ]}
+                        cols={[
+                          { label: 'Segment', get: r => r.label, strong: true },
+                          { label: 'Count', align: 'right', get: r => r.value },
+                          { label: 'Share', align: 'right', get: r => pctText(r.share) },
+                          { label: '', get: r => <Bar value={r.share} max={1} color={CHART_COLORS[2]} /> },
+                        ]}
+                      />
+                      <p className="mt-4 text-xs text-ink-faint">
+                        Average profile completeness {pctText(comp.avgCompleteness)} of the weighted model.
+                        {comp.clubShare === 0 && ' No record carries clubs, so the archetype signal is inferred from field text alone.'}
+                        {comp.classShare === 0 && ' No record carries classes, so the class-zone weight never fires.'}
+                      </p>
+                    </Panel>
+                  </div>
+
+                  {/* Dream colleges vs who we actually have. */}
+                  <Panel
+                    title="Dream colleges vs network coverage"
+                    subtitle="Where students want to go, and whether anyone in the network went there."
+                    Icon={School}
+                  >
+                    <TrendTable
+                      rows={colleges.slice(0, 12)}
+                      empty="No student target colleges on record yet."
+                      cols={[
+                        { label: 'College', get: r => r.label, strong: true },
+                        { label: 'Students', align: 'right', get: r => r.students },
+                        { label: '', get: r => <Bar value={r.students} max={maxCollege} color={CHART_COLORS[3]} /> },
+                        { label: 'Alumni', align: 'right', get: r => r.alumni },
+                        {
+                          label: 'Professionals', align: 'right',
+                          get: r => r.professionals === 0
+                            ? <span className="text-bad">none</span>
+                            : r.professionals,
+                        },
+                      ]}
+                    />
+                  </Panel>
+
+                  <div className="grid gap-8 lg:grid-cols-2">
+                    {/* Load spread. */}
+                    <Panel
+                      title="Mentor load"
+                      subtitle={load.meaningful
+                        ? `Fair share would be ${load.fairShare.toFixed(1)} matches each. Concentration ${load.gini.toFixed(2)} (0 even, 1 one mentor takes all).`
+                        : `${load.total} matches across ${load.rosterSize} mentors — too few to read concentration yet. Counts below are still exact.`}
+                      Icon={Briefcase}
+                    >
+                      <TrendTable
+                        rows={load.leaders}
+                        empty="No matches recorded yet."
+                        cols={[
+                          { label: 'Mentor', get: r => r.mentor?.name || '-', strong: true },
+                          { label: 'College', get: r => r.mentor?.college || '' },
+                          { label: 'Matches', align: 'right', get: r => r.matches },
+                          { label: '', get: r => <Bar value={r.matches} max={maxLoad} color={CHART_COLORS[4]} /> },
+                        ]}
+                      />
+                      <p className="mt-4 text-xs text-ink-faint">
+                        {load.neverMatched} of {load.rosterSize} mentors have never been matched.
+                        {load.total > 0 && ` Top five absorb ${pctText(load.top5Share)} of all matches.`}
+                      </p>
+                    </Panel>
+
+                    {/* Volume + outcomes. */}
+                    <Panel
+                      title="Match volume"
+                      subtitle="Matches made per month, with distinct students served."
+                      Icon={CalendarDays}
+                    >
+                      <TrendTable
+                        rows={volume}
+                        empty="No dated matches yet."
+                        cols={[
+                          { label: 'Month', get: r => r.key, strong: true },
+                          { label: 'Matches', align: 'right', get: r => r.matches },
+                          { label: '', get: r => <Bar value={r.matches} max={maxVol} color={CHART_COLORS[5]} /> },
+                          { label: 'Students', align: 'right', get: r => r.students },
+                        ]}
+                      />
+                      <div className="mt-5 pt-4 border-t border-rule">
+                        <div className="text-sm font-medium text-ink mb-2">Outcomes</div>
+                        {out.tracked ? (
+                          <TrendTable
+                            rows={out.counts}
+                            cols={[
+                              { label: 'Status', get: r => r.label, strong: true },
+                              { label: 'Count', align: 'right', get: r => r.value },
+                              { label: 'Share', align: 'right', get: r => pctText(r.value / (out.total || 1)) },
+                            ]}
+                          />
+                        ) : (
+                          <p className="text-sm text-warn">
+                            All {out.total} matches still sit at &ldquo;Matched&rdquo;. No outcome has ever been recorded, so
+                            there is no funnel to read here yet — and no way to tell which matches actually worked.
+                          </p>
+                        )}
+                      </div>
+                    </Panel>
+                  </div>
+
+                  {/* Every scored pairing, newest quality first. */}
+                  <Panel
+                    title="Every recorded match, re-scored"
+                    subtitle="The score each student was actually served, recomputed now against the current engine."
+                    Icon={Table2}
+                  >
+                    <TrendTable
+                      rows={quality.scored}
+                      empty="No matches could be scored — the student or mentor record may have been deleted."
+                      cols={[
+                        { label: 'Student', get: r => r.student, strong: true },
+                        { label: 'Mentor', get: r => r.mentor },
+                        { label: 'College', get: r => r.college || '' },
+                        { label: 'Position', get: r => r.position || '' },
+                        { label: 'Score', align: 'right', get: r => r.score.toFixed(1) },
+                        {
+                          label: 'Confidence', align: 'right',
+                          get: r => r.confidence === 'low'
+                            ? <span className="text-warn">low</span>
+                            : r.confidence,
+                        },
+                      ]}
+                    />
+                  </Panel>
+                </div>
+              );
+            })()}
+
             {/* ===================== CONTACTS ===================== */}
             {view === 'contacts' && (
               <div>
@@ -859,6 +1187,217 @@ export default function AdminCRM() {
                             <td className="px-4 py-3"><button onClick={() => { deleteDonation(d.id); changed(); }} className="text-ink-faint hover:text-action cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>
                           </tr>
                         ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ===================== MESSAGE BOARD ===================== */}
+            {view === 'board' && (
+              <div className="space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h2 className="text-xl font-semibold text-ink">Community Message Board</h2>
+                    <p className="text-xs font-medium text-ink-faint mt-0.5">
+                      Publish alumni magazine stories, campus updates, and district news for all students and alumni.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowNewBoardPost(!showNewBoardPost)}
+                    className="px-4 py-2.5 bg-action text-action-ink font-medium text-sm flex items-center gap-2 rounded-slight hover:bg-action-hover transition-colors cursor-pointer"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>{showNewBoardPost ? 'Cancel' : 'New Story / Magazine Post'}</span>
+                  </button>
+                </div>
+
+                {showNewBoardPost && (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!boardForm.title.trim() || !boardForm.content.trim()) return;
+                      addBoardPost(boardForm);
+                      setBoardPosts(getBoardPosts());
+                      setShowNewBoardPost(false);
+                      setBoardForm({
+                        title: '',
+                        category: 'Alumni Magazine',
+                        summary: '',
+                        content: '',
+                        author: 'Eanes Alumni Office',
+                        linkUrl: '',
+                        pinned: false,
+                      });
+                    }}
+                    className="bg-surface border border-rule p-6 panel space-y-4 shadow-sm"
+                  >
+                    <h3 className="font-semibold text-ink text-base">Create Message Board Post</h3>
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-ink-faint mb-1">Title</label>
+                        <input
+                          type="text"
+                          required
+                          value={boardForm.title}
+                          onChange={(e) => setBoardForm({ ...boardForm, title: e.target.value })}
+                          placeholder="e.g. Fall 2026 Alumni Magazine Issue"
+                          className="w-full px-3 py-2 text-sm bg-sunken border border-rule rounded-slight focus:outline-none focus:border-action"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-ink-faint mb-1">Category</label>
+                        <select
+                          value={boardForm.category}
+                          onChange={(e) => setBoardForm({ ...boardForm, category: e.target.value })}
+                          className="w-full px-3 py-2 text-sm bg-sunken border border-rule rounded-slight focus:outline-none focus:border-action"
+                        >
+                          <option value="Alumni Magazine">Alumni Magazine</option>
+                          <option value="Spotlight">Spotlight</option>
+                          <option value="Events">Events</option>
+                          <option value="Campus News">Campus News</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-ink-faint mb-1">Author / Byline</label>
+                        <input
+                          type="text"
+                          value={boardForm.author}
+                          onChange={(e) => setBoardForm({ ...boardForm, author: e.target.value })}
+                          placeholder="e.g. Eanes Alumni Office"
+                          className="w-full px-3 py-2 text-sm bg-sunken border border-rule rounded-slight focus:outline-none focus:border-action"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-semibold uppercase tracking-wider text-ink-faint mb-1">External Link / PDF URL (Optional)</label>
+                        <input
+                          type="url"
+                          value={boardForm.linkUrl}
+                          onChange={(e) => setBoardForm({ ...boardForm, linkUrl: e.target.value })}
+                          placeholder="https://eaneseducationfoundation.org/alumni/..."
+                          className="w-full px-3 py-2 text-sm bg-sunken border border-rule rounded-slight focus:outline-none focus:border-action"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-ink-faint mb-1">Short Summary</label>
+                      <input
+                        type="text"
+                        value={boardForm.summary}
+                        onChange={(e) => setBoardForm({ ...boardForm, summary: e.target.value })}
+                        placeholder="Brief 1-sentence teaser for the card preview..."
+                        className="w-full px-3 py-2 text-sm bg-sunken border border-rule rounded-slight focus:outline-none focus:border-action"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold uppercase tracking-wider text-ink-faint mb-1">Story Content</label>
+                      <textarea
+                        required
+                        rows={5}
+                        value={boardForm.content}
+                        onChange={(e) => setBoardForm({ ...boardForm, content: e.target.value })}
+                        placeholder="Write or paste the magazine snippet, announcement, or story..."
+                        className="w-full px-3 py-2 text-sm bg-sunken border border-rule rounded-slight focus:outline-none focus:border-action"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2">
+                      <label className="flex items-center gap-2 text-sm text-ink cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={boardForm.pinned}
+                          onChange={(e) => setBoardForm({ ...boardForm, pinned: e.target.checked })}
+                          className="rounded text-action"
+                        />
+                        <span>Pin to top of Message Board</span>
+                      </label>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowNewBoardPost(false)}
+                          className="px-4 py-2 text-sm font-medium text-ink-muted hover:text-ink cursor-pointer"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-5 py-2 text-sm font-medium bg-action text-action-ink rounded-slight hover:bg-action-hover cursor-pointer"
+                        >
+                          Publish Story
+                        </button>
+                      </div>
+                    </div>
+                  </form>
+                )}
+
+                {/* Posts Table */}
+                <div className="bg-surface border border-rule overflow-hidden panel">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left text-sm whitespace-nowrap">
+                      <thead>
+                        <tr className="text-xs tracking-wide text-ink-faint border-b border-rule bg-sunken">
+                          <th className="px-4 py-3 font-medium">Post Title</th>
+                          <th className="px-4 py-3 font-medium">Category</th>
+                          <th className="px-4 py-3 font-medium">Author</th>
+                          <th className="px-4 py-3 font-medium">Date</th>
+                          <th className="px-4 py-3 font-medium text-center">Pinned</th>
+                          <th className="px-4 py-3 font-medium text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-rule font-medium">
+                        {boardPosts.map((post) => (
+                          <tr key={post.id} className="hover:bg-sunken/50 transition-colors">
+                            <td className="px-4 py-3 font-medium text-ink max-w-[280px] truncate">
+                              {post.title}
+                            </td>
+                            <td className="px-4 py-3">
+                              <span className="text-xs px-2 py-0.5 bg-sunken border border-rule rounded-xs text-action font-semibold">
+                                {post.category}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-ink-muted">{post.author}</td>
+                            <td className="px-4 py-3 text-ink-faint">{post.date}</td>
+                            <td className="px-4 py-3 text-center">
+                              <button
+                                onClick={() => {
+                                  updateBoardPost(post.id, { pinned: !post.pinned });
+                                  setBoardPosts(getBoardPosts());
+                                }}
+                                className={`p-1 rounded cursor-pointer ${post.pinned ? 'text-action' : 'text-ink-faint hover:text-ink'}`}
+                                title={post.pinned ? 'Unpin' : 'Pin to top'}
+                              >
+                                <Pin className={`w-4 h-4 ${post.pinned ? 'fill-current' : ''}`} />
+                              </button>
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <button
+                                onClick={() => {
+                                  if (window.confirm(`Delete post "${post.title}"?`)) {
+                                    deleteBoardPost(post.id);
+                                    setBoardPosts(getBoardPosts());
+                                  }
+                                }}
+                                className="text-ink-faint hover:text-action cursor-pointer p-1"
+                                title="Delete post"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                        {boardPosts.length === 0 && (
+                          <tr>
+                            <td colSpan={6} className="px-4 py-8 text-center text-ink-muted">
+                              No posts published yet.
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>

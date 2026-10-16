@@ -16,17 +16,33 @@ import {
   FolderHeart,
   CheckCircle2,
   Home,
-  LogOut
+  LogOut,
+  Mail,
+  Lock,
+  Sparkles,
+  Newspaper,
+  ExternalLink,
+  RefreshCw,
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import TabBar from '../components/ui/TabBar';
 import { COLLEGES, MAJORS } from '../utils/colleges';
+import { findAlumniMatches, generateAlumniOutreachDraft } from '../utils/alumniMatchingEngine';
+import MessageBoard from '../components/MessageBoard';
+import SendMessageModal from '../components/SendMessageModal';
+import { isContactUnlocked, obscureEmail, recordReply, getMessagesBetween } from '../utils/messageRelayStore';
 
 export default function Dashboard({ session }) {
   const [activeTab, setActiveTab] = useState('matches'); // 'matches' or 'profile'
   const [matches, setMatches] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Alumni-to-alumni matching state
+  const [alumniMatches, setAlumniMatches] = useState([]);
+  const [loadingAlumniMatches, setLoadingAlumniMatches] = useState(false);
+  const [selectedRecipientForMessage, setSelectedRecipientForMessage] = useState(null);
+  const [messageRelayTick, setMessageRelayTick] = useState(0);
   
   // Notes local state
   const [savingNoteId, setSavingNoteId] = useState(null);
@@ -183,6 +199,36 @@ export default function Dashboard({ session }) {
 
     fetchDashboardData();
   }, [session]);
+
+  const runAlumniMatching = async () => {
+    if (!profile) return;
+    setLoadingAlumniMatches(true);
+    try {
+      const results = await findAlumniMatches(profile);
+      setAlumniMatches(results);
+    } catch (err) {
+      console.error("Failed to run alumni matching:", err);
+    } finally {
+      setLoadingAlumniMatches(false);
+    }
+  };
+
+  useEffect(() => {
+    let active = true;
+    if (!isStudent && profile && alumniMatches.length === 0 && !loadingAlumniMatches) {
+      findAlumniMatches(profile).then(results => {
+        if (active) setAlumniMatches(results);
+      }).catch(err => {
+        console.error("Failed to run alumni matching:", err);
+      });
+    }
+    return () => { active = false; };
+  }, [profile, isStudent, alumniMatches.length, loadingAlumniMatches]);
+
+  const checkUnlocked = (uid, cid) => {
+    if (messageRelayTick < 0) return false;
+    return isContactUnlocked(uid, cid);
+  };
 
   const handleStatusChange = async (matchId, newStatus) => {
     const { error } = await supabase
@@ -502,7 +548,8 @@ export default function Dashboard({ session }) {
           onChange={setActiveTab}
           items={[
             ...(!isStudent ? [{ key: 'home', label: 'Home', Icon: Home }] : []),
-            ...(isStudent ? [{ key: 'matches', label: `My Matches (${matches.length})`, Icon: FolderHeart }] : []),
+            { key: 'matches', label: isStudent ? `My Matches (${matches.length})` : 'Alumni Matching', Icon: FolderHeart },
+            { key: 'board', label: 'Message Board', Icon: Newspaper },
             { key: 'profile', label: 'My Profile', Icon: User },
           ]}
         />
@@ -622,13 +669,163 @@ export default function Dashboard({ session }) {
               );
             })()}
 
-            {/* Inactive Student Connections Notice */}
-            <div className="bg-surface border border-rule p-8 text-center max-w-xl mx-auto w-full mt-8 panel">
-              <FolderHeart className="w-16 h-16 text-ink-faint mx-auto mb-6" />
-              <h3 className="text-2xl font-semibold text-ink tracking-tight mb-2">Looking to meet with a kid!</h3>
-              <p className="text-ink-muted font-medium text-sm leading-relaxed">
-                We are actively matching you with students. As soon as a student initiates a match to connect with you, their details will appear here. Thank you for giving back and mentoring the next generation of Chaps!
-              </p>
+            {/* Alumni-to-Alumni Matching Section */}
+            <div className="pt-8 border-t-2 border-rule">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-semibold text-action uppercase tracking-wider">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Algorithmic Peer Matcher</span>
+                  </div>
+                  <h3 className="font-heading text-2xl font-semibold text-ink tracking-tight mt-0.5">
+                    Alumni-to-Alumni Contact Matching
+                  </h3>
+                  <p className="text-sm text-ink-muted mt-0.5">
+                    Chaps paired algorithmically on college, current field, major, and location.
+                  </p>
+                </div>
+
+                <button
+                  onClick={runAlumniMatching}
+                  disabled={loadingAlumniMatches}
+                  className="px-4 py-2.5 bg-action text-action-ink font-medium text-xs rounded-slight flex items-center gap-2 hover:bg-action-hover transition-colors cursor-pointer disabled:opacity-50"
+                >
+                  <RefreshCw className={`w-3.5 h-3.5 ${loadingAlumniMatches ? 'animate-spin' : ''}`} />
+                  <span>{loadingAlumniMatches ? 'Matching Chaps…' : 'Refresh Alumni Matches'}</span>
+                </button>
+              </div>
+
+              {loadingAlumniMatches ? (
+                <div className="bg-surface border border-rule p-12 text-center panel">
+                  <Loader2 className="w-8 h-8 text-ink-faint animate-spin mx-auto mb-3" />
+                  <p className="text-sm font-medium text-ink-muted">Running algorithmic match across alumni network…</p>
+                </div>
+              ) : alumniMatches.length === 0 ? (
+                <div className="bg-surface border border-rule p-8 text-center panel">
+                  <p className="text-sm font-medium text-ink-muted">No alumni peer matches found yet. Try keeping your college, field, and major current in your profile!</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {alumniMatches.map((m, idx) => {
+                    const currentUserId = session?.user?.id || 'local_user';
+                    const candId = m.candidate.id;
+                    const isUnlocked = checkUnlocked(currentUserId, candId);
+                    const sentMsgs = getMessagesBetween(currentUserId, candId);
+                    const pendingMsg = sentMsgs.find(msg => msg.replyStatus === 'pending');
+
+                    return (
+                      <motion.div
+                        key={m.candidate.id || idx}
+                        initial={{ opacity: 0, y: 12 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05, duration: 0.25 }}
+                        className="bg-surface border border-rule flex flex-col justify-between panel overflow-hidden hover:border-rule-strong transition-all"
+                      >
+                        <div className="p-5">
+                          <div className="flex items-center justify-between gap-2 mb-3">
+                            <span className="px-2.5 py-0.5 bg-action text-action-ink font-semibold text-xs rounded-full">
+                              {m.score}% Match
+                            </span>
+                            {m.candidate.gradYear && (
+                              <span className="text-xs text-ink-faint font-medium">
+                                Class of <strong className="text-heritage">{m.candidate.gradYear}</strong>
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex items-center gap-3.5 mb-3">
+                            <img
+                              src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(m.candidate.name)}`}
+                              alt={m.candidate.name}
+                              className="w-12 h-12 rounded-full border border-rule bg-sunken shrink-0"
+                            />
+                            <div className="min-w-0">
+                              <h4 className="font-semibold text-ink text-lg leading-tight truncate">
+                                {m.candidate.name}
+                              </h4>
+                              <p className="text-xs text-ink-muted truncate mt-0.5 font-medium">
+                                {m.candidate.primaryCareer}
+                                {m.candidate.company ? ` @ ${m.candidate.company}` : ''}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1 text-xs text-ink-muted mb-4 font-medium">
+                            {m.candidate.primarySchool && (
+                              <div className="flex items-center gap-1.5 truncate">
+                                <GraduationCap className="w-3.5 h-3.5 text-ink-faint shrink-0" />
+                                <span>{m.candidate.primarySchool} {m.candidate.primaryMajor ? `(${m.candidate.primaryMajor})` : ''}</span>
+                              </div>
+                            )}
+                            {m.candidate.location && (
+                              <div className="flex items-center gap-1.5 truncate">
+                                <MapPin className="w-3.5 h-3.5 text-ink-faint shrink-0" />
+                                <span>{m.candidate.location}</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Match reasons */}
+                          <div className="bg-sunken border border-rule p-3 mb-4 panel space-y-1">
+                            <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint block">Why you matched</span>
+                            {m.threads.slice(0, 2).map((t, tIdx) => (
+                              <p key={tIdx} className="text-xs text-ink leading-snug">
+                                • {t}
+                              </p>
+                            ))}
+                          </div>
+
+                          {/* Privacy Email Status */}
+                          <div className="border-t border-rule pt-3 text-xs">
+                            {isUnlocked ? (
+                              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 p-2 rounded-xs">
+                                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                                <span className="truncate">Contact Unlocked: {m.candidate.email || 'Email shared'}</span>
+                              </div>
+                            ) : pendingMsg ? (
+                              <div className="space-y-1.5 bg-amber-500/10 border border-amber-500/20 p-2 rounded-xs">
+                                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium">
+                                  <Lock className="w-3 h-3 shrink-0" />
+                                  <span className="truncate">Relayed (Awaiting Reply)</span>
+                                </div>
+                                <p className="text-[11px] text-ink-faint">
+                                  Obscured: {obscureEmail(m.candidate.email)}
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    recordReply(pendingMsg.id);
+                                    setMessageRelayTick(t => t + 1);
+                                  }}
+                                  className="text-[11px] font-semibold text-action hover:underline cursor-pointer flex items-center gap-1"
+                                >
+                                  <span>Simulate Recipient Reply (Test Unlock)</span>
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 text-ink-faint p-1 font-mono text-[11px]">
+                                <Lock className="w-3 h-3 text-action shrink-0" />
+                                <span className="truncate">Email obscured: {obscureEmail(m.candidate.email)}</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Message Action */}
+                        <div className="p-4 bg-sunken/40 border-t border-rule">
+                          <button
+                            onClick={() => setSelectedRecipientForMessage({ ...m.candidate, matchThreads: m.threads, matchScore: m.score })}
+                            className="w-full py-2 px-3 text-xs font-medium bg-action text-action-ink rounded-slight hover:bg-action-hover transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                          >
+                            <Mail className="w-3.5 h-3.5" />
+                            <span>Message {m.candidate.name.split(' ')[0]} (Draft Ready)</span>
+                          </button>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         ) : matches.length === 0 ? (
@@ -736,6 +933,58 @@ export default function Dashboard({ session }) {
                         <span>{m.location}</span>
                       </div>
                     </div>
+
+                    {/* Messaging & Obscured Email Status */}
+                    {(() => {
+                      const currentUserId = session?.user?.id || 'local_user';
+                      const isUnlocked = checkUnlocked(currentUserId, m.id);
+                      const sentMsgs = getMessagesBetween(currentUserId, m.id);
+                      const pendingMsg = sentMsgs.find(msg => msg.replyStatus === 'pending');
+
+                      return (
+                        <div className="space-y-2 mb-4">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedRecipientForMessage({ ...m, id: m.id || match.mentor_id })}
+                            className="w-full py-2.5 px-4 font-medium text-xs bg-action text-action-ink hover:bg-action-hover rounded-slight flex items-center justify-center gap-2 cursor-pointer transition-colors"
+                          >
+                            <Mail className="w-4 h-4" />
+                            <span>Message {m.name.split(' ')[0]}</span>
+                          </button>
+
+                          <div className="text-xs">
+                            {isUnlocked ? (
+                              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 p-2 rounded-xs">
+                                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                                <span className="truncate">Contact Unlocked: {m.email || 'Email shared'}</span>
+                              </div>
+                            ) : pendingMsg ? (
+                              <div className="space-y-1 bg-amber-500/10 border border-amber-500/20 p-2 rounded-xs">
+                                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium">
+                                  <Lock className="w-3 h-3 shrink-0" />
+                                  <span>Relayed (Awaiting Reply)</span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    recordReply(pendingMsg.id);
+                                    setMessageRelayTick(t => t + 1);
+                                  }}
+                                  className="text-[11px] font-semibold text-action hover:underline cursor-pointer block"
+                                >
+                                  Simulate Mentor Reply (Test Unlock)
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-1.5 text-ink-faint p-1 font-mono text-[11px]">
+                                <Lock className="w-3 h-3 text-action shrink-0" />
+                                <span>Email obscured for privacy until reply</span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     <a
                       href={linkedInSearchUrl}
@@ -1221,6 +1470,29 @@ export default function Dashboard({ session }) {
             </p>
           </motion.div>
 
+          {/* Featured Message Board & Magazine Card */}
+          <div className="bg-surface border border-rule p-6 mb-12 panel flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xs">
+            <div className="space-y-1 max-w-xl">
+              <div className="flex items-center gap-2 text-xs font-semibold text-action uppercase tracking-wide">
+                <Newspaper className="w-4 h-4" />
+                <span>Alumni Magazine &amp; Gazette</span>
+              </div>
+              <h3 className="font-heading text-xl font-semibold text-ink">
+                The Chaparral Review: Fall Issue Now Live
+              </h3>
+              <p className="text-sm text-ink-muted leading-relaxed">
+                Celebrating 50 years of Westlake excellence, alumni spotlights, and campus milestones. Read articles and community notes on the message board.
+              </p>
+            </div>
+            <button
+              onClick={() => setActiveTab('board')}
+              className="px-5 py-3 bg-action text-action-ink font-medium text-xs rounded-slight hover:bg-action-hover transition-colors whitespace-nowrap self-start sm:self-center cursor-pointer flex items-center gap-1.5"
+            >
+              <span>Read Message Board</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+          </div>
+
           <h2 className="font-heading text-2xl font-semibold text-ink tracking-tight mb-1">
             Eanes ISD &amp; alumni portal
           </h2>
@@ -1270,6 +1542,32 @@ export default function Dashboard({ session }) {
           </dl>
         </div>
       )}
+
+      {/* MESSAGE BOARD TAB */}
+      {activeTab === 'board' && (
+        <MessageBoard />
+      )}
+
+      {/* Recipient Message Modal */}
+      {selectedRecipientForMessage && (() => {
+        const draft = generateAlumniOutreachDraft(
+          profile || {},
+          selectedRecipientForMessage,
+          selectedRecipientForMessage.matchThreads || []
+        );
+
+        return (
+          <SendMessageModal
+            isOpen={Boolean(selectedRecipientForMessage)}
+            onClose={() => setSelectedRecipientForMessage(null)}
+            recipient={selectedRecipientForMessage}
+            currentUser={session}
+            defaultSubject={draft.subject}
+            defaultBody={draft.body}
+            onSent={() => setMessageRelayTick(t => t + 1)}
+          />
+        );
+      })()}
     </div>
   );
 }

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import Magnetic from './ui/Magnetic';
-import { Copy, Check } from 'lucide-react';
+import { Copy, Check, Send } from 'lucide-react';
 import { cn } from '../utils/cn';
+import SendMessageModal from './SendMessageModal';
 
-export default function OutreachMessage({ matchData, userProfile }) {
+export default function OutreachMessage({ matchData, userProfile, session }) {
   const [copiedBody, setCopiedBody] = useState(false);
   const [copiedSubject, setCopiedSubject] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
 
   if (!matchData || !matchData.mentor || !userProfile) {
     return null; // Guard against rendering crashes if profile data is missing
@@ -222,28 +224,47 @@ export default function OutreachMessage({ matchData, userProfile }) {
           </div>
         </div>
 
-        {/* The one red thing on this card. */}
-        <Magnetic strength={4}
-          onClick={handleCopyBody}
-          className={cn(
-            'w-full py-4 px-6 font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors',
-            copiedBody
-              ? 'bg-signal-good text-white'
-              : 'bg-action text-action-ink hover:bg-action-hover'
-          )}
-        >
-          {copiedBody ? (
-            <>
-              <Check className="w-5 h-5" />
-              <span>Message copied</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-5 h-5" />
-              <span>Copy message body</span>
-            </>
-          )}
-        </Magnetic>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+          {/* Send via Relay button */}
+          <button
+            type="button"
+            onClick={() => setShowMessageModal(true)}
+            className="w-full py-4 px-6 font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors bg-action text-action-ink hover:bg-action-hover rounded-slight"
+          >
+            <Send className="w-4 h-4" />
+            <span>Send via Email Relay</span>
+          </button>
+
+          {/* Copy button */}
+          <Magnetic strength={4}
+            onClick={handleCopyBody}
+            className={cn(
+              'w-full py-4 px-6 font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors border border-rule bg-surface text-ink hover:bg-sunken rounded-slight',
+              copiedBody && 'border-signal-good text-good'
+            )}
+          >
+            {copiedBody ? (
+              <>
+                <Check className="w-5 h-5 text-good" />
+                <span>Message copied</span>
+              </>
+            ) : (
+              <>
+                <Copy className="w-5 h-5" />
+                <span>Copy message body</span>
+              </>
+            )}
+          </Magnetic>
+        </div>
+
+        <SendMessageModal
+          isOpen={showMessageModal}
+          onClose={() => setShowMessageModal(false)}
+          recipient={mentor}
+          currentUser={session || { user: { id: userProfile.user_id, email: userProfile.email, user_metadata: { full_name: userProfile.name } } }}
+          defaultSubject={subjectText}
+          defaultBody={bodyText}
+        />
       </div>
     </div>
   );

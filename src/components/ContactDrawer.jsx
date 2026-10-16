@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, DollarSign, Plus, Trash2, Tag as TagIcon, StickyNote } from 'lucide-react';
+import { X, DollarSign, Plus, Trash2, Tag as TagIcon, StickyNote, Mail } from 'lucide-react';
 import { donationsFor, totalRaised, getNotes, addNote, deleteNote, getTags, setTags, deleteDonation, money } from '../utils/crmStore';
+import SendMessageModal from './SendMessageModal';
 
 const FIELDS = [
   ['Type', 'source'], ['Class', 'grad_year'], ['Status', 'status'], ['Email', 'email'],
@@ -13,6 +14,7 @@ const FIELDS = [
 export default function ContactDrawer({ contact, onClose, onAddDonation, refreshKey, onChanged, onDelete }) {
   const [noteText, setNoteText] = useState('');
   const [tagText, setTagText] = useState('');
+  const [showMessageModal, setShowMessageModal] = useState(false);
   if (!contact) return null;
 
   const donations = donationsFor(contact.id);
@@ -64,9 +66,17 @@ export default function ContactDrawer({ contact, onClose, onAddDonation, refresh
             <div className="text-3xl font-semibold" style={{ fontVariantNumeric: 'tabular-nums' }}>{money(total)}</div>
             <div className="text-xs font-medium text-white/70">{donations.length} gift{donations.length === 1 ? '' : 's'}</div>
           </div>
-          <button onClick={() => onAddDonation(contact)} className="bg-white/15 hover:bg-white/25 border border-white/25 px-3 py-2 text-sm font-medium flex items-center gap-1.5 cursor-pointer">
-            <Plus className="w-4 h-4" /> Gift
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setShowMessageModal(true)}
+              className="bg-white/15 hover:bg-white/25 border border-white/25 px-3 py-2 text-sm font-medium flex items-center gap-1.5 cursor-pointer"
+            >
+              <Mail className="w-4 h-4" /> Message
+            </button>
+            <button onClick={() => onAddDonation(contact)} className="bg-white/15 hover:bg-white/25 border border-white/25 px-3 py-2 text-sm font-medium flex items-center gap-1.5 cursor-pointer">
+              <Plus className="w-4 h-4" /> Gift
+            </button>
+          </div>
         </div>
 
         {/* Profile fields */}
@@ -151,6 +161,15 @@ export default function ContactDrawer({ contact, onClose, onAddDonation, refresh
             </button>
           </div>
         )}
+
+        <SendMessageModal
+          isOpen={showMessageModal}
+          onClose={() => setShowMessageModal(false)}
+          recipient={contact}
+          currentUser={{ user: { id: 'admin_user', email: 'admin@westlakealumni.org', user_metadata: { full_name: 'Admin Desk' } } }}
+          defaultSubject={`Chap Connect — Note regarding your Westlake alumni record`}
+          defaultBody={`Hi ${contact.name ? contact.name.split(' ')[0] : 'there'},\n\nWe wanted to reach out from the Westlake High School alumni network regarding your community profile.`}
+        />
       </motion.aside>
     </motion.div>
   );

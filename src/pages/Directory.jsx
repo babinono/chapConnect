@@ -1,37 +1,59 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { supabase } from '../utils/supabaseClient';
-import { Loader2, Search, ArrowLeft, ArrowRight } from 'lucide-react';
+import { selectAll } from '../utils/supabaseClient';
+import { Loader2, Search, ArrowLeft, ArrowRight, Mail, CheckCircle2 } from 'lucide-react';
+import SendMessageModal from '../components/SendMessageModal';
+import { isContactUnlocked } from '../utils/messageRelayStore';
 
 const PAGE_SIZE = 15;
 
-export default function Directory() {
+export default function Directory({ session }) {
   const navigate = useNavigate();
   const [rows, setRows] = useState(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(0);
+  const [messagingTarget, setMessagingTarget] = useState(null);
 
   useEffect(() => {
     async function fetchDirectory() {
       setLoading(true);
       const [alumniRes, mentorsRes] = await Promise.all([
-        supabase
-          .from('user_profiles')
-          .select('id, name, grad_year')
-          .eq('post_grad_school', 'ALUMNI_METADATA'),
-        supabase
-          .from('mentors')
-          .select('id, name, grad_year')
+        selectAll(
+          'user_profiles',
+          'id, user_id, name, grad_year, email, college, major, career, company, location',
+          q => q.eq('post_grad_school', 'ALUMNI_METADATA'),
+        ),
+        selectAll('mentors', 'id, name, grad_year, college, current_position, location, role, company'),
       ]);
 
       if (alumniRes.error) console.error('Error loading alumni:', alumniRes.error);
       if (mentorsRes.error) console.error('Error loading mentors:', mentorsRes.error);
 
       const merged = [
-        ...(alumniRes.data || []).map(r => ({ key: `a-${r.id}`, name: r.name, gradYear: r.grad_year })),
-        ...(mentorsRes.data || []).map(r => ({ key: `m-${r.id}`, name: r.name, gradYear: r.grad_year }))
+        ...(alumniRes.data || []).map(r => ({
+          key: `a-${r.id || r.user_id}`,
+          id: `a-${r.id || r.user_id}`,
+          name: r.name,
+          gradYear: r.grad_year,
+          college: r.college,
+          career: r.career || 'Westlake Alum',
+          company: r.company,
+          email: r.email,
+          location: r.location,
+        })),
+        ...(mentorsRes.data || []).map(r => ({
+          key: `m-${r.id}`,
+          id: `m-${r.id}`,
+          name: r.name,
+          gradYear: r.grad_year,
+          college: r.college,
+          career: r.current_position || r.role || 'Established Alumni',
+          company: r.company,
+          email: '',
+          location: r.location,
+        }))
       ].filter(r => r.name).sort((a, b) => a.name.localeCompare(b.name));
 
       setRows(merged);
@@ -98,20 +120,51 @@ export default function Directory() {
       ) : (
         <>
           <div className="bg-surface border border-rule overflow-hidden divide-y divide-slate-100 dark:divide-white/10 panel">
-            {current.map((r, i) => (
-              <motion.div
-                key={r.key}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: Math.min(i * 0.03, 0.4), duration: 0.3 }}
-                className="flex items-center justify-between px-6 py-4"
-              >
-                <span className="font-medium text-ink">{r.name}</span>
-                <span className="text-sm font-medium text-ink-faint tracking-wide">
-                  {r.gradYear ? `Class of ${r.gradYear}` : '-'}
-                </span>
-              </motion.div>
-            ))}
+            {current.map((r, i) => {
+              const currentUserId = session?.user?.id || 'local_user';
+              const unlocked = isContactUnlocked(currentUserId, r.id);
+
+              return (
+                <motion.div
+                  key={r.key}
+                  initial={{ opacity: 0, x: -12 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: Math.min(i * 0.03, 0.4), duration: 0.3 }}
+                  className="flex flex-col sm:flex-row sm:items-center justify-between p-4 sm:px-6 sm:py-4 gap-3 hover:bg-sunken/40 transition-colors"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-semibold text-ink text-base">{r.name}</span>
+                      {r.gradYear && (
+                        <span className="text-xs font-medium text-heritage tabular">
+                          '{String(r.gradYear).slice(-2)}
+                        </span>
+                      )}
+                      {unlocked && (
+                        <span className="inline-flex items-center gap-1 text-[11px] font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded-full">
+                          <CheckCircle2 className="w-3 h-3" /> Unlocked
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-xs text-ink-muted mt-0.5 truncate flex flex-wrap gap-x-2">
+                      <span>{r.career}</span>
+                      {r.college && <span>· {r.college}</span>}
+                      {r.location && <span>· {r.location}</span>}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      onClick={() => setMessagingTarget(r)}
+                      className="px-3.5 py-1.5 text-xs font-medium bg-sunken border border-rule hover:border-action text-ink rounded-slight flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Mail className="w-3.5 h-3.5 text-action" />
+                      <span>Message</span>
+                    </button>
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
 
           {/* Pagination */}
@@ -132,12 +185,24 @@ export default function Directory() {
             <button
               onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))}
               disabled={safePage >= pageCount - 1}
-              className="flex items-center space-x-2 bg-action text-action-ink font-medium py-2.5 px-4 border border-rule tracking-wide text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="flex items-center space-x-2 bg-action text-action-ink font-medium py-2.5 px-4 border border-rule tracking-wide text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer rounded-slight"
             >
               <span>Next</span>
               <ArrowRight className="w-4 h-4" />
             </button>
           </div>
+
+          {/* Message Modal */}
+          {messagingTarget && (
+            <SendMessageModal
+              isOpen={Boolean(messagingTarget)}
+              onClose={() => setMessagingTarget(null)}
+              recipient={messagingTarget}
+              currentUser={session}
+              defaultSubject={`Chap Connect — Greeting from ${session?.user?.user_metadata?.full_name || 'a fellow Chap'}`}
+              defaultBody={`Hi ${messagingTarget.name ? messagingTarget.name.split(' ')[0] : 'there'},\n\nI came across your profile in the Chap Connect Directory and wanted to say hello! Would love to connect and hear about your journey after Westlake.`}
+            />
+          )}
         </>
       )}
     </div>
