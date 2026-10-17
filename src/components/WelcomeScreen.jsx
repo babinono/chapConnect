@@ -80,9 +80,8 @@ export default function WelcomeScreen({ session }) {
     if (!name || !gradYear) return;
     
     const year = parseInt(gradYear, 10);
-    let flow = 'student';
-    if (year <= 2023) flow = 'post_college';
-    else if (year <= 2026) flow = 'recent';
+    // Everyone onboards into the alumni profile flow
+    const flow = 'post_college';
 
     navigate('/onboarding', { state: { name, gradYear: year, flow } });
   };

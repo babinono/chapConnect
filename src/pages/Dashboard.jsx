@@ -522,7 +522,7 @@ export default function Dashboard({ session }) {
             Chap Connect
           </h1>
           <p className="text-sm text-ink-faint mt-1.5">
-            {isAlumniMentor ? 'Alumni mentor' : isStudent ? 'Student' : 'Alumni'}
+            Westlake Alumni
           </p>
         </div>
 
@@ -544,29 +544,13 @@ export default function Dashboard({ session }) {
             </button>
           )}
 
-          {/* Algorithmic matching only. The Gemini path stays reachable in
-              matchingEngine (matchType 'ai'), but nothing in the UI requests it -
-              the local scorer needs no API key, no quota and no network round
-              trip, so it can't fail the way the AI path can. */}
-          {isStudent && (
-            <button
-              onClick={() => handleFindMatch('algo')}
-              className="bg-action text-action-ink font-medium py-4 px-5 border border-rule flex items-center justify-center space-x-2 transition-all tracking-normal text-sm cursor-pointer"
-            >
-                            <span>Find My Match</span>
-            </button>
-          )}
-
-          {/* Recent grads + alumni don't match. they open the directory page. */}
-          {canSeeDirectory && (
-            <Magnetic
-              onClick={() => navigate('/directory')}
-              className="bg-action text-action-ink font-medium py-4 px-5 border border-rule flex items-center justify-center space-x-2 transition-all tracking-normal text-sm cursor-pointer"
-            >
-              <FolderHeart className="w-4 h-4" strokeWidth={1.75} />
-              <span>View Directory</span>
-            </Magnetic>
-          )}
+          <Magnetic
+            onClick={() => navigate('/directory')}
+            className="bg-action text-action-ink font-medium py-4 px-5 border border-rule flex items-center justify-center space-x-2 transition-all tracking-normal text-sm cursor-pointer"
+          >
+            <FolderHeart className="w-4 h-4" strokeWidth={1.75} />
+            <span>View Directory</span>
+          </Magnetic>
         </div>
       </header>
 
@@ -576,8 +560,8 @@ export default function Dashboard({ session }) {
           active={activeTab}
           onChange={setActiveTab}
           items={[
-            ...(!isStudent ? [{ key: 'home', label: 'Home', Icon: Home }] : []),
-            { key: 'matches', label: isStudent ? `My Matches (${matches.length})` : 'Alumni Matching', Icon: FolderHeart },
+            { key: 'home', label: 'Home', Icon: Home },
+            { key: 'matches', label: 'Alumni Matching', Icon: FolderHeart },
             { key: 'board', label: 'Message Board', Icon: Newspaper },
             { key: 'profile', label: 'My Profile', Icon: User },
           ]}
@@ -585,8 +569,7 @@ export default function Dashboard({ session }) {
       </div>
 
       {activeTab === 'matches' ? (
-        isAlumniMentor ? (
-          <div className="space-y-8 animate-in fade-in duration-500">
+        <div className="space-y-8 animate-in fade-in duration-500">
             {/* Warm Welcome Banner */}
             <div className="navy-field p-8 relative">
               <div className="absolute right-8 top-8 text-sm text-on-navy-muted">
@@ -861,212 +844,7 @@ export default function Dashboard({ session }) {
               )}
             </div>
           </div>
-        ) : matches.length === 0 ? (
-          /* Empty state as a composed moment, not a card adrift in a void. It
-             names the next action instead of only reporting absence. */
-          <div className="navy-field panel overflow-hidden">
-            <div className="grid gap-8 p-8 sm:p-12 lg:grid-cols-[1.3fr_1fr] lg:items-center">
-              <div>
-                <p className="text-sm text-on-navy-muted">Nothing here yet</p>
-                <h2 className="mt-2 font-heading text-3xl sm:text-4xl font-semibold text-on-navy tracking-tight">
-                  Your first match is one click away.
-                </h2>
-                <p className="mt-5 max-w-prose text-on-navy-muted leading-relaxed">
-                  Chap Connect pairs you with a Westlake graduate who already walked
-                  the path you are starting. Matches you make will collect here.
-                </p>
-                {isStudent && (
-                  <Magnetic
-                    onClick={() => handleFindMatch('algo')}
-                    className="mt-8 bg-action text-action-ink font-medium py-3 px-6 inline-flex items-center gap-2 transition-colors hover:bg-action-hover active:translate-y-[1px] cursor-pointer rounded-slight"
-                  >
-                    Find my match
-                  </Magnetic>
-                )}
-              </div>
-              <div className="duotone panel hidden h-48 lg:block">
-                <img src="/WHSfield.jpg" alt="" aria-hidden="true" width={1200} height={630} loading="lazy" />
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-            {matches.map((match) => {
-              const m = match.mentors;
-              if (!m) return null;
-              
-              const linkedInSearchUrl = `https://www.linkedin.com/search/results/all/?keywords=${encodeURIComponent(
-                `${m.name} ${m.college || ''} ${m.current_position || ''}`
-              )}`;
-
-              return (
-                <div key={match.id} className="bg-surface border border-rule flex flex-col overflow-hidden panel">
-                  <div className="h-16 navy-field flex items-center justify-between px-6 border-b border-rule">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-white font-medium text-sm tracking-wide">
-                        Status:
-                      </span>
-                      <select
-                        value={match.status}
-                        onChange={(e) => handleStatusChange(match.id, e.target.value)}
-                        className="bg-surface text-ink font-medium text-xs px-2 py-1 border-2 border-white focus:outline-none rounded-slight"
-                      >
-                        <option value="Matched">Matched</option>
-                        <option value="Contacted">Contacted</option>
-                        <option value="Scheduled">Scheduled</option>
-                        <option value="Completed">Completed</option>
-                      </select>
-                    </div>
-
-                    <button
-                      onClick={() => handleDeleteMatch(match.id)}
-                      className="text-bad hover:text-action p-1 cursor-pointer"
-                      title="Remove match"
-                    >
-                      <Trash2 className="w-5 h-5" />
-                    </button>
-                  </div>
-
-                  <div className="p-6 flex-grow flex flex-col">
-                    <div className="flex items-center space-x-4 mb-4 border-b-2 border-rule pb-4">
-                      <img
-                        src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(m.name)}`}
-                        alt={m.name}
-                        className="w-14 h-14 rounded-full border border-rule bg-surface"
-                      />
-                      <div>
-                        <h3 className="text-xl font-semibold text-ink leading-none">{m.name}</h3>
-                        <span className="inline-block mt-1 text-ink-muted text-sm">
-                          Class of <span className="text-heritage font-medium tabular">{m.grad_year}</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2 mb-6 text-xs text-ink-muted font-medium flex-grow">
-                      <div className="flex items-center">
-                        <Briefcase className="w-4.5 h-4.5 mr-2 text-ink-faint flex-shrink-0" />
-                        <span>{m.current_position || 'Established Alumni'}</span>
-                      </div>
-                      {m.college && (
-                        <div className="flex items-start">
-                          <GraduationCap className="w-4.5 h-4.5 mr-2 text-ink-faint flex-shrink-0 mt-0.5" />
-                          <div className="flex flex-col">
-                            <span>{m.college}</span>
-                            {m.first_grad_education && (
-                              <span className="text-xs text-ink-faint font-semibold mt-0.5">Grad: {m.first_grad_education}</span>
-                            )}
-                            {m.second_grad_education && (
-                              <span className="text-xs text-ink-faint font-semibold">Grad 2: {m.second_grad_education}</span>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      <div className="flex items-center">
-                        <MapPin className="w-4.5 h-4.5 mr-2 text-ink-faint flex-shrink-0" />
-                        <span>{m.location}</span>
-                      </div>
-                    </div>
-
-                    {/* Messaging & Obscured Email Status */}
-                    {(() => {
-                      const currentUserId = session?.user?.id || 'local_user';
-                      const isUnlocked = checkUnlocked(currentUserId, m.id);
-                      const sentMsgs = getMessagesBetween(currentUserId, m.id);
-                      const pendingMsg = sentMsgs.find(msg => msg.replyStatus === 'pending');
-
-                      return (
-                        <div className="space-y-2 mb-4">
-                          <button
-                            type="button"
-                            onClick={() => setSelectedRecipientForMessage({ ...m, id: m.id || match.mentor_id })}
-                            className="w-full py-2.5 px-4 font-medium text-xs bg-action text-action-ink hover:bg-action-hover rounded-slight flex items-center justify-center gap-2 cursor-pointer transition-colors"
-                          >
-                            <Mail className="w-4 h-4" />
-                            <span>Message {m.name.split(' ')[0]}</span>
-                          </button>
-
-                          <div className="text-xs">
-                            {isUnlocked ? (
-                              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 p-2 rounded-xs">
-                                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                                <span className="truncate">Contact Unlocked: {m.email || 'Email shared'}</span>
-                              </div>
-                            ) : pendingMsg ? (
-                              <div className="space-y-1 bg-amber-500/10 border border-amber-500/20 p-2 rounded-xs">
-                                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium">
-                                  <Lock className="w-3 h-3 shrink-0" />
-                                  <span>Relayed (Awaiting Reply)</span>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    recordReply(pendingMsg.id);
-                                    setMessageRelayTick(t => t + 1);
-                                  }}
-                                  className="text-[11px] font-semibold text-action hover:underline cursor-pointer block"
-                                >
-                                  Simulate Mentor Reply (Test Unlock)
-                                </button>
-                              </div>
-                            ) : (
-                              <div className="flex items-center gap-1.5 text-ink-faint p-1 font-mono text-[11px]">
-                                <Lock className="w-3 h-3 text-action shrink-0" />
-                                <span>Email obscured for privacy until reply</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    <a
-                      href={linkedInSearchUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="w-full py-2.5 px-4 mb-6 font-medium text-xs tracking-normal flex items-center justify-center space-x-2 border border-rule bg-surface text-ink transition-all cursor-pointer panel"
-                    >
-                      <svg className="w-4 h-4 fill-slate-900" viewBox="0 0 24 24">
-                        <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.779-1.75-1.75s.784-1.75 1.75-1.75 1.75.779 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"/>
-                      </svg>
-                      <span>Find on LinkedIn</span>
-                    </a>
-
-                    <div className="border-t-2 border-rule pt-4 flex flex-col">
-                      <label className="block text-xs font-medium text-ink-faint tracking-wide mb-2">My Meeting Logs & Notes</label>
-                      <textarea
-                        value={notesState[match.id] || ''}
-                        onChange={(e) => handleNotesChange(match.id, e.target.value)}
-                        placeholder="e.g. Sent email. Coffee chat scheduled for next Tuesday!"
-                        className="w-full px-3 py-2 text-xs border border-rule focus:outline-none focus:border-action bg-sunken font-medium min-h-[80px] resize-none mb-3 panel"
-                      />
-                      <button
-                        onClick={() => handleSaveNotes(match.id)}
-                        disabled={savingNoteId === match.id}
-                        className={cn(
-                          "self-end py-1.5 px-3 font-medium text-xs tracking-wide border border-rule-strong flex items-center space-x-1 cursor-pointer transition-all",
-                          savingNoteId === match.id ? "bg-sunken" : "text-ink border-action"
-                        )}
-                      >
-                        {savingNoteId === match.id ? (
-                          <>
-                            <Loader2 className="w-3 h-3 animate-spin" />
-                            <span>Saving</span>
-                          </>
-                        ) : (
-                          <>
-                            <Save className="w-3.5 h-3.5" />
-                            <span>Save Notes</span>
-                          </>
-                        )}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )
-      ) : activeTab === 'profile' ? (
+        ) : activeTab === 'profile' ? (
         /* My Profile Editor Tab */
         <div className="max-w-xl mx-auto bg-surface border border-rule p-8 w-full panel">
           <h2 className="text-3xl font-semibold text-ink tracking-tight mb-6 border-b-2 border-rule pb-3 flex items-center space-x-2">
@@ -1115,14 +893,13 @@ export default function Dashboard({ session }) {
               <label className={labelClass}>Profile Path / Flow</label>
               <select
                 name="flow_type"
-                value={profileForm.flow_type || 'student'}
+                value={profileForm.flow_type || 'post_schooling'}
                 onChange={handleProfileFormChange}
                 className={` font-medium`}
               >
-                <option value="student">Current High School Student</option>
-                <option value="recent">Current College Student</option>
-                <option value="post_undergrad">Grad School / Post-Undergrad</option>
                 <option value="post_schooling">Working / Post-Schooling</option>
+                <option value="recent">Undergraduate / College</option>
+                <option value="post_undergrad">Grad School / Post-Undergrad</option>
               </select>
             </div>
 
@@ -1153,65 +930,6 @@ export default function Dashboard({ session }) {
                   placeholder="e.g. UT Austin"
                 />
               </div>
-            )}
-
-            {/* HIGH SCHOOL STUDENT FIELDS */}
-            {profileForm.flow_type === 'student' && (
-              <>
-                <div>
-                  <label className={labelClass}>Dream College(s)</label>
-                  <Autocomplete
-                    name="targetColleges"
-                    value={profileForm.targetColleges || ''}
-                    onChange={handleProfileFormChange}
-                    suggestions={COLLEGES}
-                    placeholder="e.g. Stanford, UT Austin (comma separated)"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Intended Major(s)</label>
-                  <Autocomplete
-                    name="targetMajors"
-                    value={profileForm.targetMajors || ''}
-                    onChange={handleProfileFormChange}
-                    suggestions={MAJORS}
-                    placeholder="e.g. Computer Science (comma separated)"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Intended Career(s)</label>
-                  <input
-                    type="text"
-                    name="targetCareers"
-                    value={profileForm.targetCareers || ''}
-                    onChange={handleProfileFormChange}
-                    className={inputClass}
-                    placeholder="e.g. Software Engineer, Doctor (comma separated)"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>High School Clubs / Sports</label>
-                  <input
-                    type="text"
-                    name="activities"
-                    value={profileForm.activities || ''}
-                    onChange={handleProfileFormChange}
-                    className={inputClass}
-                    placeholder="e.g. Debate, Varsity Football (comma separated)"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Favorite Classes</label>
-                  <input
-                    type="text"
-                    name="classes"
-                    value={profileForm.classes || ''}
-                    onChange={handleProfileFormChange}
-                    className={inputClass}
-                    placeholder="e.g. AP Chemistry, Calculus (comma separated)"
-                  />
-                </div>
-              </>
             )}
 
             {/* COLLEGE STUDENT / RECENT ALUMNI FIELDS */}

@@ -20,12 +20,11 @@ export default function OnboardingFlow({ session }) {
   // Grad year drives which flow the onboarding runs. When someone arrives via
   // Google sign-in we only have their name, so grad year / flow are collected in
   // a first step here (stateful) instead of on the welcome screen.
+  // All onboarding users create alumni profiles
   const computeFlow = (yr) => {
     const y = parseInt(yr, 10);
     if (!y) return null;
-    if (y <= 2023) return 'post_college';
-    if (y <= 2026) return 'recent';
-    return 'student';
+    return 'post_college';
   };
   const sourceName = state.name || session?.user?.user_metadata?.full_name || '';
   const [firstName, setFirstName] = useState(sourceName.split(' ')[0] || '');
