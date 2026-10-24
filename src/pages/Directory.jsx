@@ -5,6 +5,8 @@ import { selectAll } from '../utils/supabaseClient';
 import { Loader2, Search, ArrowLeft, ArrowRight, Mail, CheckCircle2 } from 'lucide-react';
 import SendMessageModal from '../components/SendMessageModal';
 import { isContactUnlocked } from '../utils/messageRelayStore';
+import ChapLogo from '../components/ChapLogo';
+import ThemeControls from '../components/ui/ThemeControls';
 
 const PAGE_SIZE = 15;
 
@@ -76,13 +78,19 @@ export default function Directory({ session }) {
 
   return (
     <div className="min-h-[100dvh] py-12 px-4 sm:px-6 lg:px-8 max-w-3xl mx-auto">
-      <button
-        onClick={() => navigate('/dashboard')}
-        className="mb-6 flex items-center space-x-2 text-ink-muted font-medium tracking-wide text-sm hover:text-ink transition-colors cursor-pointer"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Back to Dashboard</span>
-      </button>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <button
+          onClick={() => navigate('/dashboard')}
+          className="flex items-center space-x-2 text-ink-muted font-medium tracking-wide text-sm hover:text-ink transition-colors cursor-pointer"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back to Dashboard</span>
+        </button>
+        <div className="flex items-center gap-3">
+          <ThemeControls />
+          <ChapLogo className="h-8 w-auto" />
+        </div>
+      </div>
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -158,7 +166,7 @@ export default function Directory({ session }) {
                       onClick={() => setMessagingTarget(r)}
                       className="px-3.5 py-1.5 text-xs font-medium bg-sunken border border-rule hover:border-action text-ink rounded-slight flex items-center gap-1.5 transition-colors cursor-pointer"
                     >
-                      <Mail className="w-3.5 h-3.5 text-action" />
+                      <Mail className="w-3.5 h-3.5 text-action-text" />
                       <span>Message</span>
                     </button>
                   </div>
@@ -199,8 +207,8 @@ export default function Directory({ session }) {
               onClose={() => setMessagingTarget(null)}
               recipient={messagingTarget}
               currentUser={session}
-              defaultSubject={`Chap Connect — Greeting from ${session?.user?.user_metadata?.full_name || 'a fellow Chap'}`}
-              defaultBody={`Hi ${messagingTarget.name ? messagingTarget.name.split(' ')[0] : 'there'},\n\nI came across your profile in the Chap Connect Directory and wanted to say hello! Would love to connect and hear about your journey after Westlake.`}
+              defaultSubject={`ChapConnect — Greeting from ${session?.user?.user_metadata?.full_name || 'a fellow Chap'}`}
+              defaultBody={`Hi ${messagingTarget.name ? messagingTarget.name.split(' ')[0] : 'there'},\n\nI came across your profile in the ChapConnect Directory and wanted to say hello! Would love to connect and hear about your journey after Westlake.`}
             />
           )}
         </>

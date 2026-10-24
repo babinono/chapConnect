@@ -8,10 +8,7 @@ import MatchPage from './pages/MatchPage';
 import Dashboard from './pages/Dashboard';
 import Directory from './pages/Directory';
 import AdminCRM from './pages/AdminCRM';
-import ThemeToggle from './components/ThemeToggle';
-import SchemeToggle from './components/ui/SchemeToggle';
 import IntroSplash from './components/IntroSplash';
-import BubbleCursor from './components/ui/BubbleCursor';
 import { Loader2 } from 'lucide-react';
 
 // Cross-fade + slide between routes; exit is quick so back/forward stays snappy.
@@ -104,9 +101,6 @@ function App() {
   return (
     <div className="relative">
       {showIntro && <IntroSplash />}
-      <BubbleCursor />
-      <SchemeToggle />
-      <ThemeToggle />
       <BrowserRouter>
         <AnimatedRoutes session={session} />
       </BrowserRouter>

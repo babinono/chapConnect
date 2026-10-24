@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Magnetic from './ui/Magnetic';
+import ChapLogo from './ChapLogo';
+import ThemeControls from './ui/ThemeControls';
 import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { LogOut } from 'lucide-react';
@@ -9,8 +11,7 @@ import { supabase, signOutToWelcome } from '../utils/supabaseClient';
 const OAUTH_RETURN_KEY = 'cc_oauth_return';
 
 export default function WelcomeScreen({ session }) {
-  const [name, setName] = useState(session?.user?.user_metadata?.full_name || '');
-  const [gradYear, setGradYear] = useState('');
+  const [email, setEmail] = useState('');
   const [signingIn, setSigningIn] = useState(false);
   const navigate = useNavigate();
 
@@ -77,13 +78,11 @@ export default function WelcomeScreen({ session }) {
 
   const handleStart = (e) => {
     e.preventDefault();
-    if (!name || !gradYear) return;
-    
-    const year = parseInt(gradYear, 10);
-    // Everyone onboards into the alumni profile flow
-    const flow = 'post_college';
-
-    navigate('/onboarding', { state: { name, gradYear: year, flow } });
+    const trimmed = email.trim();
+    if (!trimmed) return;
+    // Name and graduating class are asked for on onboarding's first step,
+    // which runs whenever no grad year is handed over.
+    navigate('/onboarding', { state: { email: trimmed } });
   };
 
   const reduce = useReducedMotion();
@@ -106,18 +105,20 @@ export default function WelcomeScreen({ session }) {
           hue. Mobile: stacks first, reduced height. */}
       <section className="navy-field relative lg:col-span-7 xl:col-span-7 flex flex-col overflow-hidden">
         <div className="flex flex-1 flex-col justify-between gap-8 px-6 pt-10 pb-8 sm:gap-12 sm:px-12 sm:pt-14 lg:gap-16 lg:px-16 lg:pt-16">
-        <motion.p {...rise(0.05)} className="text-sm text-on-navy-muted">
-          Eanes ISD, Westlake High School
-        </motion.p>
+        <motion.div {...rise(0.05)} className="flex items-center justify-between gap-4">
+          <p className="text-sm text-on-navy-muted">Eanes ISD, Westlake High School</p>
+          <ThemeControls />
+        </motion.div>
 
         <div className="py-4 sm:py-10 lg:py-0">
+          <motion.div {...rise(0.08)}>
+            <ChapLogo onNavy className="mb-6 h-12 w-auto sm:h-16" />
+          </motion.div>
           <motion.h1
             {...rise(0.12)}
             className="wordmark text-[2.75rem] leading-[0.95] sm:text-6xl lg:text-display text-on-navy"
           >
-            Chap
-            <br />
-            Connect
+            ChapConnect
           </motion.h1>
 
           <motion.span
@@ -167,8 +168,8 @@ export default function WelcomeScreen({ session }) {
           transition={{ duration: 0.5, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="w-full max-w-sm mx-auto"
         >
-          <h2 className="font-heading text-3xl font-semibold text-ink tracking-tight">Sign in</h2>
-          <p className="mt-2 text-ink-muted">Pick up where the network left off.</p>
+          <h2 className="font-heading text-3xl font-semibold text-ink tracking-tight">Join or sign in</h2>
+          <p className="mt-2 text-ink-muted">New to the network or coming back, start here.</p>
 
           {isGoogleSession && (
             <div className="mt-8 flex items-center justify-between gap-3 border border-rule bg-sunken px-4 py-3 panel">
@@ -180,7 +181,7 @@ export default function WelcomeScreen({ session }) {
                 type="button"
                 onClick={signOut}
                 title="Sign out"
-                className="flex-shrink-0 p-2 text-ink-faint hover:text-action cursor-pointer transition-colors"
+                className="flex-shrink-0 p-2 text-ink-faint hover:text-action-text cursor-pointer transition-colors"
               >
                 <LogOut className="w-4 h-4" strokeWidth={1.75} />
               </button>
@@ -204,23 +205,15 @@ export default function WelcomeScreen({ session }) {
 
           <div className="my-8 flex items-center gap-4">
             <span className="h-px flex-1 bg-rule" />
-            <span className="text-sm text-ink-faint">or continue as guest</span>
+            <span className="text-sm text-ink-faint">or continue with email</span>
             <span className="h-px flex-1 bg-rule" />
           </div>
 
           <form onSubmit={handleStart} className="space-y-7">
             <div className="flex flex-col gap-2">
-              <label htmlFor="cc-name" className="text-sm font-medium text-ink-muted">Your name</label>
-              <input id="cc-name" type="text" required placeholder="Jane Doe" className={fieldClass}
-                value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <label htmlFor="cc-year" className="text-sm font-medium text-ink-muted">Graduating class</label>
-              <input id="cc-year" type="number" required min="1950" max="2035" placeholder="2024"
-                className={`${fieldClass} tabular`} value={gradYear}
-                onChange={(e) => setGradYear(e.target.value)} />
-              <p className="text-sm text-ink-faint">This decides what the network shows you.</p>
+              <label htmlFor="cc-email" className="text-sm font-medium text-ink-muted">Email</label>
+              <input id="cc-email" type="email" required autoComplete="email" placeholder="you@example.com"
+                className={fieldClass} value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
 
             {/* The one red element on the page. */}

@@ -24,12 +24,12 @@ import Magnetic from './Magnetic';
 // colours its scheme actually leads with.
 const PREVIEW = {
   // Ink Navy, Oxblood, Westlake Red.
-  ivy: { a: '#16233d', b: '#6e1a24', c: '#a8202f' },
-  // Eanes Navy, Eanes Blue, Eanes Red, straight from the district palette.
-  default: { a: '#102047', b: '#003087', c: '#A6192E' },
+  ivy: { a: '#001950', b: '#780a1c', c: '#b40e29' },
+  // Westlake Navy, Westlake Blue, Westlake Red.
+  default: { a: '#001c58', b: '#0032A0', c: '#C8102E' },
 };
 
-export default function SchemeToggle() {
+export default function SchemeToggle({ className = '' }) {
   const reduce = useReducedMotion();
   const [ivy, setIvy] = useState(
     typeof document !== 'undefined' && document.documentElement.classList.contains('ivy')
@@ -60,7 +60,7 @@ export default function SchemeToggle() {
         ivy ? 'Switch to the Chaparral scheme' : 'Switch to the Ivy scheme'
       }
       title={ivy ? 'Chaparral scheme' : 'Ivy scheme'}
-      className="fixed top-4 right-[4.25rem] z-50 h-11 pl-2.5 pr-3 flex items-center gap-2.5 bg-surface border border-rule text-ink cursor-pointer panel"
+      className={`h-9 pl-2.5 pr-3 flex items-center gap-2.5 bg-surface border border-rule text-ink cursor-pointer hover:border-rule-strong transition-colors ${className}`}
     >
       {/* Three stacked swatches read as a bound set of colours rather than as
           a single dot, which is what makes it legible as a scheme. */}

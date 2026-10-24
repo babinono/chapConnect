@@ -208,7 +208,7 @@ export default function OutreachMessage({ matchData, userProfile, session }) {
               onClick={handleCopySubject}
               className={cn(
                 'flex-shrink-0 flex items-center gap-1.5 pl-4 text-sm font-medium cursor-pointer transition-colors',
-                copiedSubject ? 'text-good' : 'text-action hover:text-action-hover'
+                copiedSubject ? 'text-good' : 'text-action-text hover:text-action-hover'
               )}
             >
               {copiedSubject ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}

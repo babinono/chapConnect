@@ -97,7 +97,7 @@ export default function ContactDrawer({ contact, onClose, onAddDonation, refresh
             {tags.map(t => (
               <span key={t} className="inline-flex items-center gap-1 bg-sunken text-ink-muted border border-rule text-xs font-medium px-2 py-1 panel">
                 {t}
-                <button onClick={() => removeTag(t)} className="hover:text-action cursor-pointer"><X className="w-3 h-3" /></button>
+                <button onClick={() => removeTag(t)} className="hover:text-action-text cursor-pointer"><X className="w-3 h-3" /></button>
               </span>
             ))}
           </div>
@@ -122,7 +122,7 @@ export default function ContactDrawer({ contact, onClose, onAddDonation, refresh
                     <div className="text-xs text-ink-faint font-medium">{d.date} · {d.campaign}</div>
               <div className="text-xs text-ink-faint">{d.method}</div>
                   </div>
-                  <button onClick={() => removeDonation(d.id)} className="text-ink-faint hover:text-action cursor-pointer"><Trash2 className="w-4 h-4" /></button>
+                  <button onClick={() => removeDonation(d.id)} className="text-ink-faint hover:text-action-text cursor-pointer"><Trash2 className="w-4 h-4" /></button>
                 </div>
               ))}
             </div>
@@ -144,7 +144,7 @@ export default function ContactDrawer({ contact, onClose, onAddDonation, refresh
                   <div className="text-sm font-medium text-ink">{n.text}</div>
                   <div className="text-xs text-ink-faint font-medium">{new Date(n.date).toLocaleString()}</div>
                 </div>
-                <button onClick={() => { deleteNote(contact.id, n.id); onChanged && onChanged(); }} className="text-ink-faint hover:text-action cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
+                <button onClick={() => { deleteNote(contact.id, n.id); onChanged && onChanged(); }} className="text-ink-faint hover:text-action-text cursor-pointer"><Trash2 className="w-3.5 h-3.5" /></button>
               </div>
             ))}
           </div>
@@ -167,7 +167,7 @@ export default function ContactDrawer({ contact, onClose, onAddDonation, refresh
           onClose={() => setShowMessageModal(false)}
           recipient={contact}
           currentUser={{ user: { id: 'admin_user', email: 'admin@westlakealumni.org', user_metadata: { full_name: 'Admin Desk' } } }}
-          defaultSubject={`Chap Connect — Note regarding your Westlake alumni record`}
+          defaultSubject={`ChapConnect — Note regarding your Westlake alumni record`}
           defaultBody={`Hi ${contact.name ? contact.name.split(' ')[0] : 'there'},\n\nWe wanted to reach out from the Westlake High School alumni network regarding your community profile.`}
         />
       </motion.aside>

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Sun, Moon } from 'lucide-react';
 
-export default function ThemeToggle() {
+export default function ThemeToggle({ className = '' }) {
   const [dark, setDark] = useState(
     typeof document !== 'undefined' && document.documentElement.classList.contains('dark')
   );
@@ -18,7 +18,7 @@ export default function ThemeToggle() {
     <motion.button
       onClick={() => setDark(d => !d)}
       aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className="fixed top-4 right-4 z-50 w-11 h-11 flex items-center justify-center bg-surface border border-rule text-ink cursor-pointer panel"
+      className={`w-9 h-9 flex items-center justify-center bg-surface border border-rule text-ink cursor-pointer hover:border-rule-strong transition-colors ${className}`}
     >
       <motion.span
         key={dark ? 'moon' : 'sun'}
@@ -26,7 +26,7 @@ export default function ThemeToggle() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
       >
-        {dark ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
+        {dark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
       </motion.span>
     </motion.button>
   );

@@ -126,7 +126,7 @@ export function sendRelayMessage({
     recipientName: recipientName || 'Alumni Contact',
     recipientEmail: recipientEmail || '',
     obscuredEmail: obscured,
-    subject: subject || 'Connecting via Chap Connect',
+    subject: subject || 'Connecting via ChapConnect',
     body: body || '',
     status: 'delivered',
     replyStatus: 'pending',

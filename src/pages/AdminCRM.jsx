@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { supabase, selectAll } from '../utils/supabaseClient';
 import ContactDrawer from '../components/ContactDrawer';
 import DonationModal from '../components/DonationModal';
+import ChapLogo from '../components/ChapLogo';
+import ThemeControls from '../components/ui/ThemeControls';
 import {
   getDonations, seedIfEmpty, addDonation, deleteDonation, totalRaised, donorIds,
   totalsByContact, totalsByYear, totalsByCampaign, money, CAMPAIGNS, initCRM,
@@ -404,7 +406,7 @@ export default function AdminCRM() {
     { key: 'donations', label: 'Donations', Icon: DollarSign },
     { key: 'trends', label: 'Trends', Icon: LineChart },
     { key: 'matching', label: 'Matching', Icon: Sparkles },
-    { key: 'board', label: 'Message Board', Icon: Newspaper },
+    { key: 'board', label: 'Alumni News', Icon: Newspaper },
   ];
 
   const maxYear = Math.max(1, ...yearData.map(d => d.value));
@@ -413,9 +415,15 @@ export default function AdminCRM() {
 
   return (
     <div className="min-h-[100dvh] py-10 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <button onClick={() => navigate('/')} className="mb-6 flex items-center space-x-2 text-ink-muted font-medium tracking-wide text-sm hover:text-ink transition-colors cursor-pointer">
-        <ArrowLeft className="w-5 h-5" /><span>Exit Admin</span>
-      </button>
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <button onClick={() => navigate('/')} className="flex items-center space-x-2 text-ink-muted font-medium tracking-wide text-sm hover:text-ink transition-colors cursor-pointer">
+          <ArrowLeft className="w-5 h-5" /><span>Exit Admin</span>
+        </button>
+        <div className="flex items-center gap-3">
+          <ThemeControls />
+          <ChapLogo className="h-8 w-auto" />
+        </div>
+      </div>
 
       {/* Header */}
       <motion.div
@@ -1184,7 +1192,7 @@ export default function AdminCRM() {
                             <td className="px-4 py-3">{d.campaign}</td>
                             <td className="px-4 py-3">{d.method}</td>
                             <td className="px-4 py-3 max-w-[220px] truncate" title={d.note}>{d.note || <span className="text-ink-faint">-</span>}</td>
-                            <td className="px-4 py-3"><button onClick={() => { deleteDonation(d.id); changed(); }} className="text-ink-faint hover:text-action cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>
+                            <td className="px-4 py-3"><button onClick={() => { deleteDonation(d.id); changed(); }} className="text-ink-faint hover:text-action-text cursor-pointer"><Trash2 className="w-4 h-4" /></button></td>
                           </tr>
                         ))}
                       </tbody>
@@ -1199,7 +1207,7 @@ export default function AdminCRM() {
               <div className="space-y-6">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div>
-                    <h2 className="text-xl font-semibold text-ink">Community Message Board</h2>
+                    <h2 className="text-xl font-semibold text-ink">Alumni News</h2>
                     <p className="text-xs font-medium text-ink-faint mt-0.5">
                       Publish alumni magazine stories, campus updates, and district news for all students and alumni.
                     </p>
@@ -1233,7 +1241,7 @@ export default function AdminCRM() {
                     }}
                     className="bg-surface border border-rule p-6 panel space-y-4 shadow-sm"
                   >
-                    <h3 className="font-semibold text-ink text-base">Create Message Board Post</h3>
+                    <h3 className="font-semibold text-ink text-base">Create Alumni News Post</h3>
                     <div className="grid gap-4 sm:grid-cols-2">
                       <div>
                         <label className="block text-xs font-semibold uppercase tracking-wider text-ink-faint mb-1">Title</label>
@@ -1313,9 +1321,9 @@ export default function AdminCRM() {
                           type="checkbox"
                           checked={boardForm.pinned}
                           onChange={(e) => setBoardForm({ ...boardForm, pinned: e.target.checked })}
-                          className="rounded text-action"
+                          className="rounded text-action-text"
                         />
-                        <span>Pin to top of Message Board</span>
+                        <span>Pin to top of Alumni News</span>
                       </label>
                       <div className="flex gap-2">
                         <button
@@ -1357,7 +1365,7 @@ export default function AdminCRM() {
                               {post.title}
                             </td>
                             <td className="px-4 py-3">
-                              <span className="text-xs px-2 py-0.5 bg-sunken border border-rule rounded-xs text-action font-semibold">
+                              <span className="text-xs px-2 py-0.5 bg-sunken border border-rule rounded-xs text-action-text font-semibold">
                                 {post.category}
                               </span>
                             </td>
@@ -1369,7 +1377,7 @@ export default function AdminCRM() {
                                   updateBoardPost(post.id, { pinned: !post.pinned });
                                   setBoardPosts(getBoardPosts());
                                 }}
-                                className={`p-1 rounded cursor-pointer ${post.pinned ? 'text-action' : 'text-ink-faint hover:text-ink'}`}
+                                className={`p-1 rounded cursor-pointer ${post.pinned ? 'text-action-text' : 'text-ink-faint hover:text-ink'}`}
                                 title={post.pinned ? 'Unpin' : 'Pin to top'}
                               >
                                 <Pin className={`w-4 h-4 ${post.pinned ? 'fill-current' : ''}`} />
@@ -1383,7 +1391,7 @@ export default function AdminCRM() {
                                     setBoardPosts(getBoardPosts());
                                   }
                                 }}
-                                className="text-ink-faint hover:text-action cursor-pointer p-1"
+                                className="text-ink-faint hover:text-action-text cursor-pointer p-1"
                                 title="Delete post"
                               >
                                 <Trash2 className="w-4 h-4" />

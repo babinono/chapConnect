@@ -7,6 +7,7 @@ import MatchCard from '../components/MatchCard';
 import OutreachMessage from '../components/OutreachMessage';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { ArrowLeft } from 'lucide-react';
+import ThemeControls from '../components/ui/ThemeControls';
 
 export default function MatchPage({ session }) {
   const reduce = useReducedMotion();
@@ -204,7 +205,7 @@ export default function MatchPage({ session }) {
           </h2>
           <span className="mt-6 block h-0.5 w-20 bg-action" aria-hidden="true" />
           <p className="mt-6 text-ink-muted leading-relaxed">
-            To keep connections meaningful, Chap Connect allows two matches every two
+            To keep connections meaningful, ChapConnect allows two matches every two
             weeks.
           </p>
 
@@ -261,12 +262,15 @@ export default function MatchPage({ session }) {
           display type at real size. Everything below it is quiet by design. */}
       <div className="navy-field px-4 sm:px-6 lg:px-8 pt-8 pb-16">
         <div className="mx-auto w-full max-w-5xl">
-          <Link
-            to={session ? '/dashboard' : '/'}
-            className="inline-flex items-center text-sm text-on-navy-muted hover:text-on-navy transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" /> Back to dashboard
-          </Link>
+          <div className="flex items-center justify-between gap-4">
+            <Link
+              to={session ? '/dashboard' : '/'}
+              className="inline-flex items-center text-sm text-on-navy-muted hover:text-on-navy transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" /> Back to dashboard
+            </Link>
+            <ThemeControls />
+          </div>
 
           <motion.div
             initial={reduce ? false : { opacity: 0, y: 14 }}
