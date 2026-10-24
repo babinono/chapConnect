@@ -44,10 +44,10 @@ const SEED_POSTS = [
   },
   {
     id: 'post-milestone-mentors',
-    title: 'Chap Connect Mentorship Network Surpasses 1,000 Connections',
+    title: 'ChapConnect Mentorship Network Surpasses 1,000 Connections',
     category: 'Campus News',
     summary: 'High school seniors and college graduates across the country have logged over 1,000 mentorship coffee chats and career exchanges.',
-    content: `Since launching our digital networking initiative, over 1,000 student-to-alumni and alumni-to-alumni connections have taken place through Chap Connect.\n\nFrom guiding seniors through college decision season to helping recent grads break into competitive industries, the Chap network continues to be one of the strongest public school communities in Texas. Thank you to every mentor giving back!`,
+    content: `Since launching our digital networking initiative, over 1,000 student-to-alumni and alumni-to-alumni connections have taken place through ChapConnect.\n\nFrom guiding seniors through college decision season to helping recent grads break into competitive industries, the Chap network continues to be one of the strongest public school communities in Texas. Thank you to every mentor giving back!`,
     author: 'Eanes Education Foundation',
     date: 'Aug 20, 2026',
     linkUrl: '',

@@ -49,7 +49,7 @@ async function findAIBestMatch(userProfile, mentors, apiKey) {
 Your job is to find the absolute best mentor from a list of candidates for a given student profile.
 
 CRITICAL BRANDING RULES:
-- NEVER include the words "Chap Connect" or "Chap" in the output (including commonThreads). Instead, use generic descriptions like "alumni network", "mentorship community", or "alumni connection".
+- NEVER include the words "ChapConnect" or "Chap" in the output (including commonThreads). Instead, use generic descriptions like "alumni network", "mentorship community", or "alumni connection".
 
 CRITICAL INSTRUCTIONS FOR AI HOLISTIC MATCHING & INTERSECTIONAL DOMAIN REASONING:
 1. HOLISTIC FACTOR EVALUATION: Evaluate candidate mentors highly holistically across ALL available student data points including target majors, high school clubs/sports, favorite classes, target careers, and geographical location. Do NOT ignore any factor.

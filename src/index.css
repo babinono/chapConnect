@@ -15,30 +15,30 @@
      One family carries both display and body, which is how a Gotham-based
      system is meant to work: hierarchy comes from size and weight, not from a
      second face. Sanchez is the slab in the Eanes logo and ships in ONE weight
-     (400), so it is reserved for the wordmark. Setting headings in it would
-     make every `font-semibold` heading a synthesised fake bold. */
+     (400), so it is reserved for the wordmark, which is set in a synthesised
+     bold. */
   --font-sans: 'Gotham', 'Montserrat', Arial, Helvetica, ui-sans-serif, system-ui, sans-serif;
   --font-heading: 'Gotham', 'Montserrat', Arial, Helvetica, ui-sans-serif, system-ui, sans-serif;
   --font-wordmark: 'Sanchez', Georgia, 'Times New Roman', serif;
 
-  /* ---- Eanes ISD brand palette ------------------------------------------
-     The official logo palette, verbatim, with its Pantone lineage:
-       Eanes Red      PMS 187 C   #A6192E
-       Eanes Blue     PMS 287 C   #003087
-       Eanes Navy     PMS 2766 C  #102047
+  /* ---- Westlake brand palette --------------------------------------------
+     Identity is Westlake High's own pair, with the Eanes campus colours in
+     support:
+       Westlake Red   PMS 186 C   #C8102E
+       Westlake Blue  PMS 286 C   #0032A0
+       Westlake Navy  (shade)     #001C58   Westlake Blue at 55% strength
        Bright Gold    PMS 7409 C  #F0A81E
        Forest Green   PMS 348 C   #097F42
        Sky Blue       PMS 306 C   #00ADEF
        Medium Gray    Cool Gray 6 #A7A9AB
        Black          PMS Black 6 #000000
-     Identity belongs to the three Eanes-named colours. The campus colours
-     (gold, green, sky) support them: they carry semantic signals and chart
-     categories, where six distinguishable hues are a hard requirement.
-     Westlake Red and Westlake Blue are Westlake High's own marks and are
-     deliberately absent, since this scheme is the district's. */
-  --color-eanes-red: #A6192E;
-  --color-eanes-blue: #003087;
-  --color-eanes-navy: #102047;
+     Every red and blue in the product is a shade or tint of the two Westlake
+     colours. The campus colours (gold, green, sky) carry semantic signals and
+     chart categories only, where six distinguishable hues are a hard
+     requirement. */
+  --color-westlake-red: #C8102E;
+  --color-westlake-blue: #0032A0;
+  --color-westlake-navy: #001c58;
   --color-eanes-gold: #F0A81E;
   --color-eanes-green: #097F42;
   --color-eanes-sky: #00ADEF;
@@ -50,17 +50,17 @@
      Three of the official colours cannot be body text on a light ground:
      Bright Gold reaches 1.97:1, Sky Blue 2.47:1 and Medium Gray 2.28:1. They
      are fills and on-dark colours only. */
-  --color-eanes-red-deep: #8d1527;   /* action hover */
-  --color-eanes-red-lift: #ba4c5c;   /* 3.24 on the navy field, 4.59 on canvas */
-  --color-eanes-red-dark: #b64254;   /* dark-mode action: 3.36 shape, 5.39 with white */
-  --color-eanes-red-soft: #c8707d;   /* dark text and marks: 4.79 on the raised surface, 4.15 on the dark field */
+  --color-westlake-red-deep: #aa0e27;   /* action hover: 7.50 with white */
+  --color-westlake-red-lift: #d0344d;   /* 3.27 on the navy field, 4.59 on canvas */
+  --color-westlake-red-dark: #C8102E;   /* dark-mode action: 3.08 shape, 5.88 with white, so raw red works */
+  --color-westlake-red-soft: #de7082;   /* dark text and marks: 5.32 on the raised surface, 4.61 on the dark field */
   --color-eanes-green-ink: #08773e;  /* 4.87 on the sunken surface; raw green is 4.39 */
   --color-eanes-green-soft: #5dab82;
   --color-eanes-gold-ink: #845c11;   /* 5.77 on canvas; raw gold is unusable as text */
   --color-eanes-sky-ink: #006b94;    /* chart series on a light ground */
-  --color-eanes-blue-soft: #8ca2c9;  /* Eanes Blue fails at 1.68:1 in dark */
+  --color-westlake-blue-soft: #8ca3d4; /* Westlake Blue fails at 1.69:1 in dark; this tint reaches 6.55 on the raised surface, 6.35 on the navy field */
 
-  /* Neutrals are the Eanes Navy carried to near-white and to near-black, so
+  /* Neutrals are the brand navy carried to near-white and to near-black, so
      every gray in the product is the brand navy at low chroma rather than a
      borrowed gray ramp. */
   --color-paper: #f7f7f9;
@@ -77,20 +77,20 @@
   --color-night-muted: #b7bcc8;
   --color-night-faint: #9ba1b2;
   /* The navy field. In dark it sits just ABOVE the canvas so the region still
-     reads; Eanes Navy itself is only 1.14:1 against the night ground. */
+     reads; Westlake Navy itself would nearly vanish against the night ground. */
   --color-field-night: #16294f;
 
   /* Kept so the two remaining direct primitive references and the compat
      brand-* utilities keep resolving. */
   --color-navy-950: #071023;
-  --color-brand-navy: #102047;
-  --color-brand-red: #A6192E;
-  --color-brand-blue: #003087;
-  --color-slate-900: #102047;
-  --color-red-500: #A6192E;
-  --color-red-600: #8d1527;
-  --color-blue-600: #003087;
-  --color-blue-700: #002670;
+  --color-brand-navy: #001c58;
+  --color-brand-red: #C8102E;
+  --color-brand-blue: #0032A0;
+  --color-slate-900: #001c58;
+  --color-red-500: #C8102E;
+  --color-red-600: #aa0e27;
+  --color-blue-600: #0032A0;
+  --color-blue-700: #002678;
 
   /* Display scale. Bold lives here, in size, not in weight. */
   --text-display: 4.25rem;
@@ -118,10 +118,10 @@
      ivy-gold is a FILL and fails as text (2.92:1 on cream), so ivy-gold-ink
      is its text-safe darkening; gold now appears only as the warning signal
      and the last chart series. */
-  --color-ivy-navy: #16233d;
-  --color-ivy-navy-bright: #2c4a7c;
-  --color-ivy-red: #a8202f;
-  --color-ivy-oxblood: #6e1a24;
+  --color-ivy-navy: #001950;           /* Westlake Blue at 50%: 14.86 with cream */
+  --color-ivy-navy-bright: #0032A0;    /* Westlake Blue itself: 9.49 on cream */
+  --color-ivy-red: #b40e29;            /* Westlake Red, 10% darker: 6.14 on cream */
+  --color-ivy-oxblood: #780a1c;        /* Westlake Red, 40% darker */
   --color-ivy-gold: #b0873f;        /* fill only */
   --color-ivy-gold-ink: #7d5e28;    /* text-safe: 5.32 on cream */
   --color-ivy-cream: #f6f1e6;
@@ -139,13 +139,13 @@
   --color-ivy-hairline: #cdd4e2;    /* 1.32 on Cream: the warm line's weight, in blue */
   --color-ivy-hairline-strong: #aab4ca;
   /* Lightenings of Westlake Red and Oxblood, not new hues. Full-strength red
-     reaches only 2.17:1 on the navy field and 2.55:1 on the night ground, so
+     reaches only 2.84:1 on the navy field and 3.12:1 on the night ground, so
      red cannot appear as a mark or as text there without being lifted. Each
      value is the least lift that clears its target. */
-  --color-ivy-red-lift: #c2404e;    /* 3.08 on navy, 4.99 on card: both grounds */
-  --color-ivy-red-on-navy: #d4737d; /* 4.88 on navy: red as TEXT on the field */
-  --color-ivy-ox-lift: #c9737d;     /* 5.45 on the night ground */
-  --color-ivy-navy-lift: #4468a8;   /* 3.32 on night: the fill still reads as a shape */
+  --color-ivy-red-lift: #ce2843;    /* 3.19 on navy, 5.15 on card: both grounds */
+  --color-ivy-red-on-navy: #db6477; /* 4.86 on navy: red as TEXT on the field */
+  --color-ivy-ox-lift: #de7082;     /* 5.90 on the night ground */
+  --color-ivy-navy-lift: #4d70bd;   /* 3.82 on night, 4.73 with a card label */
   /* Dark ivy: the same rooms at night. Grounds are the navy carried down to
      near-black, so the scheme stays blue rather than turning brown. */
   --color-ivy-night: #0d1424;
@@ -161,41 +161,43 @@
   --canvas: var(--color-paper);
   --surface: var(--color-paper-raised);
   --surface-sunken: var(--color-paper-sunken);
-  /* Body ink is Eanes Navy itself, so text and the navy field are the same
+  /* Body ink is Westlake Navy itself, so text and the navy field are the same
      pigment at different scales. */
-  --ink: var(--color-eanes-navy);
+  --ink: var(--color-westlake-navy);
   --ink-muted: #525d79;
   --ink-faint: #606a84;
   --rule: var(--color-hairline);
   --rule-strong: var(--color-hairline-strong);
-  --action: var(--color-eanes-red);
-  --action-hover: var(--color-eanes-red-deep);
+  --action: var(--color-westlake-red);
+  --action-hover: var(--color-westlake-red-deep);
   --action-ink: #ffffff;
-  --focus: var(--color-eanes-red);
-  /* The index hue is Eanes Blue. It holds class years, heritage marks and
-     quoted edges: the roles brass held before the brand palette landed. */
-  --heritage: var(--color-eanes-blue);
-  /* Categorical chart series. Eanes Navy, Red and Blue lead; the campus
+  --focus: var(--color-westlake-red);
+  /* The index hue is Westlake Blue (9.99:1 on canvas). It holds class years,
+     heritage marks and quoted edges. */
+  --heritage: var(--color-westlake-blue);
+  /* Categorical chart series. Westlake Navy, Red and Blue lead; the campus
      colours fill the remaining three, because six categories need six
      distinguishable hues and identity roles are not involved here. Gold and
      Sky appear darkened, since neither clears 3:1 on a light ground raw. */
-  --series-1: var(--color-eanes-navy);
-  --series-2: var(--color-eanes-red);
-  --series-3: var(--color-eanes-blue);
+  --series-1: var(--color-westlake-navy);
+  --series-2: var(--color-westlake-red);
+  --series-3: var(--color-westlake-blue);
   --series-4: var(--color-eanes-green);
   --series-5: var(--color-eanes-gold-ink);
   --series-6: var(--color-eanes-sky-ink);
   --good: var(--color-eanes-green-ink);
   --warn: var(--color-eanes-gold-ink);
-  --bad: var(--color-eanes-red);
-  --info: var(--color-eanes-blue);
-  /* Eanes Red reaches only 2.17:1 on the navy field, so a red mark there must
-     be lifted. Sky Blue is the one campus colour that is better on navy than
-     on paper: 6.23:1 against the field, 2.47:1 against the page. */
-  --accent-navy: var(--color-eanes-red-lift);
-  --heritage-on-navy: var(--color-eanes-sky);
-  --cursor-mark: var(--color-eanes-red-lift);
-  --cursor-halo: #A6192E24;
+  --bad: var(--color-westlake-red);
+  --info: var(--color-westlake-blue);
+  /* Rules and the logo's red ring on the navy field are true Westlake Red.
+     They are decoration, never text, so the raw brand colour is used. */
+  --accent-navy: var(--color-westlake-red);
+  /* Red used as TEXT (links, labels). Light grounds carry raw Westlake Red
+     at 5.5:1. */
+  --action-text: var(--color-westlake-red);
+  --heritage-on-navy: var(--color-westlake-blue-soft);
+  --cursor-mark: var(--color-westlake-red-lift);
+  --cursor-halo: #C8102E24;
   --cursor-rim: #fdfdfdbf;
   --on-navy: var(--color-night-ink);
   /* Medium Gray, straight from the palette: 6.75:1 on the field. */
@@ -212,32 +214,33 @@
   --ink-faint: var(--color-night-faint);
   --rule: var(--color-night-rule);
   --rule-strong: var(--color-night-rule-strong);
-  /* Eanes Red at full strength is 2.66:1 on the night ground, so the filled
-     button would have no shape. Lifted until it clears 3:1 while still
-     carrying white at 4.5:1, which is a narrow window. */
-  --action: var(--color-eanes-red-dark);
-  --action-hover: #bc5362;
+  /* Westlake Red at full strength clears 3:1 on the night ground (3.08) and
+     still carries white at 5.88, so the filled button keeps its true colour.
+     Hover lifts it slightly: 3.46 shape, 5.24 with white. */
+  --action: var(--color-westlake-red-dark);
+  --action-hover: #ce2843;
   --action-ink: #ffffff;
-  --focus: var(--color-eanes-red-dark);
-  /* Eanes Blue manages 1.68:1 here and simply cannot be used. Sky Blue is the
-     brand's own answer to that problem and reaches 7.09:1. */
-  --heritage: var(--color-eanes-sky);
-  --series-1: var(--color-eanes-blue-soft);
-  --series-2: var(--color-eanes-red-soft);
+  --focus: var(--color-westlake-red-dark);
+  /* Westlake Blue manages 1.69:1 here and cannot be used raw; its light tint
+     reaches 6.55:1 on the raised surface. */
+  --heritage: var(--color-westlake-blue-soft);
+  --series-1: var(--color-westlake-blue-soft);
+  --series-2: var(--color-westlake-red-soft);
   --series-3: var(--color-eanes-sky);
   --series-4: var(--color-eanes-green-soft);
   --series-5: var(--color-eanes-gold);
   --series-6: var(--color-night-muted);
   --good: var(--color-eanes-green-soft);
   --warn: var(--color-eanes-gold);
-  --bad: var(--color-eanes-red-soft);
-  --info: var(--color-eanes-sky);
-  /* The dark field is LIGHTER than the light one, so the red mark on it has to
-     be lifted further: red-lift manages only 2.92:1 there. */
-  --accent-navy: var(--color-eanes-red-soft);
-  --heritage-on-navy: var(--color-eanes-sky);
-  --cursor-mark: var(--color-eanes-red-soft);
-  --cursor-halo: #A6192E2e;
+  --bad: var(--color-westlake-red-soft);
+  --info: var(--color-westlake-blue-soft);
+  --accent-navy: var(--color-westlake-red);
+  /* Raw red text manages 3.08:1 on the night ground and reads harsh at small
+     sizes, so red text takes the soft tint (5.32:1). Fills keep full red. */
+  --action-text: var(--color-westlake-red-soft);
+  --heritage-on-navy: var(--color-westlake-blue-soft);
+  --cursor-mark: var(--color-westlake-red-soft);
+  --cursor-halo: #C8102E2e;
   --cursor-rim: #0a152ecc;
   --on-navy: var(--color-night-ink);
   --on-navy-muted: var(--color-eanes-gray);
@@ -249,7 +252,7 @@
    combinations resolve. Only roles are remapped here; no component knows
    this scheme exists.
 
-   The hierarchy shifts deliberately versus the default scheme. There, Eanes
+   The hierarchy shifts deliberately versus the default scheme. There, Westlake
    red owns primary action. Here Ink Navy owns it and red moves to emphasis,
    heritage marks and the duotone. Keeping action blue is what separates the
    two schemes: give Ivy a red button and it becomes Chaparral in a serif. */
@@ -271,6 +274,7 @@
   --action: var(--color-ivy-navy);
   --action-hover: var(--color-ivy-navy-bright);
   --action-ink: var(--color-ivy-cream);
+  --action-text: var(--color-ivy-navy);
   --focus: var(--color-ivy-oxblood);
   /* Oxblood, not gold. This single role carries class years, heritage marks
      and quoted edges, so it is the largest lever on how much red the scheme
@@ -300,9 +304,9 @@
   --series-6: var(--color-ivy-gold-ink);
   /* Westlake Red lifted just enough to clear 3:1 on BOTH the light ground and
      the navy field, both of which the pointer crosses. Full-strength red
-     manages 2.17 on navy and oxblood only 1.37, so neither can be used here. */
+     manages 2.84 on navy and oxblood only 1.48, so neither can be used here. */
   --cursor-mark: var(--color-ivy-red-lift);
-  --cursor-halo: #a8202f26;
+  --cursor-halo: #b40e2926;
   --cursor-rim: #fffdf8bf;
 
   /* Typography: Newsreader for display, Inter for body and data. Serif wants
@@ -336,7 +340,8 @@
      Cream as the label, exactly one value satisfies both. Card widens it to
      four, which is the only reason a hover state fits at all. */
   --action: var(--color-ivy-navy-lift);
-  --action-hover: #4a6eb0;
+  --action-hover: #4065b8;
+  --action-text: #8ca3d4;
   --action-ink: var(--color-ivy-card);
   --focus: var(--color-ivy-red-on-navy);
   --heritage: var(--color-ivy-ox-lift);
@@ -346,17 +351,30 @@
   --good: #7fb389;
   --warn: #d9b678;
   --bad: var(--color-ivy-red-on-navy);
-  --info: #8fb0e0;
-  --series-1: #8fb0e0;
+  --info: #8ca3d4;
+  --series-1: #8ca3d4;
   --series-2: var(--color-ivy-red-on-navy);
-  --series-3: #5a86c9;
+  --series-3: #6684c6;
   --series-4: var(--color-ivy-ox-lift);
   --series-5: #7fb389;
   --series-6: #d9b678;
   --cursor-mark: var(--color-ivy-red-on-navy);
-  --cursor-halo: #a8202f33;
+  --cursor-halo: #b40e2933;
   --cursor-rim: #0d1424cc;
 }
+
+/* ---- Logo ---------------------------------------------------------------
+   The two rings of the ChapConnect mark. Ink carries the navy ring, so it
+   turns light in dark mode; the red ring stays Westlake Red, which clears 3:1
+   on every ground it sits on. On the navy field both lift. */
+:root {
+  --logo-a: var(--ink);
+  --logo-b: var(--color-westlake-red);
+  --logo-a-on-navy: var(--on-navy);
+  --logo-b-on-navy: var(--accent-navy);
+}
+.ivy { --logo-b: var(--color-ivy-red); }
+.dark.ivy { --logo-b: var(--color-ivy-red-lift); }
 
 @theme inline {
   --color-canvas: var(--canvas);
@@ -370,6 +388,7 @@
   --color-action: var(--action);
   --color-action-hover: var(--action-hover);
   --color-action-ink: var(--action-ink);
+  --color-action-text: var(--action-text);
   --color-heritage: var(--heritage);
   --color-accent-navy: var(--accent-navy);
   --color-heritage-on-navy: var(--heritage-on-navy);
@@ -414,17 +433,17 @@ h1, h2, h3, h4, h5, h6 {
    very low alpha lifts the surface just enough to read as deliberate. */
 .gradient-brand,
 .navy-field {
-  background-color: var(--color-eanes-navy);
+  background-color: var(--color-westlake-navy);
   color: var(--on-navy);
   /* Depth from one hue at two depths. Not a multi-hue gradient. */
   background-image: radial-gradient(
     120% 90% at 12% 0%,
-    #1b3163 0%,
+    #002678 0%,
     transparent 62%
   );
 }
-/* In dark the field sits just ABOVE the canvas: Eanes Navy against the night
-   ground is 1.14:1, so a field painted in it would vanish into the page. */
+/* In dark the field sits just ABOVE the canvas: Westlake Navy against the
+   night ground would vanish into the page. */
 .dark .gradient-brand,
 .dark .navy-field {
   background-color: var(--color-field-night);
@@ -441,7 +460,7 @@ h1, h2, h3, h4, h5, h6 {
   position: relative;
   isolation: isolate;
   /* Follows the field's own navy so the band never shows a seam. */
-  --duotone-ground: var(--color-eanes-navy);
+  --duotone-ground: var(--color-westlake-navy);
   background-color: var(--duotone-ground);
 }
 .dark .duotone {
@@ -560,11 +579,13 @@ h1, h2, h3, h4, h5, h6 {
 button, input, select, textarea, .radius-slight {
   border-radius: var(--radius-slight);
 }
-/* The Eanes logo slab, used for the wordmark only. Weight is pinned because
-   Sanchez ships a single weight and any heavier request is synthesised. */
+/* The Eanes logo slab, used for the wordmark only. Set bold on purpose:
+   Sanchez ships a single weight (400), so this bold is synthesised by the
+   browser, and font-synthesis is pinned on so it can't fall back to regular. */
 .wordmark {
   font-family: var(--font-wordmark);
-  font-weight: 400;
+  font-weight: 700;
+  font-synthesis-weight: auto;
   letter-spacing: -0.015em;
 }
 
@@ -582,8 +603,8 @@ button, input, select, textarea, .radius-slight {
 
 /* Browser surfaces: selection, caret, scrollbar and numerals are part of the
    design, not defaults we inherit. */
-::selection { background: #A6192E33; color: var(--ink); }
-.dark ::selection { background: #c2637159; color: var(--ink); }
+::selection { background: #C8102E33; color: var(--ink); }
+.dark ::selection { background: #de708259; color: var(--ink); }
 
 input, textarea, select { caret-color: var(--action); }
 
@@ -637,7 +658,7 @@ table, .tabular { font-variant-numeric: tabular-nums; }
   background-color: var(--color-ivy-navy);
   background-image: radial-gradient(
     120% 90% at 12% 0%,
-    #24365c 0%,
+    #002370 0%,
     transparent 58%
   );
 }
@@ -660,11 +681,11 @@ table, .tabular { font-variant-numeric: tabular-nums; }
    like a plate in a printed annual rather than a blue-tinted stock photo. */
 .ivy .duotone {
   --duotone-ground: var(--color-ivy-navy);
-  background-image: linear-gradient(to bottom, #16233d 0%, #6e1a24 100%);
+  background-image: linear-gradient(to bottom, #001950 0%, #780a1c 100%);
 }
 .dark.ivy .duotone {
   --duotone-ground: #152139;
-  background-image: linear-gradient(to bottom, #152139 0%, #4a121a 100%);
+  background-image: linear-gradient(to bottom, #152139 0%, #4a0712 100%);
 }
 .ivy .duotone > img {
   filter: contrast(1.1) brightness(0.88);
@@ -684,5 +705,5 @@ table, .tabular { font-variant-numeric: tabular-nums; }
 }
 
 /* Selection and the caret follow the scheme's own accent. */
-.ivy ::selection { background: #a8202f33; color: var(--ink); }
-.dark.ivy ::selection { background: #c2404e4d; color: var(--ink); }
+.ivy ::selection { background: #b40e2933; color: var(--ink); }
+.dark.ivy ::selection { background: #ce28434d; color: var(--ink); }

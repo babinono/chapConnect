@@ -89,6 +89,7 @@ function extractAlumProfile(raw) {
     location: locations[0] || '',
     gradYear,
     activities: raw.high_school_activities || raw.activities || [],
+    avatar: meta.avatar || '',   // "color:look" mascot Chap, when they picked one
   };
 }
 
@@ -255,11 +256,11 @@ export function generateAlumniOutreachDraft(seekerProfile, candidateProfile, thr
   // Tailored connection point
   if (threads && threads.length > 0) {
     const primaryReason = threads[0];
-    lines.push(`I came across your profile through Chap Connect and noticed our shared connection: ${primaryReason.replace(/\s*\(\d+%.*?\)/g, '')}.`);
+    lines.push(`I came across your profile through ChapConnect and noticed our shared connection: ${primaryReason.replace(/\s*\(\d+%.*?\)/g, '')}.`);
   } else if (cand.primarySchool) {
-    lines.push(`I came across your profile through Chap Connect and noticed you also attended ${cand.primarySchool}${candClass}.`);
+    lines.push(`I came across your profile through ChapConnect and noticed you also attended ${cand.primarySchool}${candClass}.`);
   } else {
-    lines.push(`I came across your profile through the Westlake alumni directory on Chap Connect and wanted to reach out.`);
+    lines.push(`I came across your profile through the Westlake alumni directory on ChapConnect and wanted to reach out.`);
   }
 
   lines.push('');

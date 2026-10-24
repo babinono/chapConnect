@@ -12,14 +12,14 @@ export default function SendMessageModal({
   defaultBody = '',
   onSent,
 }) {
-  const [subject, setSubject] = useState(defaultSubject || `Connecting via Chap Connect — Westlake Alumni`);
+  const [subject, setSubject] = useState(defaultSubject || `Connecting via ChapConnect — Westlake Alumni`);
   const [body, setBody] = useState(defaultBody || '');
   const [isSent, setIsSent] = useState(false);
   const [lastSentMsg, setLastSentMsg] = useState(null);
 
   React.useEffect(() => {
     if (isOpen) {
-      setSubject(defaultSubject || `Connecting via Chap Connect — Westlake Alumni`);
+      setSubject(defaultSubject || `Connecting via ChapConnect — Westlake Alumni`);
       setBody(defaultBody || '');
       setIsSent(false);
     }
@@ -79,7 +79,7 @@ export default function SendMessageModal({
           {/* Header */}
           <div className="flex items-start justify-between pb-4 border-b border-rule">
             <div>
-              <span className="text-xs font-semibold tracking-wider text-action uppercase">Direct Email Relay</span>
+              <span className="text-xs font-semibold tracking-wider text-action-text uppercase">Direct Email Relay</span>
               <h2 className="text-2xl font-semibold text-ink tracking-tight mt-0.5">
                 Message {recipientName}
               </h2>
@@ -109,7 +109,7 @@ export default function SendMessageModal({
 
               {/* Email Relay Receipt */}
               <div className="bg-sunken border border-rule p-4 text-xs text-left panel space-y-2 text-ink">
-                <div className="font-semibold text-action flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
+                <div className="font-semibold text-action-text flex items-center gap-1.5 uppercase tracking-wide text-[11px]">
                   <Mail className="w-3.5 h-3.5" />
                   <span>Email Dispatch Receipt</span>
                 </div>
@@ -119,7 +119,7 @@ export default function SendMessageModal({
                   <div><strong>Subject:</strong> {subject}</div>
                 </div>
                 <div className="pt-2 border-t border-rule text-xs text-ink-muted font-sans leading-relaxed">
-                  When <strong>{recipientName}</strong> opens the email and hits <strong>Reply</strong>, their response goes directly to your email (<strong className="text-ink">{senderEmail}</strong>). Their reply also unlocks their full profile contact details on Chap Connect!
+                  When <strong>{recipientName}</strong> opens the email and hits <strong>Reply</strong>, their response goes directly to your email (<strong className="text-ink">{senderEmail}</strong>). Their reply also unlocks their full profile contact details on ChapConnect!
                 </div>
               </div>
 
@@ -136,7 +136,7 @@ export default function SendMessageModal({
             <form onSubmit={handleSend} className="space-y-4 pt-4">
               {/* Privacy Notice Box with Sender Reply-To */}
               <div className="bg-sunken border border-rule p-3.5 flex items-start gap-3 panel">
-                <Lock className="w-4 h-4 text-action shrink-0 mt-0.5" />
+                <Lock className="w-4 h-4 text-action-text shrink-0 mt-0.5" />
                 <div className="text-xs leading-relaxed text-ink-muted">
                   <div className="font-semibold text-ink flex items-center gap-2">
                     <span>Recipient Email Obscured:</span>

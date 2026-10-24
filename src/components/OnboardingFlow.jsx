@@ -4,6 +4,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
 import Autocomplete from './Autocomplete';
+import ChapPicker from './ChapPicker';
+import ChapLogo from './ChapLogo';
+import ThemeControls from './ui/ThemeControls';
+import { randomAvatar } from '../utils/chapAvatar';
 import { COLLEGES, MAJORS } from '../utils/colleges';
 
 
@@ -12,8 +16,13 @@ export default function OnboardingFlow({ session }) {
   const navigate = useNavigate();
   const state = location.state || {};
 
+  // The email from the welcome screen, or a real Google account's. When we have
+  // one, the profile steps don't ask for it again.
+  const sessionEmail = session?.user?.email || '';
+  const knownEmail = state.email || (sessionEmail.endsWith('@chapconnect.local') ? '' : sessionEmail);
+
   const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({});
+  const [formData, setFormData] = useState(knownEmail ? { email: knownEmail } : {});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [dir, setDir] = useState(1); // 1 = forward, -1 = back (drives slide direction)
 
@@ -30,6 +39,8 @@ export default function OnboardingFlow({ session }) {
   const [firstName, setFirstName] = useState(sourceName.split(' ')[0] || '');
   const [lastName, setLastName] = useState(sourceName.split(' ').slice(1).join(' '));
   const [nickname, setNickname] = useState('');
+  // Profile picture: a red or blue mascot Chap, picked on the name step.
+  const [avatar, setAvatar] = useState(() => randomAvatar());
   const [identityConfirmed, setIdentityConfirmed] = useState(false);
   const [gradYear, setGradYear] = useState(state.gradYear || '');
   const [flow, setFlow] = useState(state.flow || null);
@@ -56,6 +67,14 @@ export default function OnboardingFlow({ session }) {
     setFormData({ ...formData, gradPrograms: gradPrograms.map((g, idx) => idx === i ? { ...g, [field]: val } : g) });
   const removeGradProgram = (i) =>
     setFormData({ ...formData, gradPrograms: gradPrograms.filter((_, idx) => idx !== i) });
+
+  // Repeatable undergrad majors (double majors). Saved as one comma-separated
+  // `major`, the same shape the Autocomplete already understands.
+  const majors = formData.majors || [formData.major || ''];
+  const updateMajor = (i, val) => setFormData({ ...formData, majors: majors.map((m, idx) => idx === i ? val : m) });
+  const addMajor = () => setFormData({ ...formData, majors: [...majors, ''] });
+  const removeMajor = (i) => setFormData({ ...formData, majors: majors.filter((_, idx) => idx !== i) });
+  const majorValue = majors.map(m => m.trim()).filter(Boolean).join(', ') || null;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -86,14 +105,15 @@ export default function OnboardingFlow({ session }) {
         status: isWorking ? 'working' : 'not_working',
         working: isWorking,
         undergradCollege: formData.college || null,
-        undergradMajor: formData.major || null,
+        undergradMajor: majorValue,
         education: gradPrograms,                     // full list beyond undergrad
         firstGrad: gradPrograms[0] ? asLabel(gradPrograms[0]) : null,   // legacy display
         secondGrad: gradPrograms[1] ? asLabel(gradPrograms[1]) : null,  // legacy display
         contactPlatform,
         contactInfo: formData.contactInfo || null,
         newsletterConsent: !!formData.newsletterConsent,
-        contactConsent: !!formData.contactConsent
+        contactConsent: !!formData.contactConsent,
+        avatar
       });
 
       profileData = {
@@ -102,7 +122,7 @@ export default function OnboardingFlow({ session }) {
         flow_type: 'post_schooling',
         email: formData.email || null,
         college: formData.college || null,           // undergrad
-        major: formData.major || null,               // undergrad major
+        major: majorValue,                           // undergrad major(s)
         career: isWorking ? (formData.career || null) : null,   // position
         high_school_activities: null,
         target_colleges: null,
@@ -196,17 +216,41 @@ export default function OnboardingFlow({ session }) {
       if (step === 1) {
         return (
           <div className="space-y-5">
-            <div>
-              <label className={labelClass}>Email Address</label>
-              <input name="email" type="email" required onChange={handleChange} value={formData.email || ''} className={inputClass} placeholder="you@example.com" />
-            </div>
+            {!knownEmail && (
+              <div>
+                <label className={labelClass}>Email Address</label>
+                <input name="email" type="email" required onChange={handleChange} value={formData.email || ''} className={inputClass} placeholder="you@example.com" />
+              </div>
+            )}
             <div>
               <label className={labelClass}>Undergraduate College</label>
               <Autocomplete name="college" required onChange={handleChange} value={formData.college || ''} suggestions={COLLEGES} placeholder="e.g. UT Austin" />
             </div>
-            <div>
+            <div className="space-y-3">
               <label className={labelClass}>Undergraduate Major / Degree</label>
-              <Autocomplete name="major" onChange={handleChange} value={formData.major || ''} suggestions={MAJORS} placeholder="e.g. Computer Science" />
+              {majors.map((m, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="flex-1">
+                    <Autocomplete name={`major-${i}`} onChange={(e) => updateMajor(i, e.target.value)} value={m} suggestions={MAJORS} placeholder={i === 0 ? 'e.g. Computer Science' : 'Second major'} />
+                  </div>
+                  {i > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => removeMajor(i)}
+                      className="text-bad text-xs font-medium tracking-wide hover:underline cursor-pointer"
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addMajor}
+                className="w-full py-3 border border-dashed border-rule-strong text-ink-muted font-medium tracking-wide text-sm hover:border-ink hover:text-ink transition-colors cursor-pointer"
+              >
+                + Add another major
+              </button>
             </div>
           </div>
         );
@@ -284,10 +328,6 @@ export default function OnboardingFlow({ session }) {
                 <label className={labelClass}>What is your position?</label>
                 <input name="career" type="text" required onChange={handleChange} value={formData.career || ''} className={inputClass} placeholder="e.g. Senior Software Engineer" />
               </div>
-              <div>
-                <label className={labelClass}>City (Optional)</label>
-                <input name="location" type="text" onChange={handleChange} value={formData.location || ''} className={inputClass} placeholder="e.g. Austin, TX" />
-              </div>
             </>
           )}
 
@@ -319,11 +359,11 @@ export default function OnboardingFlow({ session }) {
 
             <label className={checkboxClass}>
               <input type="checkbox" name="newsletterConsent" checked={!!formData.newsletterConsent} onChange={handleChange} className="mt-0.5 w-5 h-5 accent-blue-600" />
-              <span className="text-sm font-medium text-ink">I give permission to use my email to send me the alumni newsletter and publications.</span>
+              <span className="text-sm font-medium text-ink">I give permission to send the alumni newsletter and publications to my email.</span>
             </label>
             <label className={checkboxClass}>
               <input type="checkbox" name="contactConsent" checked={!!formData.contactConsent} onChange={handleChange} className="mt-0.5 w-5 h-5 accent-blue-600" />
-              <span className="text-sm font-medium text-ink">I allow students to occasionally contact me when Chap Connect matches them with me.</span>
+              <span className="text-sm font-medium text-ink">I'm open to students reaching out now and then for mentorship or advice.</span>
             </label>
           </div>
         </div>
@@ -334,10 +374,12 @@ export default function OnboardingFlow({ session }) {
       if (step === 1) {
         return (
           <div className="space-y-5">
-            <div>
-              <label className={labelClass}>Email Address</label>
-              <input name="email" type="email" required onChange={handleChange} value={formData.email || ''} className={inputClass} placeholder="you@example.com" />
-            </div>
+            {!knownEmail && (
+              <div>
+                <label className={labelClass}>Email Address</label>
+                <input name="email" type="email" required onChange={handleChange} value={formData.email || ''} className={inputClass} placeholder="you@example.com" />
+              </div>
+            )}
             <div>
               <label className={labelClass}>College Attended</label>
               <Autocomplete name="college" onChange={handleChange} value={formData.college || ''} suggestions={COLLEGES} placeholder="e.g. UT Austin" />
@@ -441,10 +483,12 @@ export default function OnboardingFlow({ session }) {
       if (step === 1) {
         return (
           <div className="space-y-5">
-            <div>
-              <label className={labelClass}>Email Address</label>
-              <input name="email" type="email" required onChange={handleChange} value={formData.email || ''} className={inputClass} placeholder="you@example.com" />
-            </div>
+            {!knownEmail && (
+              <div>
+                <label className={labelClass}>Email Address</label>
+                <input name="email" type="email" required onChange={handleChange} value={formData.email || ''} className={inputClass} placeholder="you@example.com" />
+              </div>
+            )}
             <div>
               <label className={labelClass}>Current College</label>
               <Autocomplete name="college" onChange={handleChange} value={formData.college || ''} suggestions={COLLEGES} placeholder="e.g. Duke University" />
@@ -523,13 +567,24 @@ export default function OnboardingFlow({ session }) {
     }
   };
 
+  // The name/class step counts as step 1 of the progress bar, ahead of the
+  // flow's own profile steps.
+  const flowSteps = (f) => (f === 'post_college' || f === 'established' ? 3 : 2);
+  const totalSteps = 1 + flowSteps(flow || computeFlow(gradYear) || 'post_college');
+
   // Grad-year gate: shown when we don't yet know the year (e.g. arriving from
   // Google sign-in). Once entered, it derives the flow and drops into step 1.
   if (!identityConfirmed || !flow) {
     const needsYear = !flow;
+    // ChapConnect is for graduates. A class counts as graduated from June of
+    // its year, so in autumn 2026 the first class still in school is 2027.
+    const now = new Date();
+    const latestGraduatedClass = now.getMonth() >= 5 ? now.getFullYear() : now.getFullYear() - 1;
+    const yearNum = parseInt(gradYear, 10);
+    const notYetGraduated = needsYear && String(gradYear).length === 4 && yearNum > latestGraduatedClass;
     const handleYear = (e) => {
       e.preventDefault();
-      if (!firstName.trim()) return;
+      if (!firstName.trim() || !(formData.location || '').trim() || notYetGraduated) return;
       if (needsYear) {
         const f = computeFlow(gradYear);
         if (!f) return;
@@ -539,84 +594,119 @@ export default function OnboardingFlow({ session }) {
       setStep(1);
     };
     return (
-      <div className="min-h-[100dvh] flex items-center justify-center p-6">
-        <div className="w-full max-w-md bg-surface border border-rule p-8 panel">
-          <h1 className="font-heading text-3xl font-semibold text-ink tracking-tight mb-2">
+      <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 p-4 sm:p-6">
+        <ThemeControls className="w-full max-w-5xl justify-end" />
+        <div className="w-full max-w-5xl bg-surface border border-rule p-6 sm:p-8 lg:px-10 panel">
+          <OnboardingProgress current={1} total={totalSteps} />
+          <h1 className="font-heading text-3xl lg:text-4xl font-semibold text-ink tracking-tight mb-8">
             {firstName ? `Hi, ${firstName}.` : 'Welcome.'}
           </h1>
-          <p className="text-ink-muted mb-8">
-            Check we have your name right. This is what other Chaps will see.
-          </p>
-          <form onSubmit={handleYear} className="space-y-6">
-            <div className="grid gap-5 sm:grid-cols-2">
-              <div className="flex flex-col gap-2">
-                <label htmlFor="ob-first" className={labelClass}>First name</label>
-                <input
-                  id="ob-first"
-                  type="text"
-                  required
-                  autoFocus
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  className={inputClass}
-                  placeholder="Katherine"
-                />
+          <form onSubmit={handleYear}>
+            {/* Desktop: details left, Chap picker as its own column on the right.
+                Phone: one column, picker after the details. */}
+            <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12 items-start">
+              <div className="space-y-6">
+              <div className="grid gap-5 sm:grid-cols-2">
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="ob-first" className={labelClass}>First name</label>
+                  <input
+                    id="ob-first"
+                    type="text"
+                    required
+                    autoFocus
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className={inputClass}
+                    placeholder="Katherine"
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="ob-last" className={labelClass}>Last name</label>
+                  <input
+                    id="ob-last"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className={inputClass}
+                    placeholder="Taylor"
+                  />
+                </div>
               </div>
+
               <div className="flex flex-col gap-2">
-                <label htmlFor="ob-last" className={labelClass}>Last name</label>
+                <label htmlFor="ob-nick" className={labelClass}>
+                  Go by something else? <span className="text-ink-faint font-normal">(optional)</span>
+                </label>
                 <input
-                  id="ob-last"
+                  id="ob-nick"
                   type="text"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
                   className={inputClass}
-                  placeholder="Taylor"
+                  placeholder="Kate"
                 />
+                <p className="text-sm text-ink-faint">
+                  {nickname.trim()
+                    ? `We'll call you ${nickname.trim()}.`
+                    : 'Leave blank to use your first name.'}
+                </p>
               </div>
+
+              <div className="grid gap-6 sm:grid-cols-2 sm:items-start">
+                {needsYear && (
+                  <div className="flex flex-col gap-2">
+                    <label htmlFor="ob-year" className={labelClass}>High school graduating class</label>
+                    <input
+                      id="ob-year"
+                      type="number"
+                      min="1950"
+                      max="2035"
+                      required
+                      value={gradYear}
+                      onChange={(e) => setGradYear(e.target.value)}
+                      className={`${inputClass} tabular`}
+                      placeholder="2024"
+                      aria-describedby={notYetGraduated ? 'ob-year-note' : undefined}
+                    />
+                    {notYetGraduated && (
+                      <div id="ob-year-note" role="status" className="mt-1 border border-rule bg-sunken px-4 py-3 panel">
+                        <p className="text-sm font-medium text-ink">Almost there, Class of {yearNum}!</p>
+                        <p className="mt-1 text-sm text-ink-muted">
+                          ChapConnect is for Westlake graduates. Come back after you walk the stage and the whole network will be waiting for you.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <div className="flex flex-col gap-2">
+                  <label htmlFor="ob-city" className={labelClass}>City you live in</label>
+                  <input
+                    id="ob-city"
+                    type="text"
+                    required
+                    autoComplete="address-level2"
+                    value={formData.location || ''}
+                    onChange={(e) => setFormData(f => ({ ...f, location: e.target.value }))}
+                    className={inputClass}
+                    placeholder="e.g. Austin, TX"
+                  />
+                </div>
+              </div>
+              </div>
+
+              <ChapPicker value={avatar} onChange={setAvatar} layout="panel" />
             </div>
 
-            <div className="flex flex-col gap-2">
-              <label htmlFor="ob-nick" className={labelClass}>
-                Go by something else? <span className="text-ink-faint font-normal">(optional)</span>
-              </label>
-              <input
-                id="ob-nick"
-                type="text"
-                value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
-                className={inputClass}
-                placeholder="Kate"
-              />
-              <p className="text-sm text-ink-faint">
-                {nickname.trim()
-                  ? `We'll call you ${nickname.trim()}.`
-                  : 'Leave blank to use your first name.'}
-              </p>
+            <div className="mt-8 flex lg:justify-end">
+              <button
+                type="submit"
+                disabled={notYetGraduated}
+                className="w-full lg:w-auto lg:min-w-56 h-12 bg-action text-action-ink font-medium px-8 flex items-center justify-center gap-2 cursor-pointer transition-colors hover:bg-action-hover disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span>Continue</span>
+                <ArrowRight className="w-5 h-5" />
+              </button>
             </div>
-
-            {needsYear && (
-              <div className="flex flex-col gap-2">
-                <label htmlFor="ob-year" className={labelClass}>High school graduating class</label>
-                <input
-                  id="ob-year"
-                  type="number"
-                  min="1950"
-                  max="2035"
-                  required
-                  value={gradYear}
-                  onChange={(e) => setGradYear(e.target.value)}
-                  className={`${inputClass} tabular`}
-                  placeholder="2024"
-                />
-              </div>
-            )}
-            <button
-              type="submit"
-              className="w-full bg-action text-action-ink font-medium py-4 px-4 flex items-center justify-center space-x-2 tracking-wide cursor-pointer"
-            >
-              <span>Continue</span>
-              <ArrowRight className="w-5 h-5" />
-            </button>
           </form>
         </div>
       </div>
@@ -627,11 +717,10 @@ export default function OnboardingFlow({ session }) {
   const isLastStep = (flow === 'post_college' && step === 3) || (flow === 'established' && step === 3) || (flow === 'recent' && step === 2) || (flow === 'student' && step === 2);
 
   return (
-    <div className="min-h-[100dvh] flex items-center justify-center p-6">
-      <div className="w-full max-w-xl bg-surface border border-rule p-8 relative panel">
-        <div className="absolute top-4 right-4 navy-field font-medium px-3 py-1 text-xs">
-          Step {step} of {flow === 'post_college' ? 3 : (flow === 'established' ? 3 : 2)}
-        </div>
+    <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 p-4 sm:p-6 lg:p-10">
+      <ThemeControls className="w-full max-w-2xl justify-end" />
+      <div className="w-full max-w-2xl bg-surface border border-rule p-6 sm:p-8 lg:p-10 relative panel">
+        <OnboardingProgress current={step + 1} total={totalSteps} />
 
         <h1 className="text-3xl font-semibold text-ink tracking-tight mb-8">
           Tell Us About Yourself
@@ -691,6 +780,33 @@ export default function OnboardingFlow({ session }) {
             </div>
           )}
         </form>
+      </div>
+    </div>
+  );
+}
+
+// Status bar across the top of the onboarding card.
+function OnboardingProgress({ current, total }) {
+  return (
+    <div className="mb-8">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs font-medium text-ink-muted">Step {current} of {total}</p>
+        <ChapLogo className="h-6 w-auto" />
+      </div>
+      <div
+        className="h-1.5 w-full bg-sunken overflow-hidden rounded-full"
+        role="progressbar"
+        aria-label="Onboarding progress"
+        aria-valuemin={1}
+        aria-valuemax={total}
+        aria-valuenow={current}
+      >
+        <motion.div
+          className="h-full bg-action rounded-full"
+          initial={false}
+          animate={{ width: `${(current / total) * 100}%` }}
+          transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+        />
       </div>
     </div>
   );

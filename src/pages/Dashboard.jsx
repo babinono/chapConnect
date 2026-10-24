@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import Magnetic from '../components/ui/Magnetic';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase, signOutToWelcome } from '../utils/supabaseClient';
 import Autocomplete from '../components/Autocomplete';
 import { 
-  Briefcase, 
+  Briefcase,
   GraduationCap, 
   MapPin, 
   Save, 
@@ -19,10 +18,11 @@ import {
   LogOut,
   Mail,
   Lock,
-  Sparkles,
   Newspaper,
+  ArrowRight,
   ExternalLink,
   RefreshCw,
+  Search,
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import TabBar from '../components/ui/TabBar';
@@ -30,16 +30,47 @@ import { COLLEGES, MAJORS } from '../utils/colleges';
 import { findAlumniMatches, generateAlumniOutreachDraft } from '../utils/alumniMatchingEngine';
 import MessageBoard from '../components/MessageBoard';
 import SendMessageModal from '../components/SendMessageModal';
+import SimilarChaps from '../components/SimilarChaps';
+import { getBoardPosts, initMessageBoard } from '../utils/messageBoardStore';
+import { artFor } from '../utils/newsArt';
+import ChapAvatar from '../components/ChapAvatar';
+import ChapPicker from '../components/ChapPicker';
+import ChapLogo from '../components/ChapLogo';
+import ThemeControls from '../components/ui/ThemeControls';
+
+// How many ranked alumni to pull for the matching tab's filters (the home
+// column shows the top few of the same list).
+const MATCH_POOL = 60;
+// matchingEngine fills these in when a record has no school or career, so
+// they aren't real values to filter on.
+const PLACEHOLDER_VALUES = new Set(['University', 'Professional']);
+// Match reasons carry the engine's internal weighting ("(35% weight)"), which
+// means nothing to the reader.
+const cleanThread = (t) => String(t).replace(/\s*\(\d+% weight\)/g, '');
 import { isContactUnlocked, obscureEmail, recordReply, getMessagesBetween } from '../utils/messageRelayStore';
 
 export default function Dashboard({ session }) {
-  const [activeTab, setActiveTab] = useState('matches'); // 'matches' or 'profile'
+  // The open tab lives in the URL (?tab=matches|board|profile; Home has none),
+  // so refresh, Back and shared links all land on the same section.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const TAB_KEYS = ['home', 'matches', 'board', 'profile'];
+  const activeTab = TAB_KEYS.includes(searchParams.get('tab')) ? searchParams.get('tab') : 'home';
+  const setActiveTab = (key) => {
+    if (key === activeTab) return;
+    setSearchParams(key === 'home' ? {} : { tab: key });
+    window.scrollTo({ top: 0 });
+  };
   const [matches, setMatches] = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
 
   // Alumni-to-alumni matching state
   const [alumniMatches, setAlumniMatches] = useState([]);
+  const [matchFilters, setMatchFilters] = useState({ q: '', college: '', company: '', gradYear: '', location: '' });
+  const [newsPosts, setNewsPosts] = useState([]);
+  useEffect(() => {
+    initMessageBoard().then(() => setNewsPosts(getBoardPosts()));
+  }, []);
   const [loadingAlumniMatches, setLoadingAlumniMatches] = useState(false);
   const [selectedRecipientForMessage, setSelectedRecipientForMessage] = useState(null);
   const [messageRelayTick, setMessageRelayTick] = useState(0);
@@ -93,11 +124,6 @@ export default function Dashboard({ session }) {
 
           setProfile(profileData);
 
-          // Only HS students match — everyone else lands on the Home tab.
-          if (profileData.flow_type !== 'student') {
-            setActiveTab('home');
-          }
-
           // Convert database arrays to comma-separated strings for form state inputs
           const toString = (arr) => Array.isArray(arr) ? arr.join(', ') : (arr || '');
           const PRESET_GRAD_SCHOOLS = ['UT Austin', 'Stanford', 'Harvard', 'Duke', 'UCLA', 'Yale', 'Columbia', 'MIT'];
@@ -146,6 +172,7 @@ export default function Dashboard({ session }) {
             // Alumni meta preserved so editing the profile doesn't drop fields
             // that have no dedicated editor input (undergrad/education).
             _rawMeta: parsedMeta,
+            avatar: parsedMeta.avatar || '',
             alumniStatus: parsedMeta.status || '',
             working: parsedMeta.working === true ? 'yes'
               : parsedMeta.working === false ? 'no'
@@ -225,7 +252,7 @@ export default function Dashboard({ session }) {
     if (!targetProfile) return;
     setLoadingAlumniMatches(true);
     try {
-      const results = await findAlumniMatches(targetProfile);
+      const results = await findAlumniMatches(targetProfile, { limit: MATCH_POOL });
       setAlumniMatches(results);
     } catch (err) {
       console.error("Failed to run alumni matching:", err);
@@ -238,7 +265,7 @@ export default function Dashboard({ session }) {
     let active = true;
     const targetProfile = getEffectiveProfile();
     if (!isStudent && targetProfile && alumniMatches.length === 0 && !loadingAlumniMatches) {
-      findAlumniMatches(targetProfile).then(results => {
+      findAlumniMatches(targetProfile, { limit: MATCH_POOL }).then(results => {
         if (active) setAlumniMatches(results);
       }).catch(err => {
         console.error("Failed to run alumni matching:", err);
@@ -343,7 +370,8 @@ export default function Dashboard({ session }) {
         contactPlatform: contactPlatformVal || '',
         contactInfo: profileForm.contactInfo || '',
         newsletterConsent: !!profileForm.newsletterConsent,
-        contactConsent: !!profileForm.contactConsent
+        contactConsent: !!profileForm.contactConsent,
+        avatar: profileForm.avatar || profileForm._rawMeta?.avatar || ''
       });
     } else {
       finalPostGradProgram = profileForm.post_grad_program === 'Other' ? profileForm.other_post_grad_program : (profileForm.post_grad_program || null);
@@ -408,7 +436,7 @@ export default function Dashboard({ session }) {
   // Plain sign-out: keeps the profile, just ends the session and returns to the
   // welcome screen so a different person can sign in.
   const handleLogOut = async () => {
-    if (!window.confirm('Log out of Chap Connect?')) return;
+    if (!window.confirm('Log out of ChapConnect?')) return;
     await signOutToWelcome();
   };
 
@@ -513,294 +541,295 @@ export default function Dashboard({ session }) {
 
   const labelClass = "block text-sm font-medium text-ink mb-2 tracking-wide";
   const inputClass = "w-full px-4 py-3 border border-rule focus:outline-none focus:border-action bg-sunken font-medium transition-all panel";
+  const isWorkingFlow = profileForm.flow_type === 'post_schooling' || profileForm.flow_type === 'established';
+
+  const filteredMatches = alumniMatches.filter(({ candidate: c }) => {
+    const f = matchFilters;
+    if (f.q) {
+      const needle = f.q.trim().toLowerCase();
+      const hay = [c.name, c.primarySchool, c.primaryMajor, c.company, c.primaryCareer, c.location].join(' ').toLowerCase();
+      if (!hay.includes(needle)) return false;
+    }
+    if (f.college && c.primarySchool !== f.college) return false;
+    if (f.company && c.company !== f.company) return false;
+    if (f.gradYear && String(c.gradYear) !== f.gradYear) return false;
+    if (f.location && c.location !== f.location) return false;
+    return true;
+  });
 
   return (
-    <div className="min-h-[100dvh] py-12 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto flex flex-col">
-      <header className="flex flex-col md:flex-row md:items-center justify-between mb-8 pb-6 border-b border-rule gap-6">
-        <div>
-          <h1 className="wordmark text-2xl text-ink leading-none">
-            Chap Connect
-          </h1>
-          <p className="text-sm text-ink-faint mt-1.5">
-            Westlake Alumni
-          </p>
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-4 self-start md:self-auto">
-          <button
-            onClick={handleLogOut}
-            className="bg-surface text-ink-muted font-medium py-2.5 px-4 text-sm border border-rule flex items-center justify-center gap-2 transition-colors hover:text-ink hover:border-ink cursor-pointer rounded-slight"
-          >
-            <LogOut className="w-4 h-4" strokeWidth={1.75} />
-            <span>Log Out</span>
-          </button>
-
-          {(session?.user?.id === '11111111-1111-1111-1111-111111111111' || import.meta.env.DEV || window.location.hostname.includes('vercel.app')) && (
+    <div className="min-h-[100dvh] flex flex-col">
+      <header className="sticky top-0 z-30 border-b border-rule bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/85">
+        <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10">
+          <div className="flex h-16 items-center justify-between gap-4">
             <button
-              onClick={handleResetDevMode}
-              className="border border-bad/40 text-bad font-medium py-2.5 px-4 text-sm flex items-center justify-center gap-2 transition-colors hover:border-bad hover:bg-sunken cursor-pointer rounded-slight"
+              type="button"
+              onClick={() => setActiveTab('home')}
+              className="flex items-center gap-3 min-w-0 cursor-pointer"
+              aria-label="ChapConnect home"
             >
-              <span>Reset Account</span>
+              <ChapLogo className="h-9 sm:h-10 w-auto shrink-0" title="" />
+              <span className="wordmark text-2xl sm:text-[1.75rem] text-ink leading-none">ChapConnect</span>
             </button>
-          )}
 
-          <Magnetic
-            onClick={() => navigate('/directory')}
-            className="bg-action text-action-ink font-medium py-4 px-5 border border-rule flex items-center justify-center space-x-2 transition-all tracking-normal text-sm cursor-pointer"
-          >
-            <FolderHeart className="w-4 h-4" strokeWidth={1.75} />
-            <span>View Directory</span>
-          </Magnetic>
+            <div className="flex items-center gap-2 sm:gap-3">
+              <ThemeControls className="hidden sm:flex" />
+              <button
+                type="button"
+                onClick={() => setActiveTab('profile')}
+                className="shrink-0 cursor-pointer rounded-full"
+                style={{ borderRadius: '9999px' }}
+                aria-label="Edit your profile"
+                title="Edit profile"
+              >
+                <ChapAvatar avatar={profileForm.avatar} seed={profile?.user_id || profile?.name} size={36} className="border border-rule" />
+              </button>
+              <button
+                onClick={handleLogOut}
+                className="h-9 px-3 text-sm font-medium text-ink-muted border border-rule bg-surface flex items-center gap-2 transition-colors hover:text-ink hover:border-rule-strong cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" strokeWidth={1.75} />
+                <span className="hidden sm:inline">Log Out</span>
+              </button>
+            </div>
+          </div>
+
+          <TabBar
+            className="-mx-3"
+            active={activeTab}
+            onChange={setActiveTab}
+            items={[
+              { key: 'home', label: 'Home', Icon: Home },
+              { key: 'matches', label: 'Directory', Icon: FolderHeart },
+              { key: 'board', label: 'Alumni News', Icon: Newspaper },
+              { key: 'profile', label: 'Edit Profile', Icon: User },
+            ]}
+          />
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="mb-10">
-        <TabBar
-          active={activeTab}
-          onChange={setActiveTab}
-          items={[
-            { key: 'home', label: 'Home', Icon: Home },
-            { key: 'matches', label: 'Alumni Matching', Icon: FolderHeart },
-            { key: 'board', label: 'Message Board', Icon: Newspaper },
-            { key: 'profile', label: 'My Profile', Icon: User },
-          ]}
-        />
-      </div>
+      <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-10 py-8 sm:py-10">
+      <ThemeControls className="sm:hidden mb-6 justify-end" />
 
       {activeTab === 'matches' ? (
-        <div className="space-y-8 animate-in fade-in duration-500">
-            {/* Warm Welcome Banner */}
-            <div className="navy-field p-8 relative">
-              <div className="absolute right-8 top-8 text-sm text-on-navy-muted">
-                <span>Mentor account active</span>
-              </div>
-              <h2 className="font-heading text-title font-semibold tracking-tight text-on-navy mb-2">Alumni mentor portal</h2>
-              <p className="text-on-navy-muted max-w-prose leading-relaxed">
-                Thank you for giving back to the Westlake High School community! Your profile has been saved to the Chap Connect database, making you visible to current WHS students and recent grads seeking college and career insights.
-              </p>
-            </div>
-
+        <div className="space-y-6 animate-in fade-in duration-500">
             {(() => {
-              let alumniMeta = null;
-              if (profile?.post_grad_school === 'ALUMNI_METADATA') {
-                try {
-                  alumniMeta = JSON.parse(profile.post_grad_program || '{}');
-                } catch (e) {
-                  console.error("Failed to parse alumni metadata:", e);
+              // Facet tiles: every value that actually occurs, most common
+              // first, with how many Chaps have it.
+              const facet = (get) => {
+                const counts = new Map();
+                for (const m of alumniMatches) {
+                  const v = get(m.candidate);
+                  if (v && !PLACEHOLDER_VALUES.has(v)) counts.set(String(v), (counts.get(String(v)) || 0) + 1);
                 }
-              }
+                return [...counts.entries()].sort((x, y) => y[1] - x[1] || x[0].localeCompare(y[0])).slice(0, 8);
+              };
+              const groups = [
+                { key: 'college', label: 'College', options: facet(c => c.primarySchool) },
+                { key: 'company', label: 'Company', options: facet(c => c.company) },
+                { key: 'gradYear', label: 'Class', options: facet(c => c.gradYear) },
+                { key: 'location', label: 'City', options: facet(c => c.location) },
+              ].filter(g => g.options.length > 0);
+              const toggle = (key, value) => setMatchFilters(f => ({ ...f, [key]: f[key] === value ? '' : value }));
+              const active = Object.values(matchFilters).some(Boolean);
 
               return (
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-start">
-                  {/* Profile Card */}
-                  <div className="md:col-span-2 bg-surface border border-rule overflow-hidden flex flex-col panel">
-                    <div className="h-16 navy-field flex items-center px-6">
-                      <h3 className="text-white font-medium tracking-wide text-sm">Your Active Mentor Listing</h3>
+                <>
+                  <div className="flex flex-wrap items-end justify-between gap-4">
+                    <div>
+                      <h2 className="font-heading text-3xl font-semibold tracking-tight text-ink">Recommended alumni</h2>
+                      <p className="text-ink-muted mt-1">Ranked by how much of your path you share.</p>
                     </div>
-                    <div className="p-6 space-y-6">
-                      <div className="flex items-center space-x-4 border-b-2 border-rule pb-4">
-                        <img
-                          src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(profile?.name || '')}`}
-                          alt={profile?.name}
-                          className="w-16 h-16 rounded-full border border-rule bg-surface"
-                        />
-                        <div>
-                          <h3 className="text-2xl font-semibold text-ink leading-none">{profile?.name}</h3>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <span className="text-ink-muted text-sm">
-                              Class of <span className="text-heritage-on-navy font-medium tabular">{profile?.grad_year}</span>
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm font-medium text-ink">
-                        <div className="flex items-center">
-                          <Briefcase className="w-5 h-5 mr-3 text-ink-faint flex-shrink-0" />
-                          <span>
-                            {profile?.career || 'Position not specified'}
-                            {alumniMeta?.industry && <span className="text-ink-faint font-semibold"> ({alumniMeta.industry})</span>}
-                            {profile?.company && ` @ ${profile.company}`}
-                          </span>
-                        </div>
-                        <div className="flex items-start">
-                          <GraduationCap className="w-5 h-5 mr-3 text-ink-faint flex-shrink-0 mt-0.5" />
-                          <div className="flex flex-col">
-                            <span>{profile?.college || 'College not specified'} {profile?.major && `(${profile.major})`}</span>
-                            {alumniMeta?.firstGrad && (
-                              <span className="text-xs text-ink-muted font-semibold mt-0.5">Grad 1: {alumniMeta.firstGrad}</span>
-                            )}
-                            {alumniMeta?.secondGrad && (
-                              <span className="text-xs text-ink-muted font-semibold">Grad 2: {alumniMeta.secondGrad}</span>
-                            )}
-                          </div>
-                        </div>
-                        <div className="flex items-center">
-                          <MapPin className="w-5 h-5 mr-3 text-ink-faint flex-shrink-0" />
-                          <span>{profile?.location || 'Location not specified'}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <User className="w-5 h-5 mr-3 text-ink-faint flex-shrink-0" />
-                          <span>Contact Platform: <span className="text-ink-muted font-medium">{alumniMeta?.contactPlatform || 'Not specified'}</span></span>
-                        </div>
-                      </div>
-
-                      <div className="bg-sunken border border-rule p-4 panel">
-                        <h4 className="text-xs font-medium tracking-normal text-ink mb-2 border-b border-rule-strong border-rule pb-1">Preferred Contact Details</h4>
-                        <p className="text-sm font-medium text-ink break-all">{alumniMeta?.contactInfo || 'No contact details provided yet.'}</p>
-                      </div>
-                    </div>
+                    <button
+                      onClick={runAlumniMatching}
+                      disabled={loadingAlumniMatches}
+                      className="h-10 px-4 border border-rule bg-surface text-ink text-sm font-medium flex items-center gap-2 hover:border-rule-strong transition-colors cursor-pointer disabled:opacity-50"
+                    >
+                      <RefreshCw className={`w-4 h-4 ${loadingAlumniMatches ? 'animate-spin' : ''}`} strokeWidth={1.75} />
+                      <span>{loadingAlumniMatches ? 'Matching Chaps…' : 'Refresh'}</span>
+                    </button>
                   </div>
 
-                  {/* Stats Card */}
-                  <div className="bg-surface border border-rule p-6 space-y-6 panel">
-                    <h3 className="text-xl font-semibold text-ink tracking-wide">Mentorship Status</h3>
-                    
-                    <div className="bg-sunken border border-rule p-4 panel">
-                      <div className="text-xs font-medium text-ink-faint">Profile Status</div>
-                      <div className="font-semibold text-good text-lg tracking-normal mt-1">Active & Ready</div>
-                    </div>
+                  <label className="relative block">
+                    <span className="sr-only">Search alumni</span>
+                    <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-ink-faint" strokeWidth={1.75} />
+                    <input
+                      type="search"
+                      value={matchFilters.q}
+                      onChange={(e) => setMatchFilters(f => ({ ...f, q: e.target.value }))}
+                      placeholder="Search by name, college, company or city"
+                      className="w-full h-12 pl-12 pr-4 border border-rule bg-surface text-base text-ink placeholder:text-ink-faint focus:outline-none focus:border-action panel"
+                    />
+                  </label>
 
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center font-medium text-xs text-ink-muted border-b border-rule pb-2">
-                        <span>Target Cohorts</span>
-                        <span className="font-medium text-ink">WHS Students</span>
-                      </div>
-                      <div className="flex justify-between items-center font-medium text-xs text-ink-muted border-b border-rule pb-2">
-                        <span>Connected Students</span>
-                        <span className="font-medium text-ink">0 Active</span>
-                      </div>
+                  {groups.length > 0 && (
+                    <div className="grid gap-x-8 gap-y-5 sm:grid-cols-2 lg:grid-cols-4">
+                      {groups.map(g => (
+                        <div key={g.key} role="group" aria-label={`Filter by ${g.label.toLowerCase()}`}>
+                          <p className="text-xs font-medium text-ink-faint mb-2">{g.label}</p>
+                          <div className="flex flex-wrap gap-2">
+                            {g.options.map(([value, count]) => {
+                              const on = matchFilters[g.key] === value;
+                              return (
+                                <button
+                                  key={value}
+                                  type="button"
+                                  aria-pressed={on}
+                                  onClick={() => toggle(g.key, value)}
+                                  className={`h-8 max-w-full px-3 text-sm border flex items-center gap-2 transition-colors cursor-pointer ${
+                                    on ? 'bg-ink text-canvas border-ink' : 'bg-surface text-ink border-rule hover:border-rule-strong'
+                                  }`}
+                                >
+                                  <span className="truncate">{value}</span>
+                                  <span className={`tabular text-xs ${on ? 'text-canvas/70' : 'text-ink-faint'}`}>{count}</span>
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      ))}
                     </div>
+                  )}
 
-                    <p className="text-xs font-medium text-ink-faint leading-relaxed text-center">
-                      Students can request virtual coffee chats using the matched outreach templates. You will receive an email if a match request is generated!
-                    </p>
-                  </div>
-                </div>
+                  {alumniMatches.length > 0 && (
+                    <div className="flex items-center justify-between gap-4 border-t border-rule pt-4 text-sm">
+                      <p className="text-ink-muted" aria-live="polite">
+                        <span className="tabular font-medium text-ink">{filteredMatches.length}</span>
+                        {' '}{filteredMatches.length === 1 ? 'Chap' : 'Chaps'}{active ? ' match' : ' recommended'}
+                      </p>
+                      {active && (
+                        <button
+                          type="button"
+                          onClick={() => setMatchFilters({ q: '', college: '', company: '', gradYear: '', location: '' })}
+                          className="font-medium text-action-text hover:underline cursor-pointer"
+                        >
+                          Clear filters
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </>
               );
             })()}
 
-            {/* Alumni-to-Alumni Matching Section */}
-            <div className="pt-8 border-t-2 border-rule">
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-                <div>
-                  <div className="flex items-center gap-2 text-xs font-semibold text-action uppercase tracking-wider">
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Algorithmic Peer Matcher</span>
-                  </div>
-                  <h3 className="font-heading text-2xl font-semibold text-ink tracking-tight mt-0.5">
-                    Alumni-to-Alumni Contact Matching
-                  </h3>
-                  <p className="text-sm text-ink-muted mt-0.5">
-                    Chaps paired algorithmically on college, current field, major, and location.
-                  </p>
-                </div>
-
-                <button
-                  onClick={runAlumniMatching}
-                  disabled={loadingAlumniMatches}
-                  className="px-4 py-2.5 bg-action text-action-ink font-medium text-xs rounded-slight flex items-center gap-2 hover:bg-action-hover transition-colors cursor-pointer disabled:opacity-50"
-                >
-                  <RefreshCw className={`w-3.5 h-3.5 ${loadingAlumniMatches ? 'animate-spin' : ''}`} />
-                  <span>{loadingAlumniMatches ? 'Matching Chaps…' : 'Refresh Alumni Matches'}</span>
-                </button>
-              </div>
-
+            <div>
               {loadingAlumniMatches ? (
-                <div className="bg-surface border border-rule p-12 text-center panel">
-                  <Loader2 className="w-8 h-8 text-ink-faint animate-spin mx-auto mb-3" />
-                  <p className="text-sm font-medium text-ink-muted">Running algorithmic match across alumni network…</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5" aria-busy="true" aria-label="Running algorithmic match across alumni network…">
+                  {[0, 1, 2].map(i => (
+                    <div key={i} className="bg-surface border border-rule p-5 panel animate-pulse">
+                      <div className="flex items-center gap-3">
+                        <div className="h-12 w-12 rounded-full bg-sunken" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-3.5 w-2/3 rounded bg-sunken" />
+                          <div className="h-3 w-1/3 rounded bg-sunken" />
+                        </div>
+                      </div>
+                      <div className="mt-5 space-y-2">
+                        <div className="h-3 w-full rounded bg-sunken" />
+                        <div className="h-3 w-4/5 rounded bg-sunken" />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               ) : alumniMatches.length === 0 ? (
-                <div className="bg-surface border border-rule p-8 text-center panel">
-                  <p className="text-sm font-medium text-ink-muted">No alumni peer matches found yet. Try keeping your college, field, and major current in your profile!</p>
+                <div className="bg-surface border border-rule px-6 py-12 text-center panel">
+                  <p className="text-ink-muted max-w-md mx-auto">No recommended alumni yet. Keeping your college, field, and major current in your profile helps us find Chaps on your path.</p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('profile')}
+                    className="mt-4 text-sm font-medium text-action-text hover:underline cursor-pointer"
+                  >
+                    Edit Profile
+                  </button>
+                </div>
+              ) : filteredMatches.length === 0 ? (
+                <div className="bg-surface border border-rule px-6 py-12 text-center panel">
+                  <p className="text-ink-muted">No alumni match those filters.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {alumniMatches.map((m, idx) => {
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filteredMatches.map((m, idx) => {
                     const currentUserId = session?.user?.id || 'local_user';
                     const candId = m.candidate.id;
                     const isUnlocked = checkUnlocked(currentUserId, candId);
                     const sentMsgs = getMessagesBetween(currentUserId, candId);
                     const pendingMsg = sentMsgs.find(msg => msg.replyStatus === 'pending');
+                    const firstName = m.candidate.name.split(' ')[0];
 
                     return (
-                      <motion.div
+                      <motion.article
                         key={m.candidate.id || idx}
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: idx * 0.05, duration: 0.25 }}
-                        className="bg-surface border border-rule flex flex-col justify-between panel overflow-hidden hover:border-rule-strong transition-all"
+                        transition={{ delay: Math.min(idx, 8) * 0.04, duration: 0.25 }}
+                        className="bg-surface border border-rule flex flex-col panel hover:border-rule-strong transition-colors"
                       >
-                        <div className="p-5">
-                          <div className="flex items-center justify-between gap-2 mb-3">
-                            <span className="px-2.5 py-0.5 bg-action text-action-ink font-semibold text-xs rounded-full">
-                              {m.score}% Match
-                            </span>
-                            {m.candidate.gradYear && (
-                              <span className="text-xs text-ink-faint font-medium">
-                                Class of <strong className="text-heritage">{m.candidate.gradYear}</strong>
-                              </span>
-                            )}
-                          </div>
-
-                          <div className="flex items-center gap-3.5 mb-3">
-                            <img
-                              src={`https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(m.candidate.name)}`}
-                              alt={m.candidate.name}
-                              className="w-12 h-12 rounded-full border border-rule bg-sunken shrink-0"
-                            />
-                            <div className="min-w-0">
-                              <h4 className="font-semibold text-ink text-lg leading-tight truncate">
-                                {m.candidate.name}
-                              </h4>
-                              <p className="text-xs text-ink-muted truncate mt-0.5 font-medium">
-                                {m.candidate.primaryCareer}
-                                {m.candidate.company ? ` @ ${m.candidate.company}` : ''}
-                              </p>
+                        <div className="p-5 flex-1">
+                          <div className="flex items-start gap-3">
+                            <ChapAvatar avatar={m.candidate.avatar} seed={m.candidate.id || m.candidate.name} size={48} className="border border-rule" />
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-baseline justify-between gap-2">
+                                <h4 className="font-semibold text-ink text-base leading-tight truncate">
+                                  {m.candidate.name}
+                                </h4>
+                                <span className="shrink-0 text-xs font-medium text-ink-muted tabular">{m.score}% Match</span>
+                              </div>
+                              {m.candidate.gradYear && (
+                                <p className="text-xs text-ink-faint mt-1">
+                                  Class of <span className="tabular font-medium text-heritage">{m.candidate.gradYear}</span>
+                                </p>
+                              )}
                             </div>
                           </div>
 
-                          <div className="space-y-1 text-xs text-ink-muted mb-4 font-medium">
+                          <dl className="mt-4 space-y-1.5 text-sm text-ink-muted">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <dt className="sr-only">Role</dt>
+                              <Briefcase className="w-4 h-4 text-ink-faint shrink-0" strokeWidth={1.75} />
+                              <dd className="truncate">{m.candidate.primaryCareer}{m.candidate.company ? ` @ ${m.candidate.company}` : ''}</dd>
+                            </div>
                             {m.candidate.primarySchool && (
-                              <div className="flex items-center gap-1.5 truncate">
-                                <GraduationCap className="w-3.5 h-3.5 text-ink-faint shrink-0" />
-                                <span>{m.candidate.primarySchool} {m.candidate.primaryMajor ? `(${m.candidate.primaryMajor})` : ''}</span>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <dt className="sr-only">School</dt>
+                                <GraduationCap className="w-4 h-4 text-ink-faint shrink-0" strokeWidth={1.75} />
+                                <dd className="truncate">{m.candidate.primarySchool} {m.candidate.primaryMajor ? `(${m.candidate.primaryMajor})` : ''}</dd>
                               </div>
                             )}
                             {m.candidate.location && (
-                              <div className="flex items-center gap-1.5 truncate">
-                                <MapPin className="w-3.5 h-3.5 text-ink-faint shrink-0" />
-                                <span>{m.candidate.location}</span>
+                              <div className="flex items-center gap-2 min-w-0">
+                                <dt className="sr-only">Location</dt>
+                                <MapPin className="w-4 h-4 text-ink-faint shrink-0" strokeWidth={1.75} />
+                                <dd className="truncate">{m.candidate.location}</dd>
                               </div>
                             )}
-                          </div>
+                          </dl>
 
                           {/* Match reasons */}
-                          <div className="bg-sunken border border-rule p-3 mb-4 panel space-y-1">
-                            <span className="text-[10px] font-semibold uppercase tracking-wider text-ink-faint block">Why you matched</span>
-                            {m.threads.slice(0, 2).map((t, tIdx) => (
-                              <p key={tIdx} className="text-xs text-ink leading-snug">
-                                • {t}
-                              </p>
-                            ))}
+                          <div className="mt-4 border-t border-rule pt-3">
+                            <p className="text-xs font-medium text-ink-faint">Why you matched</p>
+                            <ul className="mt-1.5 space-y-1">
+                              {m.threads.slice(0, 2).map((t, tIdx) => (
+                                <li key={tIdx} className="text-sm text-ink leading-snug">{cleanThread(t)}</li>
+                              ))}
+                            </ul>
                           </div>
+                        </div>
 
-                          {/* Privacy Email Status */}
-                          <div className="border-t border-rule pt-3 text-xs">
+                        {/* Contact status and message action */}
+                        <div className="px-5 py-3 border-t border-rule flex items-center justify-between gap-3">
+                          <div className="min-w-0 text-xs">
                             {isUnlocked ? (
-                              <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400 font-semibold bg-emerald-500/10 p-2 rounded-xs">
+                              <p className="flex items-center gap-1.5 text-good font-medium">
                                 <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                                 <span className="truncate">Contact Unlocked: {m.candidate.email || 'Email shared'}</span>
-                              </div>
+                              </p>
                             ) : pendingMsg ? (
-                              <div className="space-y-1.5 bg-amber-500/10 border border-amber-500/20 p-2 rounded-xs">
-                                <div className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400 font-medium">
-                                  <Lock className="w-3 h-3 shrink-0" />
+                              <div className="space-y-0.5">
+                                <p className="flex items-center gap-1.5 text-warn font-medium">
+                                  <Lock className="w-3.5 h-3.5 shrink-0" />
                                   <span className="truncate">Relayed (Awaiting Reply)</span>
-                                </div>
-                                <p className="text-[11px] text-ink-faint">
+                                </p>
+                                <p className="text-ink-faint truncate">
                                   Obscured: {m.candidate.email ? obscureEmail(m.candidate.email) : 'Direct Relay Active'}
                                 </p>
                                 <button
@@ -809,35 +838,32 @@ export default function Dashboard({ session }) {
                                     recordReply(pendingMsg.id);
                                     setMessageRelayTick(t => t + 1);
                                   }}
-                                  className="text-[11px] font-semibold text-action hover:underline cursor-pointer flex items-center gap-1"
+                                  className="font-medium text-action-text hover:underline cursor-pointer"
                                 >
-                                  <span>Simulate Recipient Reply (Test Unlock)</span>
+                                  Simulate Recipient Reply (Test Unlock)
                                 </button>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-1.5 text-ink-faint p-1 font-mono text-[11px]">
-                                <Lock className="w-3 h-3 text-action shrink-0" />
+                              <p className="flex items-center gap-1.5 text-ink-faint">
+                                <Lock className="w-3.5 h-3.5 shrink-0" />
                                 <span className="truncate">
                                   {m.candidate.email
                                     ? `Email obscured: ${obscureEmail(m.candidate.email)}`
                                     : 'Email protected by Chap Relay'}
                                 </span>
-                              </div>
+                              </p>
                             )}
                           </div>
-                        </div>
-
-                        {/* Message Action */}
-                        <div className="p-4 bg-sunken/40 border-t border-rule">
                           <button
                             onClick={() => setSelectedRecipientForMessage({ ...m.candidate, matchThreads: m.threads, matchScore: m.score })}
-                            className="w-full py-2 px-3 text-xs font-medium bg-action text-action-ink rounded-slight hover:bg-action-hover transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                            title="Opens a ready-made draft"
+                            className="shrink-0 h-9 px-3 border border-rule bg-surface text-sm font-medium text-ink hover:border-action hover:text-action-text transition-colors flex items-center gap-1.5 cursor-pointer"
                           >
-                            <Mail className="w-3.5 h-3.5" />
-                            <span>Message {m.candidate.name.split(' ')[0]} (Draft Ready)</span>
+                            <Mail className="w-4 h-4" strokeWidth={1.75} />
+                            <span>Message {firstName}</span>
                           </button>
                         </div>
-                      </motion.div>
+                      </motion.article>
                     );
                   })}
                 </div>
@@ -845,212 +871,244 @@ export default function Dashboard({ session }) {
             </div>
           </div>
         ) : activeTab === 'profile' ? (
-        /* My Profile Editor Tab */
-        <div className="max-w-xl mx-auto bg-surface border border-rule p-8 w-full panel">
-          <h2 className="text-3xl font-semibold text-ink tracking-tight mb-6 border-b-2 border-rule pb-3 flex items-center space-x-2">
-            <User className="w-7 h-7 text-ink-faint" />
-            <span>Profile Manager</span>
-          </h2>
-          {isAlumniMentor && (
-            <p className="text-ink-muted font-medium text-sm mb-6 leading-relaxed bg-sunken border border-rule p-4 panel">
-              Keep your profile up to date so students can connect with you for mentorship, advice, and new opportunities. Your guidance helps shape their future.
-            </p>
-          )}
+        /* Edit Profile: grouped sections, one save bar. */
+        <div className="max-w-3xl mx-auto w-full">
+          <div className="mb-8">
+            <h2 className="font-heading text-3xl font-semibold text-ink tracking-tight">Edit Profile</h2>
+            {isAlumniMentor && (
+              <p className="mt-2 text-ink-muted leading-relaxed max-w-prose">
+                Keep your profile up to date so fellow alumni can find Chaps on a similar path, and students can reach out for advice and new opportunities.
+              </p>
+            )}
+          </div>
 
           {profileSaveSuccess && (
-            <div className="bg-signal-good text-white font-medium p-4 border border-rule mb-6 flex items-center space-x-2 animate-in fade-in duration-300">
-              <CheckCircle2 className="w-6 h-6" />
+            <div role="status" className="mb-6 flex items-center gap-2 border border-good/40 bg-sunken px-4 py-3 text-sm font-medium text-good panel animate-in fade-in duration-300">
+              <CheckCircle2 className="w-5 h-5 shrink-0" />
               <span>Profile updated successfully!</span>
             </div>
           )}
 
           <form onSubmit={handleProfileSubmit} className="space-y-6">
-            <div>
-              <label className={labelClass}>Your Name</label>
-              <input
-                type="text"
-                name="name"
-                required
-                value={profileForm.name || ''}
-                onChange={handleProfileFormChange}
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className={labelClass}>High School Graduation Year</label>
-              <input
-                type="number"
-                name="grad_year"
-                required
-                value={profileForm.grad_year || ''}
-                onChange={handleProfileFormChange}
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <label className={labelClass}>Profile Path / Flow</label>
-              <select
-                name="flow_type"
-                value={profileForm.flow_type || 'post_schooling'}
-                onChange={handleProfileFormChange}
-                className={` font-medium`}
-              >
-                <option value="post_schooling">Working / Post-Schooling</option>
-                <option value="recent">Undergraduate / College</option>
-                <option value="post_undergrad">Grad School / Post-Undergrad</option>
-              </select>
-            </div>
-
-            {/* Email mapping */}
-            {(profileForm.flow_type === 'recent' || profileForm.flow_type === 'post_undergrad' || profileForm.flow_type === 'post_schooling' || profileForm.flow_type === 'established') && (
-              <div>
-                <label className={labelClass}>Email Address</label>
-                <input
-                  type="email"
-                  name="email"
-                  value={profileForm.email || ''}
-                  onChange={handleProfileFormChange}
-                  className={inputClass}
-                  placeholder="you@example.com"
+            {isAlumniMentor && (
+              <ProfileSection title="Your Chap">
+                <ChapPicker
+                  label="Your Chap"
+                  value={profileForm.avatar}
+                  seed={profile?.user_id || profile?.name}
+                  onChange={(value) => setProfileForm(f => ({ ...f, avatar: value }))}
                 />
-              </div>
+              </ProfileSection>
             )}
 
-            {/* Undergrad / College Attended */}
-            {profileForm.flow_type !== 'student' && (
-              <div>
-                <label className={labelClass}>Current College / College Attended</label>
-                <Autocomplete
-                  name="college"
-                  value={profileForm.college || ''}
-                  onChange={handleProfileFormChange}
-                  suggestions={COLLEGES}
-                  placeholder="e.g. UT Austin"
-                />
-              </div>
-            )}
-
-            {/* COLLEGE STUDENT / RECENT ALUMNI FIELDS */}
-            {profileForm.flow_type === 'recent' && (
-              <>
+            <ProfileSection title="About you">
+              <div className="grid gap-5 sm:grid-cols-2">
                 <div>
-                  <label className={labelClass}>Major(s)</label>
+                  <label className={labelClass}>Your Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    required
+                    value={profileForm.name || ''}
+                    onChange={handleProfileFormChange}
+                    className={inputClass}
+                  />
+                </div>
+                <div>
+                  <label className={labelClass}>High School Graduation Year</label>
+                  <input
+                    type="number"
+                    name="grad_year"
+                    required
+                    value={profileForm.grad_year || ''}
+                    onChange={handleProfileFormChange}
+                    className={inputClass}
+                  />
+                </div>
+              </div>
+              <div>
+                <label className={labelClass}>Profile Path / Flow</label>
+                <select
+                  name="flow_type"
+                  value={profileForm.flow_type || 'post_schooling'}
+                  onChange={handleProfileFormChange}
+                  className={`${inputClass} cursor-pointer`}
+                >
+                  <option value="post_schooling">Working / Post-Schooling</option>
+                  <option value="recent">Undergraduate / College</option>
+                  <option value="post_undergrad">Grad School / Post-Undergrad</option>
+                </select>
+              </div>
+              {(profileForm.flow_type === 'recent' || profileForm.flow_type === 'post_undergrad' || profileForm.flow_type === 'post_schooling' || profileForm.flow_type === 'established') && (
+                <div>
+                  <label className={labelClass}>Email Address</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={profileForm.email || ''}
+                    onChange={handleProfileFormChange}
+                    className={inputClass}
+                    placeholder="you@example.com"
+                  />
+                </div>
+              )}
+            </ProfileSection>
+
+            <ProfileSection title="Education">
+              {profileForm.flow_type !== 'student' && (
+                <div>
+                  <label className={labelClass}>Current College / College Attended</label>
                   <Autocomplete
-                    name="targetMajors"
-                    value={profileForm.targetMajors || ''}
+                    name="college"
+                    value={profileForm.college || ''}
                     onChange={handleProfileFormChange}
-                    suggestions={MAJORS}
-                    placeholder="e.g. Finance (comma separated)"
+                    suggestions={COLLEGES}
+                    placeholder="e.g. UT Austin"
                   />
                 </div>
-                <div>
-                  <label className={labelClass}>Career Interests / Aspirations</label>
-                  <input
-                    type="text"
-                    name="targetCareers"
-                    value={profileForm.targetCareers || ''}
-                    onChange={handleProfileFormChange}
-                    className={inputClass}
-                    placeholder="e.g. Consulting, Investment Banking (comma separated)"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>High School Activities</label>
-                  <input
-                    type="text"
-                    name="activities"
-                    value={profileForm.activities || ''}
-                    onChange={handleProfileFormChange}
-                    className={inputClass}
-                    placeholder="e.g. Student Council, Golf (comma separated)"
-                  />
-                </div>
-              </>
-            )}
-
-            {/* GRAD SCHOOL FIELDS */}
-            {profileForm.flow_type === 'post_undergrad' && (
-              <>
-                <div>
-                  <label className={labelClass}>Graduate School</label>
-                  <select
-                    name="post_grad_school"
-                    value={profileForm.post_grad_school || ''}
-                    onChange={handleProfileFormChange}
-                    className={` font-medium`}
-                  >
-                    <option value="">-- Select Graduate School --</option>
-                    <option value="UT Austin">University of Texas at Austin</option>
-                    <option value="Stanford">Stanford University</option>
-                    <option value="Harvard">Harvard University</option>
-                    <option value="Duke">Duke University</option>
-                    <option value="UCLA">UCLA</option>
-                    <option value="Yale">Yale University</option>
-                    <option value="Columbia">Columbia University</option>
-                    <option value="MIT">MIT</option>
-                    <option value="Other">Other (Please specify below)</option>
-                  </select>
-                </div>
-                {profileForm.post_grad_school === 'Other' && (
+              )}
+              {profileForm.flow_type === 'recent' && (
+                <>
                   <div>
-                    <label className={labelClass}>Please specify graduate school</label>
-                    <input
-                      type="text"
-                      name="other_post_grad_school"
-                      value={profileForm.other_post_grad_school || ''}
+                    <label className={labelClass}>Major(s)</label>
+                    <Autocomplete
+                      name="targetMajors"
+                      value={profileForm.targetMajors || ''}
                       onChange={handleProfileFormChange}
-                      className={inputClass}
-                      placeholder="e.g. Rice University"
-                      required
+                      suggestions={MAJORS}
+                      placeholder="e.g. Finance (comma separated)"
                     />
                   </div>
-                )}
-                <div>
-                  <label className={labelClass}>Program / Degree Type</label>
-                  <select
-                    name="post_grad_program"
-                    value={profileForm.post_grad_program || ''}
-                    onChange={handleProfileFormChange}
-                    className={` font-medium`}
-                  >
-                    <option value="">-- Select Program Type --</option>
-                    <option value="Medicine">Medicine (Med School)</option>
-                    <option value="Law">Law (Law School)</option>
-                    <option value="MBA">Business (MBA)</option>
-                    <option value="PhD/Masters">Ph.D. / Master's Degree</option>
-                    <option value="Residency">Residency / Fellowship</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                {profileForm.post_grad_program === 'Other' && (
                   <div>
-                    <label className={labelClass}>Please specify program type</label>
+                    <label className={labelClass}>Career Interests / Aspirations</label>
                     <input
                       type="text"
-                      name="other_post_grad_program"
-                      value={profileForm.other_post_grad_program || ''}
+                      name="targetCareers"
+                      value={profileForm.targetCareers || ''}
                       onChange={handleProfileFormChange}
                       className={inputClass}
-                      placeholder="e.g. Master of Science in Data Science"
-                      required
+                      placeholder="e.g. Consulting, Investment Banking (comma separated)"
                     />
                   </div>
-                )}
-              </>
-            )}
+                  <div>
+                    <label className={labelClass}>High School Activities</label>
+                    <input
+                      type="text"
+                      name="activities"
+                      value={profileForm.activities || ''}
+                      onChange={handleProfileFormChange}
+                      className={inputClass}
+                      placeholder="e.g. Student Council, Golf (comma separated)"
+                    />
+                  </div>
+                </>
+              )}
+              {profileForm.flow_type === 'post_undergrad' && (
+                <>
+                  <div>
+                    <label className={labelClass}>Graduate School</label>
+                    <select
+                      name="post_grad_school"
+                      value={profileForm.post_grad_school || ''}
+                      onChange={handleProfileFormChange}
+                      className={`${inputClass} cursor-pointer`}
+                    >
+                      <option value="">-- Select Graduate School --</option>
+                      <option value="UT Austin">University of Texas at Austin</option>
+                      <option value="Stanford">Stanford University</option>
+                      <option value="Harvard">Harvard University</option>
+                      <option value="Duke">Duke University</option>
+                      <option value="UCLA">UCLA</option>
+                      <option value="Yale">Yale University</option>
+                      <option value="Columbia">Columbia University</option>
+                      <option value="MIT">MIT</option>
+                      <option value="Other">Other (Please specify below)</option>
+                    </select>
+                  </div>
+                  {profileForm.post_grad_school === 'Other' && (
+                    <div>
+                      <label className={labelClass}>Please specify graduate school</label>
+                      <input
+                        type="text"
+                        name="other_post_grad_school"
+                        value={profileForm.other_post_grad_school || ''}
+                        onChange={handleProfileFormChange}
+                        className={inputClass}
+                        placeholder="e.g. Rice University"
+                        required
+                      />
+                    </div>
+                  )}
+                  <div>
+                    <label className={labelClass}>Program / Degree Type</label>
+                    <select
+                      name="post_grad_program"
+                      value={profileForm.post_grad_program || ''}
+                      onChange={handleProfileFormChange}
+                      className={`${inputClass} cursor-pointer`}
+                    >
+                      <option value="">-- Select Program Type --</option>
+                      <option value="Medicine">Medicine (Med School)</option>
+                      <option value="Law">Law (Law School)</option>
+                      <option value="MBA">Business (MBA)</option>
+                      <option value="PhD/Masters">Ph.D. / Master's Degree</option>
+                      <option value="Residency">Residency / Fellowship</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  {profileForm.post_grad_program === 'Other' && (
+                    <div>
+                      <label className={labelClass}>Please specify program type</label>
+                      <input
+                        type="text"
+                        name="other_post_grad_program"
+                        value={profileForm.other_post_grad_program || ''}
+                        onChange={handleProfileFormChange}
+                        className={inputClass}
+                        placeholder="e.g. Master of Science in Data Science"
+                        required
+                      />
+                    </div>
+                  )}
+                </>
+              )}
+              {isWorkingFlow && (
+                <div className="grid gap-5 sm:grid-cols-2">
+                  <div>
+                    <label className={labelClass}>Graduate Program 1 (If Completed)</label>
+                    <input
+                      type="text"
+                      name="firstGrad"
+                      value={profileForm.firstGrad || ''}
+                      onChange={handleProfileFormChange}
+                      className={inputClass}
+                      placeholder="e.g. UT Austin, MBA (Business)"
+                    />
+                  </div>
+                  <div>
+                    <label className={labelClass}>Graduate Program 2 (If Completed)</label>
+                    <input
+                      type="text"
+                      name="secondGrad"
+                      value={profileForm.secondGrad || ''}
+                      onChange={handleProfileFormChange}
+                      className={inputClass}
+                      placeholder="e.g. Harvard, Law School (JD)"
+                    />
+                  </div>
+                </div>
+              )}
+            </ProfileSection>
 
-            {/* WORKING PROFESSIONAL FIELDS */}
-            {(profileForm.flow_type === 'post_schooling' || profileForm.flow_type === 'established') && (
-              <>
+            {isWorkingFlow && (
+              <ProfileSection title="Work">
                 <div>
                   <label className={labelClass}>Are you currently working?</label>
                   <select
                     name="working"
                     value={profileForm.working || ''}
                     onChange={handleProfileFormChange}
-                    className={` font-medium`}
+                    className={`${inputClass} cursor-pointer`}
                   >
                     <option value="">-- Select --</option>
                     <option value="yes">Yes</option>
@@ -1058,7 +1116,7 @@ export default function Dashboard({ session }) {
                   </select>
                 </div>
                 {profileForm.working === 'yes' && (
-                  <>
+                  <div className="grid gap-5 sm:grid-cols-2">
                     <div>
                       <label className={labelClass}>Where do you work?</label>
                       <input
@@ -1092,209 +1150,267 @@ export default function Dashboard({ session }) {
                         placeholder="e.g. Austin, TX"
                       />
                     </div>
-                  </>
+                  </div>
                 )}
-                <div>
-                  <label className={labelClass}>Graduate Program 1 (If Completed)</label>
-                  <input
-                    type="text"
-                    name="firstGrad"
-                    value={profileForm.firstGrad || ''}
-                    onChange={handleProfileFormChange}
-                    className={inputClass}
-                    placeholder="e.g. UT Austin, MBA (Business)"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Graduate Program 2 (If Completed)</label>
-                  <input
-                    type="text"
-                    name="secondGrad"
-                    value={profileForm.secondGrad || ''}
-                    onChange={handleProfileFormChange}
-                    className={inputClass}
-                    placeholder="e.g. Harvard, Law School (JD)"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Preferred Reach Out Method</label>
-                  <select
-                    name="contactPlatform"
-                    value={profileForm.contactPlatform || ''}
-                    onChange={handleProfileFormChange}
-                    className={` font-medium`}
-                  >
-                    <option value="">-- Select Contact Method --</option>
-                    <option value="LinkedIn">LinkedIn</option>
-                    <option value="Email">Email</option>
-                    <option value="Phone">Phone / Text</option>
-                    <option value="Twitter">Twitter / X</option>
-                    <option value="Instagram">Instagram</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                {profileForm.contactPlatform === 'Other' && (
+              </ProfileSection>
+            )}
+
+            {isWorkingFlow && (
+              <ProfileSection title="Contact &amp; permissions">
+                <div className="grid gap-5 sm:grid-cols-2">
                   <div>
-                    <label className={labelClass}>Please specify contact platform</label>
+                    <label className={labelClass}>Preferred Reach Out Method</label>
+                    <select
+                      name="contactPlatform"
+                      value={profileForm.contactPlatform || ''}
+                      onChange={handleProfileFormChange}
+                      className={`${inputClass} cursor-pointer`}
+                    >
+                      <option value="">-- Select Contact Method --</option>
+                      <option value="LinkedIn">LinkedIn</option>
+                      <option value="Email">Email</option>
+                      <option value="Phone">Phone / Text</option>
+                      <option value="Twitter">Twitter / X</option>
+                      <option value="Instagram">Instagram</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className={labelClass}>Contact Username / Link / Email</label>
                     <input
                       type="text"
-                      name="otherContactPlatform"
-                      value={profileForm.otherContactPlatform || ''}
+                      name="contactInfo"
+                      value={profileForm.contactInfo || ''}
                       onChange={handleProfileFormChange}
                       className={inputClass}
-                      placeholder="e.g. Slack, WhatsApp"
+                      placeholder="e.g. linkedin.com/in/username"
                       required
                     />
                   </div>
-                )}
-                <div>
-                  <label className={labelClass}>Contact Username / Link / Email</label>
-                  <input
-                    type="text"
-                    name="contactInfo"
-                    value={profileForm.contactInfo || ''}
-                    onChange={handleProfileFormChange}
-                    className={inputClass}
-                    placeholder="e.g. linkedin.com/in/username"
-                    required
-                  />
                 </div>
-                <div className="space-y-4 pt-2 border-t-2 border-rule">
+                {profileForm.contactPlatform === 'Other' && (
+                                  <div>
+                                    <label className={labelClass}>Please specify contact platform</label>
+                                    <input
+                                      type="text"
+                                      name="otherContactPlatform"
+                                      value={profileForm.otherContactPlatform || ''}
+                                      onChange={handleProfileFormChange}
+                                      className={inputClass}
+                                      placeholder="e.g. Slack, WhatsApp"
+                                      required
+                                    />
+                                  </div>
+                                )}
+                <div className="space-y-3 pt-1">
                   <label className="flex items-start space-x-3 p-4 border border-rule bg-sunken cursor-pointer panel">
                     <input type="checkbox" name="newsletterConsent" checked={!!profileForm.newsletterConsent} onChange={handleProfileFormChange} className="mt-0.5 w-5 h-5 accent-blue-600" />
-                    <span className="text-sm font-medium text-ink">I give permission to use my email to send me the alumni newsletter and publications.</span>
+                    <span className="text-sm font-medium text-ink">I give permission to send the alumni newsletter and publications to my email.</span>
                   </label>
                   <label className="flex items-start space-x-3 p-4 border border-rule bg-sunken cursor-pointer rounded-slight">
                     <input type="checkbox" name="contactConsent" checked={!!profileForm.contactConsent} onChange={handleProfileFormChange} className="mt-0.5 w-5 h-5 accent-blue-600" />
-                    <span className="text-sm font-medium text-ink">I allow students to occasionally contact me when Chap Connect matches them with me.</span>
+                    <span className="text-sm font-medium text-ink">I'm open to students reaching out now and then for mentorship or advice.</span>
                   </label>
                 </div>
-              </>
+              </ProfileSection>
             )}
 
-            <button
-              type="submit"
-              disabled={isSavingProfile}
-              className="w-full bg-action text-action-ink font-medium py-4 px-6 border border-rule flex items-center justify-center space-x-2 transition-all tracking-normal text-sm cursor-pointer mt-8"
-            >
-              {isSavingProfile ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  <span>Saving Profile...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-5 h-5" />
-                  <span>Save Changes</span>
-                </>
-              )}
-            </button>
+            <div className="sticky bottom-0 z-10 -mx-4 sm:mx-0 border-t border-rule bg-canvas/95 backdrop-blur px-4 sm:px-0 py-4 flex justify-end">
+              <button
+                type="submit"
+                disabled={isSavingProfile}
+                className="w-full sm:w-auto h-11 bg-action text-action-ink font-medium px-6 flex items-center justify-center gap-2 transition-colors hover:bg-action-hover text-sm cursor-pointer disabled:opacity-60"
+              >
+                {isSavingProfile ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>Saving Profile...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-5 h-5" />
+                    <span>Save Changes</span>
+                  </>
+                )}
+              </button>
+            </div>
           </form>
+
+          {(session?.user?.id === '11111111-1111-1111-1111-111111111111' || import.meta.env.DEV || window.location.hostname.includes('vercel.app')) && (
+            <section className="mt-10 border border-bad/30 p-5 sm:p-6 panel">
+              <h3 className="font-heading text-lg font-semibold text-ink">Reset account</h3>
+              <p className="mt-1 text-sm text-ink-muted max-w-prose">Deletes your profile and matches so you can start onboarding again. Available in development builds only.</p>
+              <button
+                type="button"
+                onClick={handleResetDevMode}
+                className="mt-4 h-10 px-4 border border-bad/40 text-bad text-sm font-medium flex items-center gap-2 transition-colors hover:border-bad hover:bg-sunken cursor-pointer"
+              >
+                Reset Account
+              </button>
+            </section>
+          )}
         </div>
       ) : null}
 
-      {/* HOME TAB. alumni landing page with official links */}
+      {/* HOME TAB: greeting with real stats, alumni on a similar path and the
+          latest news in the main column; profile, magazine and official links
+          in the side column. Phones stack them in that order. */}
       {activeTab === 'home' && (
-        <div>
-          {/* Masthead. a full-bleed navy field, the peak of this page. */}
+        <div className="space-y-8">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="navy-field -mx-4 sm:-mx-6 lg:-mx-8 px-4 sm:px-6 lg:px-8 py-14 mb-14"
+            className="navy-field px-6 sm:px-8 py-6 sm:py-7 panel overflow-hidden"
           >
-            {(profile?.grad_year || profile?.gradYear) && (
-              <p className="text-sm text-on-navy-muted">
-                Class of{' '}
-                <span className="tabular text-heritage-on-navy font-medium">
-                  {profile.grad_year || profile.gradYear}
-                </span>
-              </p>
-            )}
-            <h2 className="mt-3 font-heading text-4xl sm:text-5xl lg:text-title font-semibold text-on-navy">
-              Welcome back, {profile?.name?.split(' ')[0] || 'Chap'}.
-            </h2>
-            <span className="rule-draw mt-7 block h-0.5 w-24 bg-accent-navy" aria-hidden="true" />
-            <p className="mt-7 max-w-prose text-lg leading-relaxed text-on-navy-muted">
-              Your home base as a Westlake alum. Browse the Chap directory, keep your
-              profile current, and explore the official Eanes resources below.
-            </p>
+            <div className="flex items-center gap-5 min-w-0">
+              <ChapAvatar
+                avatar={profileForm.avatar}
+                seed={profile?.user_id || profile?.name}
+                size={72}
+                className="hidden sm:block ring-4 ring-white/15"
+              />
+              <div className="min-w-0">
+                {(profile?.grad_year || profile?.gradYear) && (
+                  <p className="text-sm text-on-navy-muted">
+                    Class of{' '}
+                    <span className="tabular text-heritage-on-navy font-medium">
+                      {profile.grad_year || profile.gradYear}
+                    </span>
+                  </p>
+                )}
+                <h1 className="mt-1 font-heading text-3xl sm:text-4xl font-semibold tracking-tight text-on-navy">
+                  Welcome back, {profile?.name?.split(' ')[0] || 'Chap'}.
+                </h1>
+              </div>
+            </div>
+
           </motion.div>
 
-          {/* Featured Message Board & Magazine Card */}
-          <div className="bg-surface border border-rule p-6 mb-12 panel flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-xs">
-            <div className="space-y-1 max-w-xl">
-              <div className="flex items-center gap-2 text-xs font-semibold text-action uppercase tracking-wide">
-                <Newspaper className="w-4 h-4" />
-                <span>Alumni Magazine &amp; Gazette</span>
-              </div>
-              <h3 className="font-heading text-xl font-semibold text-ink">
-                The Chaparral Review: Fall Issue Now Live
-              </h3>
-              <p className="text-sm text-ink-muted leading-relaxed">
-                Celebrating 50 years of Westlake excellence, alumni spotlights, and campus milestones. Read articles and community notes on the message board.
-              </p>
+          <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] xl:gap-10 lg:items-start">
+            <div className="min-w-0 space-y-10">
+              {!isStudent && (
+                <SimilarChaps
+                  matches={alumniMatches}
+                  onMessage={(m) => setSelectedRecipientForMessage({ ...m.candidate, matchThreads: m.threads, matchScore: m.score })}
+                  onSeeAll={() => setActiveTab('matches')}
+                  onEditProfile={() => setActiveTab('profile')}
+                />
+              )}
+
+              {newsPosts.length > 0 && (
+                <section aria-labelledby="latest-news-title">
+                  <div className="flex items-end justify-between gap-4 mb-4">
+                    <h2 id="latest-news-title" className="font-heading text-2xl font-semibold tracking-tight text-ink">
+                      Latest from Alumni News
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab('board')}
+                      className="shrink-0 flex items-center gap-1.5 text-sm font-medium text-action-text hover:underline cursor-pointer"
+                    >
+                      <span>All stories</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {newsPosts.slice(0, 3).map(post => (
+                      <li key={post.id} className="group relative flex flex-col overflow-hidden bg-surface border border-rule panel hover:border-rule-strong transition-colors">
+                        <div className="aspect-[16/9] overflow-hidden bg-sunken">
+                          <img src={artFor(post)} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+                        </div>
+                        <div className="flex flex-1 flex-col gap-1.5 p-4">
+                          <p className="text-xs">
+                            <span className="font-semibold text-heritage">{post.category}</span>
+                            <span className="ml-3 text-ink-faint">{post.date}</span>
+                          </p>
+                          <h3 className="font-heading text-base font-semibold text-ink leading-snug line-clamp-2">
+                            <button
+                              type="button"
+                              onClick={() => setActiveTab('board')}
+                              className="text-left cursor-pointer after:absolute after:inset-0 focus-visible:outline-none"
+                            >
+                              {post.title}
+                            </button>
+                          </h3>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </div>
-            <button
-              onClick={() => setActiveTab('board')}
-              className="px-5 py-3 bg-action text-action-ink font-medium text-xs rounded-slight hover:bg-action-hover transition-colors whitespace-nowrap self-start sm:self-center cursor-pointer flex items-center gap-1.5"
-            >
-              <span>Read Message Board</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
+
+            <aside className="space-y-6 lg:sticky lg:top-32">
+              {/* Featured magazine issue */}
+              <section className="bg-surface border border-rule p-5 panel">
+                <div className="flex items-center gap-2 text-sm font-medium text-action-text">
+                  <Newspaper className="w-4 h-4" />
+                  <span>Alumni Magazine &amp; Gazette</span>
+                </div>
+                <h2 className="mt-2 font-heading text-lg font-semibold text-ink leading-snug">
+                  The Chaparral Review: Fall Issue Now Live
+                </h2>
+                <button
+                  onClick={() => setActiveTab('board')}
+                  className="mt-4 w-full h-10 px-4 bg-action text-action-ink font-medium text-sm hover:bg-action-hover transition-colors cursor-pointer flex items-center justify-center gap-2"
+                >
+                  <span>Read Alumni News</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </section>
+
+              {/* Official links: each row is one link */}
+              <section aria-labelledby="official-links-title">
+                <h2 id="official-links-title" className="font-heading text-lg font-semibold text-ink mb-3">
+                  Eanes ISD &amp; Alumni Association
+                </h2>
+                <ul className="bg-surface border border-rule panel divide-y divide-rule overflow-hidden">
+                  {[
+                    {
+                      term: 'Westlake Alumni Association',
+                      logo: '/logos/westlake-alumni-association.png',
+                      href: 'https://eaneseducationfoundation.org/alumni/',
+                      desc: 'Reunions, class news and the alumni registry.',
+                    },
+                    {
+                      term: 'Eanes ISD Website',
+                      logo: '/logos/eanes-isd.png',
+                      href: 'https://www.eanesisd.net/',
+                      desc: 'District news, calendars and athletics.',
+                    },
+                    {
+                      term: 'Support the Foundation',
+                      logo: '/logos/eanes-education-foundation.png',
+                      href: 'https://eaneseducationfoundation.org/donate/',
+                      desc: 'Donations fund Eanes teachers and classrooms.',
+                    },
+                  ].map((item) => (
+                    <li key={item.href}>
+                      <a
+                        href={item.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="group flex items-center gap-3 p-3.5 hover:bg-sunken transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-action"
+                      >
+                        <img src={item.logo} alt="" className="h-11 w-11 shrink-0 object-contain" loading="lazy" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block text-sm font-semibold text-ink leading-snug">{item.term}</span>
+                          <span className="block text-xs text-ink-muted mt-0.5">{item.desc}</span>
+                        </span>
+                        <ExternalLink className="w-4 h-4 shrink-0 text-ink-faint group-hover:text-action-text transition-colors" aria-hidden="true" />
+                        <span className="sr-only">(opens in a new tab)</span>
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </aside>
           </div>
-
-          <h2 className="font-heading text-2xl font-semibold text-ink tracking-tight mb-1">
-            Eanes ISD &amp; alumni portal
-          </h2>
-          <p className="text-ink-muted mb-8">Official district and foundation resources.</p>
-
-          <dl className="border-t-2 border-rule-strong">
-            {[
-              {
-                term: 'EEF Alumni Portal',
-                href: 'https://eaneseducationfoundation.org/alumni/',
-                cta: 'Visit EEF Alumni',
-                desc: 'The official Eanes Education Foundation alumni page. the registry for former Chaps. Reunion news, networking registers, and what other graduates are up to.',
-              },
-              {
-                term: 'Eanes ISD Website',
-                href: 'https://www.eanesisd.net/',
-                cta: 'Visit Eanes ISD',
-                desc: 'District announcements, academic calendars, board updates, athletic schedules, and campus news from the current generation of WHS students.',
-              },
-              {
-                term: 'Support the Foundation',
-                href: 'https://eaneseducationfoundation.org/donate/',
-                cta: 'Donate',
-                desc: 'Donations to the Eanes Education Foundation fund teacher salaries and the classroom resources that keep district programs running.',
-              },
-            ].map((item) => (
-              <div
-                key={item.href}
-                className="group border-b border-rule py-7 sm:grid sm:grid-cols-[15rem_1fr_auto] sm:gap-10 sm:items-baseline"
-              >
-                <dt className="font-heading text-lg font-semibold text-ink">{item.term}</dt>
-                <dd className="mt-1.5 sm:mt-0 text-ink-muted leading-relaxed max-w-prose">
-                  {item.desc}
-                </dd>
-                <dd className="mt-3 sm:mt-0 sm:text-right">
-                  <a
-                    href={item.href}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-sm font-medium text-action border-b border-action/30 group-hover:border-action pb-0.5 transition-colors whitespace-nowrap"
-                  >
-                    {item.cta}
-                  </a>
-                </dd>
-              </div>
-            ))}
-          </dl>
         </div>
       )}
 
-      {/* MESSAGE BOARD TAB */}
+      {/* ALUMNI NEWS TAB */}
       {activeTab === 'board' && (
         <MessageBoard />
       )}
@@ -1319,6 +1435,17 @@ export default function Dashboard({ session }) {
           />
         );
       })()}
+      </main>
     </div>
+  );
+}
+
+// One titled group of fields on the Edit Profile tab.
+function ProfileSection({ title, children }) {
+  return (
+    <section className="bg-surface border border-rule p-5 sm:p-6 panel">
+      <h3 className="font-heading text-lg font-semibold text-ink mb-5">{title}</h3>
+      <div className="space-y-5">{children}</div>
+    </section>
   );
 }

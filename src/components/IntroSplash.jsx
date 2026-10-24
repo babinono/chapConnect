@@ -1,4 +1,5 @@
 import React from 'react';
+import ChapLogo from './ChapLogo';
 
 
 // Wordmark intro over the navy field. One authored moment: the Eanes rule draws
@@ -9,10 +10,11 @@ export default function IntroSplash() {
       className="intro-splash navy-field fixed inset-0 z-[999] flex flex-col items-center justify-center overflow-hidden px-8"
       aria-hidden="true"
     >
+      <ChapLogo onNavy className="intro-word mb-8 h-20 w-auto sm:h-24" title="" />
       <h1
         className="intro-word font-heading text-5xl sm:text-6xl lg:text-display font-semibold text-on-navy text-center"
       >
-        Chap Connect
+        ChapConnect
       </h1>
 
       <span

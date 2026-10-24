@@ -1,5 +1,6 @@
 import React from 'react';
 import { Briefcase, GraduationCap, MapPin } from 'lucide-react';
+import ChapAvatar from './ChapAvatar';
 
 export default function MatchCard({ matchData }) {
   if (!matchData || !matchData.mentor) return null;
@@ -25,14 +26,7 @@ export default function MatchCard({ matchData }) {
   return (
     <article className="bg-surface border border-rule panel">
       <header className="flex items-start gap-5 border-b border-rule p-6">
-        <img
-          src={
-            mentor.avatar ||
-            `https://api.dicebear.com/7.x/notionists/svg?seed=${encodeURIComponent(mentor.name)}`
-          }
-          alt=""
-          className="w-16 h-16 rounded-full bg-sunken flex-shrink-0"
-        />
+        <ChapAvatar avatar={mentor.chapAvatar} seed={mentor.id || mentor.name} size={64} />
         <div className="min-w-0">
           <p className="text-sm text-ink-faint">The mentor</p>
           <h2 className="font-heading text-2xl font-semibold text-ink leading-tight tracking-tight">
@@ -87,7 +81,7 @@ export default function MatchCard({ matchData }) {
 
       <div className="border-t border-rule p-6 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-2 text-xs text-ink-faint font-mono">
-          <svg className="w-3.5 h-3.5 text-action shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3.5 h-3.5 text-action-text shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
           </svg>
           <span>Email obscured for privacy until reply</span>
