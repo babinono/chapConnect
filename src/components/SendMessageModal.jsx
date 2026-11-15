@@ -68,7 +68,7 @@ export default function SendMessageModal({
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-navy-950/70 backdrop-blur-xs">
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-navy-950/70 backdrop-blur-xs overlay-in">
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 14 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}

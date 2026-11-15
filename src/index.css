@@ -794,6 +794,17 @@ table, .tabular { font-variant-numeric: tabular-nums; }
   /* A tab's content settles in when you switch to it. */
   .tab-in { animation: fade-up .28s cubic-bezier(0.16, 1, 0.3, 1) both; }
 
+  /* Fields in an onboarding step arrive one after another, top to bottom. */
+  .stagger-in > div > * { animation: fade-up .32s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .stagger-in > div > *:nth-child(2) { animation-delay: 45ms; }
+  .stagger-in > div > *:nth-child(3) { animation-delay: 90ms; }
+  .stagger-in > div > *:nth-child(4) { animation-delay: 135ms; }
+  .stagger-in > div > *:nth-child(5) { animation-delay: 180ms; }
+  .stagger-in > div > *:nth-child(n+6) { animation-delay: 225ms; }
+
+  /* The dimmed backdrop behind a dialog fades in rather than snapping on. */
+  .overlay-in { animation: fade-in .18s ease-out both; }
+
   /* Arrows lean toward where they point. */
   .lucide-arrow-right { transition: translate .18s ease-out; }
   :is(button, a, .group):hover .lucide-arrow-right:not(.rotate-180) { translate: 3px 0; }

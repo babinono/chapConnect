@@ -166,7 +166,7 @@ export default function MessageBoard() {
       <AnimatePresence>
         {activeStory && (
           <div
-            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-navy-950/70 backdrop-blur-xs"
+            className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-navy-950/70 backdrop-blur-xs overlay-in"
             onClick={(e) => { if (e.target === e.currentTarget) setActiveStory(null); }}
           >
             <motion.div
