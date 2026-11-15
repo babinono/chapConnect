@@ -311,7 +311,7 @@ export default function OnboardingFlow({ session }) {
         <div className="space-y-5">
           <div>
             <label className={labelClass}>Are you currently working?</label>
-            <select name="working" required onChange={handleChange} value={formData.working || ''} className={` font-medium`}>
+            <select name="working" required onChange={handleChange} value={formData.working || ''} className="input cursor-pointer">
               <option value="">-- Select --</option>
               <option value="yes">Yes</option>
               <option value="no">No</option>
@@ -334,7 +334,7 @@ export default function OnboardingFlow({ session }) {
           <div className="space-y-4 pt-4 border-t border-rule">
             <div>
               <label className={labelClass}>Preferred Contact (Optional)</label>
-              <select name="contactPlatform" onChange={handleChange} value={formData.contactPlatform || ''} className={` font-medium`}>
+              <select name="contactPlatform" onChange={handleChange} value={formData.contactPlatform || ''} className="input cursor-pointer">
                 <option value="">-- Select Platform --</option>
                 <option value="Email">Email</option>
                 <option value="LinkedIn">LinkedIn</option>
@@ -404,7 +404,7 @@ export default function OnboardingFlow({ session }) {
                 required 
                 onChange={handleChange} 
                 value={formData.industry || ''} 
-                className={` font-medium`}
+                className="input cursor-pointer"
               >
                 <option value="">-- Select Industry --</option>
                 <option value="Technology">Technology</option>
@@ -453,7 +453,7 @@ export default function OnboardingFlow({ session }) {
                 required 
                 onChange={handleChange} 
                 value={formData.contactPlatform || ''} 
-                className={` font-medium`}
+                className="input cursor-pointer"
               >
                 <option value="">-- Select Platform --</option>
                 <option value="Email">Email</option>
@@ -508,7 +508,7 @@ export default function OnboardingFlow({ session }) {
             </div>
             <div className="pt-4 border-t border-rule">
               <label className={labelClass}>Social Media (Optional)</label>
-              <select name="contactPlatform" onChange={handleChange} value={formData.contactPlatform || ''} className={` font-medium`}>
+              <select name="contactPlatform" onChange={handleChange} value={formData.contactPlatform || ''} className="input cursor-pointer">
                 <option value="">-- Select Platform --</option>
                 <option value="Instagram">Instagram</option>
                 <option value="LinkedIn">LinkedIn</option>
@@ -722,8 +722,8 @@ export default function OnboardingFlow({ session }) {
       <div className="w-full max-w-2xl bg-surface border border-rule p-6 sm:p-8 lg:p-10 relative panel">
         <OnboardingProgress current={step + 1} total={totalSteps} />
 
-        <h1 className="text-3xl font-semibold text-ink tracking-tight mb-8">
-          Tell Us About Yourself
+        <h1 className="font-heading text-3xl font-semibold text-ink tracking-tight mb-8">
+          {(flow === 'post_college' && ['Your undergrad', 'Beyond undergrad', 'Work and contact'][step - 1]) || 'Tell us about yourself'}
         </h1>
 
         <form onSubmit={isLastStep ? handleSubmit : (e) => { e.preventDefault(); handleNext(); }} className="space-y-6">
@@ -746,7 +746,7 @@ export default function OnboardingFlow({ session }) {
           </AnimatePresence>
 
           {!isSelectorStep && (
-            <div className="flex justify-between pt-4 border-t-2 border-rule">
+            <div className="flex items-center justify-between pt-5 border-t border-rule">
               {step > 1 ? (
                 <button
                   type="button"

@@ -658,7 +658,7 @@ export default function Dashboard({ session }) {
                       value={matchFilters.q}
                       onChange={(e) => setMatchFilters(f => ({ ...f, q: e.target.value }))}
                       placeholder="Search by name, college, company or city"
-                      className="w-full h-12 pl-12 pr-4 border border-rule bg-surface text-base text-ink placeholder:text-ink-faint focus:outline-none focus:border-action panel"
+                      className="input h-12 pl-12 bg-surface"
                     />
                   </label>
 
@@ -676,9 +676,7 @@ export default function Dashboard({ session }) {
                                   type="button"
                                   aria-pressed={on}
                                   onClick={() => toggle(g.key, value)}
-                                  className={`h-8 max-w-full px-3 text-sm border flex items-center gap-2 transition-colors cursor-pointer ${
-                                    on ? 'bg-ink text-canvas border-ink' : 'bg-surface text-ink border-rule hover:border-rule-strong'
-                                  }`}
+                                  className="chip"
                                 >
                                   <span className="truncate">{value}</span>
                                   <span className={`tabular text-xs ${on ? 'text-canvas/70' : 'text-ink-faint'}`}>{count}</span>

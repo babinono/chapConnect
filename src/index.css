@@ -745,6 +745,14 @@ table, .tabular { font-variant-numeric: tabular-nums; }
   }
   textarea.input { @apply h-auto py-2.5; }
 
+  /* Toggle chip: set aria-pressed and the selected look follows. */
+  .chip {
+    @apply inline-flex items-center gap-2 max-w-full h-9 px-3.5 text-sm font-medium bg-surface text-ink-muted border border-rule cursor-pointer transition-colors;
+  }
+  .chip:hover { @apply text-ink border-rule-strong; }
+  .chip[aria-pressed="true"] { @apply bg-ink text-canvas border-ink; }
+  .chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
   .label { @apply block text-sm font-medium text-ink mb-1.5; }
 
   .card {

@@ -102,13 +102,13 @@ export default function WelcomeScreen({ session }) {
       {/* LEFT: the navy field, grounded on real photography pushed into the brand
           hue. Mobile: stacks first, reduced height. */}
       <section className="navy-field relative lg:col-span-7 xl:col-span-7 flex flex-col overflow-hidden">
-        <div className="flex flex-1 flex-col justify-between gap-8 px-6 pt-10 pb-8 sm:gap-12 sm:px-12 sm:pt-14 lg:gap-16 lg:px-16 lg:pt-16">
+        <div className="flex flex-1 flex-col justify-between gap-5 px-6 pt-6 pb-7 sm:gap-12 sm:px-12 sm:pt-14 sm:pb-8 lg:gap-16 lg:px-16 lg:pt-16">
         <motion.div {...rise(0.05)} className="flex items-center justify-between gap-4">
           <p className="text-sm text-on-navy-muted">Eanes ISD, Westlake High School</p>
           <ThemeControls />
         </motion.div>
 
-        <div className="py-4 sm:py-10 lg:py-0">
+        <div className="sm:py-10 lg:py-0">
           <motion.div {...rise(0.08)}>
             <ChapLogo onNavy className="mb-6 h-12 w-auto sm:h-16" />
           </motion.div>
@@ -144,7 +144,7 @@ export default function WelcomeScreen({ session }) {
           initial={reduce ? false : { opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.9, delay: 0.3, ease: 'easeOut' }}
-          className="duotone h-32 w-full shrink-0 sm:h-52 lg:h-[38vh]"
+          className="duotone hidden w-full shrink-0 sm:block sm:h-52 lg:h-[38vh]"
         >
           <img
             src="/WHSfield.jpg"
@@ -159,7 +159,7 @@ export default function WelcomeScreen({ session }) {
       </section>
 
       {/* RIGHT: the task. Quiet ground so the field opposite stays the peak. */}
-      <section className="lg:col-span-5 flex items-center bg-canvas px-6 py-14 sm:px-12 lg:px-14">
+      <section className="lg:col-span-5 flex items-center bg-canvas px-6 py-9 sm:px-12 sm:py-14 lg:px-14">
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}

@@ -73,11 +73,7 @@ export default function MessageBoard() {
               key={cat}
               onClick={() => setSelectedCat(cat)}
               aria-pressed={selectedCat === cat}
-              className={`h-9 px-3.5 text-sm font-medium border transition-colors cursor-pointer ${
-                selectedCat === cat
-                  ? 'bg-ink text-canvas border-ink'
-                  : 'bg-surface text-ink-muted border-rule hover:text-ink hover:border-rule-strong'
-              }`}
+              className="chip"
             >
               {cat}
             </button>
