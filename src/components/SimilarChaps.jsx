@@ -48,7 +48,7 @@ export default function SimilarChaps({ matches = [], onMessage, onSeeAll, onEdit
           <h2 id="similar-chaps-title" className="font-heading text-2xl font-semibold tracking-tight text-ink">
             Chaps like you
           </h2>
-          <p className="mt-1 text-sm text-ink-muted">Matched on college, major, field and city.</p>
+          <p className="mt-1 text-sm text-ink-muted">Alumni who share your college, major, field or city.</p>
         </div>
         {matches.length > 0 && (
           <button

@@ -89,7 +89,8 @@ function extractAlumProfile(raw) {
     location: locations[0] || '',
     gradYear,
     activities: raw.high_school_activities || raw.activities || [],
-    avatar: meta.avatar || '',   // "color:look" mascot Chap, when they picked one
+    avatar: meta.avatar || '',
+    openTo: Array.isArray(meta.openTo) ? meta.openTo : [],   // "color:look" mascot Chap, when they picked one
   };
 }
 
@@ -115,7 +116,7 @@ export function scoreAlumniPair(seeker, candidate) {
   if (sharedCanon.length > 0 || (seeker.primarySchool && candidate.primarySchool && seeker.primarySchool.toLowerCase() === candidate.primarySchool.toLowerCase())) {
     score += 35;
     breakdown.college = 35;
-    threads.push(`Shared Alma Mater: Both attended ${candidate.primarySchool || seeker.primarySchool} (35% weight)`);
+    threads.push(`You both went to ${candidate.primarySchool || seeker.primarySchool}`);
   } else {
     // Check college tier similarity
     const seekerTiers = new Set();
@@ -139,7 +140,7 @@ export function scoreAlumniPair(seeker, candidate) {
       score += 18;
       breakdown.college = 18;
       const tierObj = COLLEGE_TIERS.find(t => t.id === sharedTiers[0]);
-      threads.push(`College System: Both attended ${tierObj ? tierObj.label : 'similar collegiate network'} (18% weight)`);
+      threads.push(tierObj ? `Similar colleges (${tierObj.label})` : 'Similar colleges');
     }
   }
 
@@ -152,15 +153,14 @@ export function scoreAlumniPair(seeker, candidate) {
   if (seekerField && candField && seekerField === candField) {
     score += 30;
     breakdown.field = 30;
-    const formattedField = seekerField.charAt(0).toUpperCase() + seekerField.slice(1);
-    threads.push(`Industry Synergy: Both work in ${formattedField} (${candidate.primaryCareer})`);
+    threads.push(`You both work in ${seekerField.replace('_', ' ')}`);
   } else if (seekerFieldText && candFieldText) {
     const sTokens = seekerFieldText.toLowerCase().split(/\s+/).filter(t => t.length > 3);
     const hasOverlap = sTokens.some(t => candFieldText.toLowerCase().includes(t));
     if (hasOverlap) {
       score += 20;
       breakdown.field = 20;
-      threads.push(`Professional Alignment: Related career paths in ${candidate.primaryCareer}`);
+      threads.push('Similar line of work');
     }
   }
 
@@ -171,13 +171,13 @@ export function scoreAlumniPair(seeker, candidate) {
     if (seekerMajor === candMajor || candMajor.includes(seekerMajor) || seekerMajor.includes(candMajor)) {
       score += 20;
       breakdown.major = 20;
-      threads.push(`Academic Alignment: Shared background in ${candidate.primaryMajor || seeker.primaryMajor}`);
+      threads.push(`You both studied ${candidate.primaryMajor || seeker.primaryMajor}`);
     } else {
       const sMajTokens = seekerMajor.split(/\s+/).filter(t => t.length > 3);
       if (sMajTokens.some(t => candMajor.includes(t))) {
         score += 12;
         breakdown.major = 12;
-        threads.push(`Academic Intersection: Related studies in ${candidate.primaryMajor}`);
+        threads.push('Related majors');
       }
     }
   }
@@ -190,7 +190,7 @@ export function scoreAlumniPair(seeker, candidate) {
     if (candLoc.includes(sCity) || seekerLoc.includes(candLoc.split(',')[0].trim())) {
       score += 10;
       breakdown.location = 10;
-      threads.push(`Metro Connection: Both currently based in ${candidate.location}`);
+      threads.push(`You're both in ${candidate.location}`);
     }
   }
 
@@ -200,21 +200,21 @@ export function scoreAlumniPair(seeker, candidate) {
     if (diff === 0) {
       score += 5;
       breakdown.cohort = 5;
-      threads.push(`Classmates: Both graduated from Westlake in ${seeker.gradYear}!`);
+      threads.push(`Same class, ${seeker.gradYear}`);
     } else if (diff <= 3) {
       score += 4;
       breakdown.cohort = 4;
-      threads.push(`Shared Era: Westlake contemporaries (${seeker.gradYear} & ${candidate.gradYear})`);
+      threads.push('At Westlake around the same time');
     } else if (diff <= 6) {
       score += 2;
       breakdown.cohort = 2;
-      threads.push(`Nearby Cohorts: Graduated within ${diff} years of each other`);
+      threads.push(`${diff} classes apart`);
     }
   }
 
   // If minimal overlap was detected, provide a graceful baseline thread
   if (threads.length === 0) {
-    threads.push(`Westlake Alumni Network: Fellow Chap with experience at ${candidate.primarySchool || candidate.primaryCareer}`);
+    threads.push('Fellow Chap');
     score = 15;
   }
 
@@ -226,53 +226,45 @@ export function scoreAlumniPair(seeker, candidate) {
 }
 
 /**
- * Generate a personalized outreach draft message for alumni-to-alumni connection.
+ * A first message from one alum to another. Opens with the one thing the two
+ * have in common, then asks for something small and specific.
  */
-export function generateAlumniOutreachDraft(seekerProfile, candidateProfile, threads = []) {
+export function generateAlumniOutreachDraft(seekerProfile, candidateProfile) {
   const seeker = extractAlumProfile(seekerProfile);
   const cand = candidateProfile.schools ? candidateProfile : extractAlumProfile(candidateProfile);
+  const { breakdown } = scoreAlumniPair(seeker, cand);
 
-  const seekerFirstName = seeker.name ? seeker.name.split(' ')[0] : 'a fellow Chap';
   const candFirstName = cand.name ? cand.name.split(' ')[0] : 'there';
-  const candClass = cand.gradYear ? ` (WHS '${String(cand.gradYear).slice(-2)})` : '';
   const seekerClass = seeker.gradYear ? ` (WHS '${String(seeker.gradYear).slice(-2)})` : '';
+  const sameSchool = breakdown.college === 35;
 
-  // Subject line options
-  let subject = `Westlake Alumni Connection — ${seeker.name || 'Fellow Chap'}`;
-  if (cand.primarySchool && seeker.primarySchool && cand.primarySchool.toLowerCase() === seeker.primarySchool.toLowerCase()) {
-    subject = `Fellow Chap & ${cand.primarySchool} Alum — Connecting from ${seeker.name || 'Westlake'}`;
-  } else if (cand.primaryCareer && seeker.primaryCareer) {
-    subject = `Westlake Alum in ${cand.primaryCareer} — Connecting with ${seeker.name || 'a fellow Chap'}`;
-  }
+  const subject = sameSchool
+    ? `Fellow Chap and ${cand.primarySchool} alum`
+    : `Hello from a fellow Chap${seekerClass}`;
 
-  // Body construction
-  const lines = [
+  const about = [
+    seeker.location && `in ${seeker.location}`,
+    seeker.primaryCareer && seeker.primaryCareer !== 'Professional' && `working in ${seeker.primaryCareer}`,
+  ].filter(Boolean).join(', ');
+
+  let common = 'I found you in the alumni directory on ChapConnect.';
+  if (sameSchool) common = `I saw on ChapConnect that you went to ${cand.primarySchool} too.`;
+  else if (breakdown.field >= 20) common = `I saw on ChapConnect that you work in ${cand.primaryCareer}, which is close to what I do.`;
+  else if (breakdown.cohort === 5) common = 'I saw on ChapConnect that we were in the same class.';
+  else if (breakdown.location === 10) common = `I saw on ChapConnect that you're in ${cand.location} too.`;
+
+  const body = [
     `Hi ${candFirstName},`,
     '',
-    `I hope you're having a great week! I'm ${seeker.name || 'a fellow Westlake alum'}${seekerClass}, currently based in ${seeker.location || 'the area'}${seeker.primaryCareer ? ` working in ${seeker.primaryCareer}` : ''}.`,
+    `I'm ${seeker.name || 'a fellow Westlake grad'}${seekerClass}${about ? `, ${about}` : ''}. ${common}`,
     '',
-  ];
+    `I'd like to hear how you got from Westlake to where you are now. Do you have 15 minutes for a call sometime in the next couple of weeks?`,
+    '',
+    'Thanks,',
+    seeker.name || 'A fellow Chap',
+  ].join('\n');
 
-  // Tailored connection point
-  if (threads && threads.length > 0) {
-    const primaryReason = threads[0];
-    lines.push(`I came across your profile through ChapConnect and noticed our shared connection: ${primaryReason.replace(/\s*\(\d+%.*?\)/g, '')}.`);
-  } else if (cand.primarySchool) {
-    lines.push(`I came across your profile through ChapConnect and noticed you also attended ${cand.primarySchool}${candClass}.`);
-  } else {
-    lines.push(`I came across your profile through the Westlake alumni directory on ChapConnect and wanted to reach out.`);
-  }
-
-  lines.push('');
-  lines.push(`I'd love to connect, hear how your path from Westlake has unfolded, and share experiences. Would you be open to a quick 15-minute virtual coffee or phone chat sometime in the next couple of weeks?`);
-  lines.push('');
-  lines.push(`Best regards,`);
-  lines.push(seeker.name || seekerFirstName);
-
-  return {
-    subject,
-    body: lines.join('\n'),
-  };
+  return { subject, body };
 }
 
 /**

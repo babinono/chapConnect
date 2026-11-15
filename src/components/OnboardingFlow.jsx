@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '../utils/supabaseClient';
 import Autocomplete from './Autocomplete';
+import OpenToPicker from './OpenToPicker';
 import ChapPicker from './ChapPicker';
 import ChapLogo from './ChapLogo';
 import ThemeControls from './ui/ThemeControls';
@@ -41,6 +42,7 @@ export default function OnboardingFlow({ session }) {
   const [nickname, setNickname] = useState('');
   // Profile picture: a red or blue mascot Chap, picked on the name step.
   const [avatar, setAvatar] = useState(() => randomAvatar());
+  const [openTo, setOpenTo] = useState([]);
   const [identityConfirmed, setIdentityConfirmed] = useState(false);
   const [gradYear, setGradYear] = useState(state.gradYear || '');
   const [flow, setFlow] = useState(state.flow || null);
@@ -113,7 +115,8 @@ export default function OnboardingFlow({ session }) {
         contactInfo: formData.contactInfo || null,
         newsletterConsent: !!formData.newsletterConsent,
         contactConsent: !!formData.contactConsent,
-        avatar
+        avatar,
+        openTo
       });
 
       profileData = {
@@ -474,6 +477,7 @@ export default function OnboardingFlow({ session }) {
               <label className={labelClass}>Contact Username / Link / Email</label>
               <input name="contactInfo" type="text" required onChange={handleChange} value={formData.contactInfo || ''} className={inputClass} placeholder="e.g. linkedin.com/in/username" />
             </div>
+            <OpenToPicker value={openTo} onChange={setOpenTo} />
           </div>
         );
       }

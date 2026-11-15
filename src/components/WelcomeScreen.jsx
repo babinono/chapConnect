@@ -166,7 +166,7 @@ export default function WelcomeScreen({ session }) {
           className="w-full max-w-sm mx-auto"
         >
           <h2 className="font-heading text-3xl font-semibold text-ink tracking-tight">Join or sign in</h2>
-          <p className="mt-2 text-ink-muted">New to the network or coming back, start here.</p>
+          <p className="mt-2 text-ink-muted">For Westlake graduates. Find Chaps from your class, your college, your city or your line of work, and message them.</p>
 
           {isGoogleSession && (
             <div className="mt-8 flex items-center justify-between gap-3 border border-rule bg-sunken px-4 py-3 panel">

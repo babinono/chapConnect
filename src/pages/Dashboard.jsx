@@ -23,6 +23,7 @@ import {
   ExternalLink,
   RefreshCw,
   Search,
+  X,
 } from 'lucide-react';
 import { cn } from '../utils/cn';
 import TabBar from '../components/ui/TabBar';
@@ -31,6 +32,10 @@ import { findAlumniMatches, generateAlumniOutreachDraft } from '../utils/alumniM
 import MessageBoard from '../components/MessageBoard';
 import SendMessageModal from '../components/SendMessageModal';
 import SimilarChaps from '../components/SimilarChaps';
+import Circles from '../components/Circles';
+import { inCircle, circleLabel } from '../utils/circles';
+import OpenToPicker from '../components/OpenToPicker';
+import { openToLabels } from '../utils/openTo';
 import { getBoardPosts, initMessageBoard } from '../utils/messageBoardStore';
 import { artFor } from '../utils/newsArt';
 import ChapAvatar from '../components/ChapAvatar';
@@ -47,6 +52,7 @@ const PLACEHOLDER_VALUES = new Set(['University', 'Professional']);
 // Match reasons carry the engine's internal weighting ("(35% weight)"), which
 // means nothing to the reader.
 const cleanThread = (t) => String(t).replace(/\s*\(\d+% weight\)/g, '');
+const NO_FILTERS = { q: '', college: '', company: '', gradYear: '', location: '', circle: '' };
 import { isContactUnlocked, obscureEmail, recordReply, getMessagesBetween } from '../utils/messageRelayStore';
 import ClassBadge from '../components/ClassBadge';
 import ChapEmpty from '../components/ChapEmpty';
@@ -68,7 +74,7 @@ export default function Dashboard({ session }) {
 
   // Alumni-to-alumni matching state
   const [alumniMatches, setAlumniMatches] = useState([]);
-  const [matchFilters, setMatchFilters] = useState({ q: '', college: '', company: '', gradYear: '', location: '' });
+  const [matchFilters, setMatchFilters] = useState(NO_FILTERS);
   const [newsPosts, setNewsPosts] = useState([]);
   const [directoryView, setDirectoryView] = useState('match'); // 'match' | 'class'
   useEffect(() => {
@@ -176,6 +182,7 @@ export default function Dashboard({ session }) {
             // that have no dedicated editor input (undergrad/education).
             _rawMeta: parsedMeta,
             avatar: parsedMeta.avatar || '',
+            openTo: Array.isArray(parsedMeta.openTo) ? parsedMeta.openTo : [],
             alumniStatus: parsedMeta.status || '',
             working: parsedMeta.working === true ? 'yes'
               : parsedMeta.working === false ? 'no'
@@ -374,7 +381,8 @@ export default function Dashboard({ session }) {
         contactInfo: profileForm.contactInfo || '',
         newsletterConsent: !!profileForm.newsletterConsent,
         contactConsent: !!profileForm.contactConsent,
-        avatar: profileForm.avatar || profileForm._rawMeta?.avatar || ''
+        avatar: profileForm.avatar || profileForm._rawMeta?.avatar || '',
+        openTo: profileForm.openTo || []
       });
     } else {
       finalPostGradProgram = profileForm.post_grad_program === 'Other' ? profileForm.other_post_grad_program : (profileForm.post_grad_program || null);
@@ -546,11 +554,13 @@ export default function Dashboard({ session }) {
   const inputClass = "input";
   const isWorkingFlow = profileForm.flow_type === 'post_schooling' || profileForm.flow_type === 'established';
 
-  const filteredMatches = alumniMatches.filter(({ candidate: c }) => {
+  const filteredMatches = alumniMatches.filter((m) => {
+    const c = m.candidate;
     const f = matchFilters;
+    if (f.circle && !inCircle(m, f.circle)) return false;
     if (f.q) {
       const needle = f.q.trim().toLowerCase();
-      const hay = [c.name, c.primarySchool, c.primaryMajor, c.company, c.primaryCareer, c.location].join(' ').toLowerCase();
+      const hay = [c.name, c.primarySchool, c.primaryMajor, c.company, c.primaryCareer, c.location, ...openToLabels(c.openTo)].join(' ').toLowerCase();
       if (!hay.includes(needle)) return false;
     }
     if (f.college && c.primarySchool !== f.college) return false;
@@ -709,10 +719,16 @@ export default function Dashboard({ session }) {
                         {' '}{filteredMatches.length === 1 ? 'Chap' : 'Chaps'}{active ? ' match' : ' recommended'}
                       </p>
                       <div className="flex flex-wrap items-center justify-end gap-3">
+                        {matchFilters.circle && (
+                          <button type="button" className="chip" aria-pressed="true" onClick={() => setMatchFilters(f => ({ ...f, circle: '' }))}>
+                            <span className="truncate">{circleLabel(matchFilters.circle, alumniMatches, { gradYear: profile?.grad_year })}</span>
+                            <X className="w-3.5 h-3.5 shrink-0" aria-label="Remove" />
+                          </button>
+                        )}
                         {active && (
                           <button
                             type="button"
-                            onClick={() => setMatchFilters({ q: '', college: '', company: '', gradYear: '', location: '' })}
+                            onClick={() => setMatchFilters(NO_FILTERS)}
                             className="font-medium text-action-text hover:underline cursor-pointer"
                           >
                             Clear filters
@@ -760,7 +776,7 @@ export default function Dashboard({ session }) {
                 <ChapEmpty
                   avatar="red:whoa"
                   title="No Chaps match that"
-                  action={<button type="button" onClick={() => setMatchFilters({ q: '', college: '', company: '', gradYear: '', location: '' })} className="btn btn-secondary">Clear filters</button>}
+                  action={<button type="button" onClick={() => setMatchFilters(NO_FILTERS)} className="btn btn-secondary">Clear filters</button>}
                 >
                   Try a different search, or clear the filters to see everyone.
                 </ChapEmpty>
@@ -827,9 +843,16 @@ export default function Dashboard({ session }) {
                             )}
                           </dl>
 
+                          {m.candidate.openTo?.length > 0 && (
+                            <p className="mt-3 text-sm text-ink-muted">
+                              <span className="font-medium text-ink">Happy to hear about: </span>
+                              {openToLabels(m.candidate.openTo).join(', ').toLowerCase()}
+                            </p>
+                          )}
+
                           {/* Match reasons */}
                           <div className="mt-4 border-t border-rule pt-3">
-                            <p className="text-xs font-medium text-ink-faint">Why you matched</p>
+                            <p className="text-xs font-medium text-ink-faint">In common</p>
                             <ul className="mt-1.5 space-y-1">
                               {m.threads.slice(0, 2).map((t, tIdx) => (
                                 <li key={tIdx} className="text-sm text-ink leading-snug">{cleanThread(t)}</li>
@@ -1214,6 +1237,7 @@ export default function Dashboard({ session }) {
                     />
                   </div>
                 </div>
+                <OpenToPicker value={profileForm.openTo || []} onChange={(openTo) => setProfileForm(f => ({ ...f, openTo }))} />
                 {profileForm.contactPlatform === 'Other' && (
                                   <div>
                                     <label className={labelClass}>Please specify contact platform</label>
@@ -1314,6 +1338,14 @@ export default function Dashboard({ session }) {
                   onMessage={(m) => setSelectedRecipientForMessage({ ...m.candidate, matchThreads: m.threads, matchScore: m.score })}
                   onSeeAll={() => setActiveTab('matches')}
                   onEditProfile={() => setActiveTab('profile')}
+                />
+              )}
+
+              {!isStudent && (
+                <Circles
+                  matches={alumniMatches}
+                  me={{ gradYear: profile?.grad_year || profile?.gradYear }}
+                  onOpen={(circle) => { setMatchFilters({ ...NO_FILTERS, circle }); setActiveTab('matches'); }}
                 />
               )}
 
