@@ -48,6 +48,8 @@ const PLACEHOLDER_VALUES = new Set(['University', 'Professional']);
 // means nothing to the reader.
 const cleanThread = (t) => String(t).replace(/\s*\(\d+% weight\)/g, '');
 import { isContactUnlocked, obscureEmail, recordReply, getMessagesBetween } from '../utils/messageRelayStore';
+import ClassBadge from '../components/ClassBadge';
+import ChapEmpty from '../components/ChapEmpty';
 
 export default function Dashboard({ session }) {
   // The open tab lives in the URL (?tab=matches|board|profile; Home has none),
@@ -730,20 +732,21 @@ export default function Dashboard({ session }) {
                   ))}
                 </div>
               ) : alumniMatches.length === 0 ? (
-                <div className="bg-surface border border-rule px-6 py-12 text-center panel">
-                  <p className="text-ink-muted max-w-md mx-auto">No recommended alumni yet. Keeping your college, field, and major current in your profile helps us find Chaps on your path.</p>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('profile')}
-                    className="mt-4 text-sm font-medium text-action-text hover:underline cursor-pointer"
-                  >
-                    Edit Profile
-                  </button>
-                </div>
+                <ChapEmpty
+                  avatar="blue:scholar"
+                  title="No Chaps to recommend yet"
+                  action={<button type="button" onClick={() => setActiveTab('profile')} className="btn btn-secondary">Edit Profile</button>}
+                >
+                  Your college, major and field are how we find Chaps on your path. Keep them current.
+                </ChapEmpty>
               ) : filteredMatches.length === 0 ? (
-                <div className="bg-surface border border-rule px-6 py-12 text-center panel">
-                  <p className="text-ink-muted">No alumni match those filters.</p>
-                </div>
+                <ChapEmpty
+                  avatar="red:whoa"
+                  title="No Chaps match that"
+                  action={<button type="button" onClick={() => setMatchFilters({ q: '', college: '', company: '', gradYear: '', location: '' })} className="btn btn-secondary">Clear filters</button>}
+                >
+                  Try a different search, or clear the filters to see everyone.
+                </ChapEmpty>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {filteredMatches.map((m, idx) => {
@@ -767,16 +770,12 @@ export default function Dashboard({ session }) {
                             <ChapAvatar avatar={m.candidate.avatar} seed={m.candidate.id || m.candidate.name} size={48} className="border border-rule" />
                             <div className="min-w-0 flex-1">
                               <div className="flex items-baseline justify-between gap-2">
-                                <h4 className="font-semibold text-ink text-base leading-tight truncate">
-                                  {m.candidate.name}
+                                <h4 className="flex min-w-0 items-center gap-2 font-semibold text-ink text-base leading-tight">
+                                  <span className="truncate">{m.candidate.name}</span>
+                                  <ClassBadge year={m.candidate.gradYear} />
                                 </h4>
                                 <span className="shrink-0 text-xs font-medium text-ink-muted tabular">{m.score}% Match</span>
                               </div>
-                              {m.candidate.gradYear && (
-                                <p className="text-xs text-ink-faint mt-1">
-                                  Class of <span className="tabular font-medium text-heritage">{m.candidate.gradYear}</span>
-                                </p>
-                              )}
                             </div>
                           </div>
 
@@ -1269,16 +1268,9 @@ export default function Dashboard({ session }) {
                 className="hidden sm:block ring-4 ring-white/15"
               />
               <div className="min-w-0">
-                {(profile?.grad_year || profile?.gradYear) && (
-                  <p className="text-sm text-on-navy-muted">
-                    Class of{' '}
-                    <span className="tabular text-heritage-on-navy font-medium">
-                      {profile.grad_year || profile.gradYear}
-                    </span>
-                  </p>
-                )}
-                <h1 className="mt-1 font-heading text-3xl sm:text-4xl font-semibold tracking-tight text-on-navy">
-                  Welcome back, {profile?.name?.split(' ')[0] || 'Chap'}.
+                <h1 className="flex flex-wrap items-center gap-x-3 gap-y-1 font-heading text-3xl sm:text-4xl font-semibold tracking-tight text-on-navy">
+                  <span>Welcome back, {profile?.name?.split(' ')[0] || 'Chap'}.</span>
+                  <ClassBadge year={profile?.grad_year || profile?.gradYear} onNavy className="h-7 px-2 text-base" />
                 </h1>
               </div>
             </div>

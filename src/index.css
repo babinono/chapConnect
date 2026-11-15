@@ -753,6 +753,18 @@ table, .tabular { font-variant-numeric: tabular-nums; }
   .chip[aria-pressed="true"] { @apply bg-ink text-canvas border-ink; }
   .chip:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 
+  /* Class year as a varsity patch, set in the wordmark slab. */
+  .class-badge {
+    @apply inline-flex shrink-0 items-center justify-center h-5 px-1.5 text-xs leading-none;
+    font-family: var(--font-wordmark);
+    font-weight: 700;
+    color: var(--heritage);
+    border: 1.5px solid currentColor;
+    border-radius: 0.25rem;
+  }
+  .ivy .class-badge { font-family: var(--font-heading); font-weight: 600; }
+  .class-badge-on-navy { color: var(--on-navy); }
+
   .label { @apply block text-sm font-medium text-ink mb-1.5; }
 
   .card {

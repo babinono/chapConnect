@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
-import { ArrowRight, BookOpen, Pin, ExternalLink, X } from 'lucide-react';
+import { ArrowRight, Pin, ExternalLink, X } from 'lucide-react';
 import { getBoardPosts, initMessageBoard } from '../utils/messageBoardStore';
 import { artFor } from '../utils/newsArt';
+import ChapEmpty from './ChapEmpty';
 
 const CATEGORIES = ['All', 'Alumni Magazine', 'Spotlight', 'Events', 'Campus News'];
 
@@ -152,10 +153,13 @@ export default function MessageBoard() {
       )}
 
       {filtered.length === 0 && (
-        <div className="text-center py-12 bg-surface border border-rule p-8 panel">
-          <BookOpen className="w-10 h-10 text-ink-faint mx-auto mb-3" />
-          <p className="text-sm font-medium text-ink-muted">No posts found in this category yet.</p>
-        </div>
+        <ChapEmpty
+          avatar="red:scholar"
+          title="Nothing here yet"
+          action={selectedCat !== 'All' && <button type="button" onClick={() => setSelectedCat('All')} className="btn btn-secondary">Show all stories</button>}
+        >
+          No posts found in this category yet.
+        </ChapEmpty>
       )}
 
       {/* Full Article Modal */}

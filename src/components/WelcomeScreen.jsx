@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { LogOut } from 'lucide-react';
 import { supabase, signOutToWelcome } from '../utils/supabaseClient';
+import ChapAvatar from './ChapAvatar';
 
 // Set just before handing off to Google, read once when the browser comes back.
 const OAUTH_RETURN_KEY = 'cc_oauth_return';
@@ -134,6 +135,15 @@ export default function WelcomeScreen({ session }) {
             Every Westlake graduate is somewhere, doing something. Find the one who
             already did the thing you are about to do.
           </motion.p>
+
+          {/* The two Chaps: every member picks one as their profile picture. */}
+          <motion.div {...rise(0.6)} className="mt-6 flex items-center gap-3 sm:mt-8">
+            <span className="flex -space-x-3">
+              <ChapAvatar avatar="red:classic" size={52} className="ring-2 ring-[var(--color-westlake-navy)]" title="Red Chap" />
+              <ChapAvatar avatar="blue:bow" size={52} className="ring-2 ring-[var(--color-westlake-navy)]" title="Blue Chap" />
+            </span>
+            <span className="text-sm text-on-navy-muted">Red or blue. Every Chap picks one.</span>
+          </motion.div>
         </div>
 
         </div>

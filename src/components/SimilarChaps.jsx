@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { ArrowRight, Briefcase, Check, FolderHeart, GraduationCap, Link2, Mail, MapPin, UserPen } from 'lucide-react';
 import ChapAvatar from './ChapAvatar';
+import ClassBadge from './ClassBadge';
 
 // The Home tab's main column: alumni whose path looks like yours, so the
 // network reads as alum-to-alum as much as student-to-alum. Fed by the same
@@ -78,12 +79,10 @@ export default function SimilarChaps({ matches = [], onMessage, onSeeAll, onEdit
                 <div className="flex items-center gap-3">
                   <ChapAvatar avatar={c.avatar} seed={c.id || c.name} size={44} className="border border-rule" />
                   <div className="min-w-0">
-                    <p className="font-semibold text-ink leading-tight truncate">{c.name}</p>
-                    {c.gradYear && (
-                      <p className="text-xs text-ink-faint mt-0.5">
-                        Class of <span className="tabular text-heritage font-medium">{c.gradYear}</span>
-                      </p>
-                    )}
+                    <p className="flex items-center gap-2 font-semibold text-ink leading-tight">
+                      <span className="truncate">{c.name}</span>
+                      <ClassBadge year={c.gradYear} />
+                    </p>
                   </div>
                 </div>
 
