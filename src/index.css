@@ -866,3 +866,21 @@ table, .tabular { font-variant-numeric: tabular-nums; }
   box-shadow: 4px 4px 0 var(--ink);
 }
 .yearbook button.lift:active { translate: 0 0; box-shadow: none; }
+
+/* Yearbook portraits: the Chap as a pasted-in photo, black and white until
+   you hover the card. */
+.yearbook .yb-hide { display: none; }
+.yb-photo {
+  flex-shrink: 0;
+  padding: 4px;
+  background: #fff;
+  border: 1px solid var(--rule-strong);
+  box-shadow: 1px 2px 0 rgb(0 0 0 / 0.14);
+  rotate: -1.5deg;
+  transition: rotate .2s ease-out;
+}
+:nth-child(even) > * > * > .yb-photo, li:nth-child(even) .yb-photo { rotate: 1.2deg; }
+.yb-photo svg { display: block; filter: grayscale(1) contrast(1.15); transition: filter .25s ease-out; }
+.lift:hover .yb-photo, .lift:focus-within .yb-photo { rotate: 0deg; }
+.lift:hover .yb-photo svg, .lift:focus-within .yb-photo svg { filter: none; }
+.yearbook article h4, .yearbook li p.font-semibold { font-family: var(--font-wordmark); font-size: 1.0625rem; }

@@ -77,7 +77,8 @@ export default function SimilarChaps({ matches = [], onMessage, onSeeAll, onEdit
                 className="flex flex-col bg-surface border border-rule p-4 panel lift"
               >
                 <div className="flex items-center gap-3">
-                  <ChapAvatar avatar={c.avatar} seed={c.id || c.name} size={44} className="border border-rule" />
+                  <ChapAvatar avatar={c.avatar} seed={c.id || c.name} size={44} className="yb-hide border border-rule" />
+                  <span className="yb-only yb-photo"><ChapAvatar square avatar={c.avatar} seed={c.id || c.name} size={72} /></span>
                   <div className="min-w-0">
                     <p className="flex items-center gap-2 font-semibold text-ink leading-tight">
                       <span className="truncate">{c.name}</span>

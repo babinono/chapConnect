@@ -809,7 +809,8 @@ export default function Dashboard({ session }) {
                       >
                         <div className="p-5 flex-1">
                           <div className="flex items-start gap-3">
-                            <ChapAvatar avatar={m.candidate.avatar} seed={m.candidate.id || m.candidate.name} size={48} className="border border-rule" />
+                            <ChapAvatar avatar={m.candidate.avatar} seed={m.candidate.id || m.candidate.name} size={48} className="yb-hide border border-rule" />
+                            <span className="yb-only yb-photo"><ChapAvatar square avatar={m.candidate.avatar} seed={m.candidate.id || m.candidate.name} size={96} /></span>
                             <div className="min-w-0 flex-1">
                               <div className="flex items-baseline justify-between gap-2">
                                 <h4 className="flex min-w-0 items-center gap-2 font-semibold text-ink text-base leading-tight">

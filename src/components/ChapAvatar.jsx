@@ -253,7 +253,8 @@ function HeadWear({ acc, team, furDark }) {
   );
 }
 
-export default function ChapAvatar({ avatar, seed, size = 48, className = '', title }) {
+// `square` drops the round crop, for yearbook-style portraits.
+export default function ChapAvatar({ avatar, seed, size = 48, className = '', title, square = false }) {
   const clipId = useId();
   const { color, look } = resolveAvatar(avatar, seed);
   const c = CHAP_COLORS[color];
@@ -267,14 +268,14 @@ export default function ChapAvatar({ avatar, seed, size = 48, className = '', ti
       height={size}
       role="img"
       aria-label={title || `${c.label} Chap, ${l.label}`}
-      className={`rounded-full shrink-0 ${className}`}
+      className={`${square ? '' : 'rounded-full'} shrink-0 ${className}`}
     >
       <defs>
         <clipPath id={clipId}>
           <circle cx="50" cy="50" r="50" />
         </clipPath>
       </defs>
-      <g clipPath={`url(#${clipId})`}>
+      <g clipPath={square ? undefined : `url(#${clipId})`}>
         <rect width="100" height="100" fill={l.bg} />
 
         {/* shoulders and the grey chest bib */}
