@@ -116,7 +116,7 @@ export default function Autocomplete({
         placeholder={placeholder}
         required={required}
         autoComplete="off"
-        className="w-full px-4 py-3 border border-rule focus:outline-none focus:border-action bg-sunken font-medium transition-all panel"
+        className="input"
       />
       {showSuggestions && (
         <ul className="absolute z-50 w-full mt-2 bg-surface border border-rule overflow-hidden panel">

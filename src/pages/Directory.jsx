@@ -180,7 +180,7 @@ export default function Directory({ session }) {
             <button
               onClick={() => setPage(p => Math.max(0, p - 1))}
               disabled={safePage === 0}
-              className="flex items-center space-x-2 bg-surface text-ink font-medium py-2.5 px-4 border border-rule tracking-wide text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:text-ink transition-colors cursor-pointer rounded-slight"
+              className="btn btn-secondary"
             >
               <ArrowLeft className="w-4 h-4" />
               <span>Prev</span>
@@ -193,7 +193,7 @@ export default function Directory({ session }) {
             <button
               onClick={() => setPage(p => Math.min(pageCount - 1, p + 1))}
               disabled={safePage >= pageCount - 1}
-              className="flex items-center space-x-2 bg-action text-action-ink font-medium py-2.5 px-4 border border-rule tracking-wide text-sm disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer rounded-slight"
+              className="btn btn-primary"
             >
               <span>Next</span>
               <ArrowRight className="w-4 h-4" />

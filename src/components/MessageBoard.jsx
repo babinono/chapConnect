@@ -184,7 +184,7 @@ export default function MessageBoard() {
               <button
                 onClick={() => setActiveStory(null)}
                 aria-label="Close story"
-                className="absolute top-3 right-3 w-9 h-9 flex items-center justify-center bg-surface/90 border border-rule text-ink hover:border-rule-strong transition-colors cursor-pointer"
+                className="btn btn-secondary btn-sm btn-icon absolute top-3 right-3"
               >
                 <X className="w-5 h-5" />
               </button>

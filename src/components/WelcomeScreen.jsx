@@ -95,9 +95,7 @@ export default function WelcomeScreen({ session }) {
     transition: { duration: 0.55, delay, ease: [0.16, 1, 0.3, 1] },
   });
 
-  const fieldClass =
-    'w-full bg-transparent border-0 border-b border-rule px-0 py-2.5 text-lg text-ink ' +
-    'placeholder:text-ink-faint focus:outline-none focus:border-action transition-colors';
+  const fieldClass = 'input h-12';
 
   return (
     <div className="min-h-[100dvh] lg:grid lg:grid-cols-12">
@@ -192,7 +190,7 @@ export default function WelcomeScreen({ session }) {
             type="button"
             onClick={signInWithGoogle}
             disabled={signingIn}
-            className="mt-8 w-full flex items-center justify-center gap-3 border border-rule-strong bg-surface py-3.5 px-4 font-medium text-ink cursor-pointer transition-colors hover:border-ink active:translate-y-[1px] disabled:opacity-60 panel"
+            className="btn btn-secondary btn-lg mt-8 w-full gap-3"
           >
             <svg className="w-5 h-5" viewBox="0 0 48 48" aria-hidden="true">
               <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.1l5.7-5.7C34.6 6.1 29.6 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.3-.4-3.5z"/>
@@ -219,7 +217,7 @@ export default function WelcomeScreen({ session }) {
             {/* The one red element on the page. */}
             <Magnetic strength={4}
               type="submit"
-              className="w-full bg-action text-action-ink font-medium py-4 px-4 cursor-pointer transition-colors hover:bg-action-hover active:translate-y-[1px] rounded-slight"
+              className="btn btn-primary btn-lg w-full"
             >
               Continue
             </Magnetic>

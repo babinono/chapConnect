@@ -707,3 +707,48 @@ table, .tabular { font-variant-numeric: tabular-nums; }
 /* Selection and the caret follow the scheme's own accent. */
 .ivy ::selection { background: #b40e2933; color: var(--ink); }
 .dark.ivy ::selection { background: #ce28434d; color: var(--ink); }
+
+/* ---- UI kit --------------------------------------------------------------
+   One definition each for buttons, inputs, labels and cards, so every screen
+   shares the same sizes, states and focus treatment. They sit in the
+   components layer, so layout utilities (w-full, mt-4, …) still win. */
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 h-10 px-4 text-sm font-medium whitespace-nowrap border border-transparent cursor-pointer transition-colors;
+  }
+  .btn:active:not(:disabled) { transform: translateY(1px); }
+  .btn:disabled { @apply opacity-50 cursor-not-allowed; }
+  .btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+  .btn-primary { @apply bg-action text-action-ink; }
+  .btn-primary:hover:not(:disabled) { @apply bg-action-hover; }
+  .btn-secondary { @apply bg-surface text-ink border-rule; }
+  .btn-secondary:hover:not(:disabled) { @apply border-rule-strong; }
+  .btn-ghost { @apply text-ink-muted; }
+  .btn-ghost:hover:not(:disabled) { @apply text-ink bg-sunken; }
+  .btn-danger { @apply text-bad border-bad/40; }
+  .btn-danger:hover:not(:disabled) { @apply border-bad bg-sunken; }
+
+  .btn-sm { @apply h-9 px-3; }
+  .btn-lg { @apply h-12 px-6 text-base; }
+  .btn-icon { @apply w-9 h-9 px-0; }
+
+  .input {
+    @apply w-full h-11 px-3.5 text-base text-ink bg-sunken border border-rule transition-colors;
+    border-radius: var(--radius-slight);
+  }
+  .input::placeholder { color: var(--ink-faint); }
+  .input:focus {
+    outline: none;
+    border-color: var(--action);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--action) 18%, transparent);
+  }
+  textarea.input { @apply h-auto py-2.5; }
+
+  .label { @apply block text-sm font-medium text-ink mb-1.5; }
+
+  .card {
+    @apply bg-surface border border-rule;
+    border-radius: var(--radius-panel);
+  }
+}

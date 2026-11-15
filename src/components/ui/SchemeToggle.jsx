@@ -60,7 +60,7 @@ export default function SchemeToggle({ className = '' }) {
         ivy ? 'Switch to the Chaparral scheme' : 'Switch to the Ivy scheme'
       }
       title={ivy ? 'Chaparral scheme' : 'Ivy scheme'}
-      className={`h-9 pl-2.5 pr-3 flex items-center gap-2.5 bg-surface border border-rule text-ink cursor-pointer hover:border-rule-strong transition-colors ${className}`}
+      className={`btn btn-secondary btn-sm ${className}`}
     >
       {/* Three stacked swatches read as a bound set of colours rather than as
           a single dot, which is what makes it legible as a scheme. */}

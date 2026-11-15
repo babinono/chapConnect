@@ -229,7 +229,7 @@ export default function OutreachMessage({ matchData, userProfile, session }) {
           <button
             type="button"
             onClick={() => setShowMessageModal(true)}
-            className="w-full py-4 px-6 font-medium flex items-center justify-center gap-2 cursor-pointer transition-colors bg-action text-action-ink hover:bg-action-hover rounded-slight"
+            className="btn btn-primary btn-lg w-full"
           >
             <Send className="w-4 h-4" />
             <span>Send via Email Relay</span>

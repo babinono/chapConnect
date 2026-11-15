@@ -18,7 +18,7 @@ export default function ThemeToggle({ className = '' }) {
     <motion.button
       onClick={() => setDark(d => !d)}
       aria-label={dark ? 'Switch to light mode' : 'Switch to dark mode'}
-      className={`w-9 h-9 flex items-center justify-center bg-surface border border-rule text-ink cursor-pointer hover:border-rule-strong transition-colors ${className}`}
+      className={`btn btn-secondary btn-sm btn-icon ${className}`}
     >
       <motion.span
         key={dark ? 'moon' : 'sun'}

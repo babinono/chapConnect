@@ -224,7 +224,7 @@ export default function MatchPage({ session }) {
 
           <Link
             to={session ? '/dashboard' : '/'}
-            className="mt-10 inline-block bg-action text-action-ink font-medium py-3.5 px-7 transition-colors hover:bg-action-hover"
+            className="btn btn-primary btn-lg mt-10"
           >
             Back to dashboard
           </Link>
@@ -247,7 +247,7 @@ export default function MatchPage({ session }) {
           </p>
           <Link
             to={session ? '/dashboard' : '/'}
-            className="mt-10 inline-block bg-action text-action-ink font-medium py-3.5 px-7 transition-colors hover:bg-action-hover"
+            className="btn btn-primary btn-lg mt-10"
           >
             Return to dashboard
           </Link>

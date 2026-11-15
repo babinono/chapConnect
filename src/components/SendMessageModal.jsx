@@ -126,7 +126,7 @@ export default function SendMessageModal({
               <div className="pt-2">
                 <button
                   onClick={handleResetAndClose}
-                  className="w-full py-3 px-4 bg-action text-action-ink font-medium rounded-slight hover:bg-action-hover transition-colors cursor-pointer"
+                  className="btn btn-primary w-full"
                 >
                   Done
                 </button>
@@ -185,13 +185,13 @@ export default function SendMessageModal({
                 <button
                   type="button"
                   onClick={handleResetAndClose}
-                  className="px-4 py-2.5 text-sm font-medium text-ink-muted hover:text-ink transition-colors cursor-pointer"
+                  className="btn btn-ghost"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 text-sm font-medium bg-action text-action-ink hover:bg-action-hover transition-colors flex items-center gap-2 rounded-slight cursor-pointer"
+                  className="btn btn-primary"
                 >
                   <Send className="w-4 h-4" />
                   <span>Send via Relay</span>

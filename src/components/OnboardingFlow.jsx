@@ -205,8 +205,8 @@ export default function OnboardingFlow({ session }) {
     navigate('/dashboard');
   };
 
-  const inputClass = "w-full px-4 py-3 border border-rule focus:outline-none focus:border-action bg-sunken font-medium transition-all panel";
-  const labelClass = "block text-sm font-medium text-ink mb-2 tracking-wide";
+  const inputClass = "input";
+  const labelClass = "label";
 
   const renderFields = () => {
     if (flow === 'post_college') {
@@ -701,7 +701,7 @@ export default function OnboardingFlow({ session }) {
               <button
                 type="submit"
                 disabled={notYetGraduated}
-                className="w-full lg:w-auto lg:min-w-56 h-12 bg-action text-action-ink font-medium px-8 flex items-center justify-center gap-2 cursor-pointer transition-colors hover:bg-action-hover disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn btn-primary btn-lg w-full lg:w-auto lg:min-w-56"
               >
                 <span>Continue</span>
                 <ArrowRight className="w-5 h-5" />
@@ -751,7 +751,7 @@ export default function OnboardingFlow({ session }) {
                 <button
                   type="button"
                   onClick={handlePrev}
-                  className="bg-surface text-ink font-medium py-3 px-5 border border-rule flex items-center space-x-2 transition-all tracking-normal rounded-slight"
+                  className="btn btn-secondary"
                 >
                   <ArrowRight className="w-5 h-5 rotate-180" />
                   <span>Back</span>
@@ -763,7 +763,7 @@ export default function OnboardingFlow({ session }) {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="bg-action text-action-ink font-medium py-3 px-5 border border-rule flex items-center space-x-2 transition-all tracking-normal"
+                className="btn btn-primary"
               >
                 {isSubmitting ? (
                   <>

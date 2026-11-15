@@ -118,7 +118,7 @@ export default function SimilarChaps({ matches = [], onMessage, onSeeAll, onEdit
                   <button
                     type="button"
                     onClick={() => onMessage(m)}
-                    className="shrink-0 h-9 px-3 border border-rule bg-surface text-sm font-medium text-ink hover:border-action hover:text-action-text transition-colors flex items-center gap-1.5 cursor-pointer"
+                    className="btn btn-secondary btn-sm shrink-0"
                   >
                     <Mail className="w-4 h-4" strokeWidth={1.75} />
                     <span>Message {c.name.split(' ')[0]}</span>

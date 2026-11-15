@@ -539,8 +539,8 @@ export default function Dashboard({ session }) {
     );
   }
 
-  const labelClass = "block text-sm font-medium text-ink mb-2 tracking-wide";
-  const inputClass = "w-full px-4 py-3 border border-rule focus:outline-none focus:border-action bg-sunken font-medium transition-all panel";
+  const labelClass = "label";
+  const inputClass = "input";
   const isWorkingFlow = profileForm.flow_type === 'post_schooling' || profileForm.flow_type === 'established';
 
   const filteredMatches = alumniMatches.filter(({ candidate: c }) => {
@@ -586,7 +586,7 @@ export default function Dashboard({ session }) {
               </button>
               <button
                 onClick={handleLogOut}
-                className="h-9 px-3 text-sm font-medium text-ink-muted border border-rule bg-surface flex items-center gap-2 transition-colors hover:text-ink hover:border-rule-strong cursor-pointer"
+                className="btn btn-secondary btn-sm"
               >
                 <LogOut className="w-4 h-4" strokeWidth={1.75} />
                 <span className="hidden sm:inline">Log Out</span>
@@ -643,7 +643,7 @@ export default function Dashboard({ session }) {
                     <button
                       onClick={runAlumniMatching}
                       disabled={loadingAlumniMatches}
-                      className="h-10 px-4 border border-rule bg-surface text-ink text-sm font-medium flex items-center gap-2 hover:border-rule-strong transition-colors cursor-pointer disabled:opacity-50"
+                      className="btn btn-secondary"
                     >
                       <RefreshCw className={`w-4 h-4 ${loadingAlumniMatches ? 'animate-spin' : ''}`} strokeWidth={1.75} />
                       <span>{loadingAlumniMatches ? 'Matching Chaps…' : 'Refresh'}</span>
@@ -857,7 +857,7 @@ export default function Dashboard({ session }) {
                           <button
                             onClick={() => setSelectedRecipientForMessage({ ...m.candidate, matchThreads: m.threads, matchScore: m.score })}
                             title="Opens a ready-made draft"
-                            className="shrink-0 h-9 px-3 border border-rule bg-surface text-sm font-medium text-ink hover:border-action hover:text-action-text transition-colors flex items-center gap-1.5 cursor-pointer"
+                            className="btn btn-secondary btn-sm shrink-0"
                           >
                             <Mail className="w-4 h-4" strokeWidth={1.75} />
                             <span>Message {firstName}</span>
@@ -1219,7 +1219,7 @@ export default function Dashboard({ session }) {
               <button
                 type="submit"
                 disabled={isSavingProfile}
-                className="w-full sm:w-auto h-11 bg-action text-action-ink font-medium px-6 flex items-center justify-center gap-2 transition-colors hover:bg-action-hover text-sm cursor-pointer disabled:opacity-60"
+                className="btn btn-primary w-full sm:w-auto"
               >
                 {isSavingProfile ? (
                   <>
@@ -1243,7 +1243,7 @@ export default function Dashboard({ session }) {
               <button
                 type="button"
                 onClick={handleResetDevMode}
-                className="mt-4 h-10 px-4 border border-bad/40 text-bad text-sm font-medium flex items-center gap-2 transition-colors hover:border-bad hover:bg-sunken cursor-pointer"
+                className="btn btn-danger mt-4"
               >
                 Reset Account
               </button>
@@ -1353,7 +1353,7 @@ export default function Dashboard({ session }) {
                 </h2>
                 <button
                   onClick={() => setActiveTab('board')}
-                  className="mt-4 w-full h-10 px-4 bg-action text-action-ink font-medium text-sm hover:bg-action-hover transition-colors cursor-pointer flex items-center justify-center gap-2"
+                  className="btn btn-primary mt-4 w-full"
                 >
                   <span>Read Alumni News</span>
                   <ArrowRight className="w-4 h-4" />
