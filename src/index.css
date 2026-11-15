@@ -462,9 +462,13 @@ h1, h2, h3, h4, h5, h6 {
   /* Follows the field's own navy so the band never shows a seam. */
   --duotone-ground: var(--color-westlake-navy);
   background-color: var(--duotone-ground);
+  /* The photo takes its hue from this backdrop: navy where it meets the field
+     above, running down to Westlake Red. */
+  background-image: linear-gradient(to bottom, var(--color-westlake-navy) 0%, var(--color-westlake-red) 100%);
 }
 .dark .duotone {
   --duotone-ground: var(--color-field-night);
+  background-image: linear-gradient(to bottom, var(--color-field-night) 0%, var(--color-westlake-red-deep) 100%);
 }
 .duotone > img {
   width: 100%;
