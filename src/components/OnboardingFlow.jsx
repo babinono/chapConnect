@@ -600,7 +600,7 @@ export default function OnboardingFlow({ session }) {
     return (
       <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 p-4 sm:p-6">
         <ThemeControls className="w-full max-w-5xl justify-end" />
-        <div className="w-full max-w-5xl bg-surface border border-rule p-6 sm:p-8 lg:px-10 panel">
+        <div className="tab-in w-full max-w-5xl bg-surface border border-rule p-6 sm:p-8 lg:px-10 panel">
           <OnboardingProgress current={1} total={totalSteps} />
           <h1 className="font-heading text-3xl lg:text-4xl font-semibold text-ink tracking-tight mb-8">
             {firstName ? `Hi, ${firstName}.` : 'Welcome.'}
@@ -723,10 +723,10 @@ export default function OnboardingFlow({ session }) {
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 p-4 sm:p-6 lg:p-10">
       <ThemeControls className="w-full max-w-2xl justify-end" />
-      <div className="w-full max-w-2xl bg-surface border border-rule p-6 sm:p-8 lg:p-10 relative panel">
+      <div className="tab-in w-full max-w-2xl bg-surface border border-rule p-6 sm:p-8 lg:p-10 relative panel">
         <OnboardingProgress current={step + 1} total={totalSteps} />
 
-        <h1 className="font-heading text-3xl font-semibold text-ink tracking-tight mb-8">
+        <h1 key={`${flow}-${step}`} className="tab-in font-heading text-3xl font-semibold text-ink tracking-tight mb-8">
           {(flow === 'post_college' && ['Your undergrad', 'Beyond undergrad', 'Work and contact'][step - 1]) || 'Tell us about yourself'}
         </h1>
 
@@ -744,6 +744,7 @@ export default function OnboardingFlow({ session }) {
               animate="center"
               exit="exit"
               transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+              className="stagger-in"
             >
               {renderFields()}
             </motion.div>
