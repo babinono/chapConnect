@@ -74,7 +74,7 @@ export default function SimilarChaps({ matches = [], onMessage, onSeeAll, onEdit
                 initial={reduce ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.04, duration: 0.25 }}
-                className="flex flex-col bg-surface border border-rule p-4 panel hover:border-rule-strong transition-colors"
+                className="flex flex-col bg-surface border border-rule p-4 panel lift"
               >
                 <div className="flex items-center gap-3">
                   <ChapAvatar avatar={c.avatar} seed={c.id || c.name} size={44} className="border border-rule" />

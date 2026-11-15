@@ -635,7 +635,7 @@ export default function Dashboard({ session }) {
       <ThemeControls className="sm:hidden mb-6 justify-end" />
 
       {activeTab === 'matches' ? (
-        <div className="space-y-6 animate-in fade-in duration-500">
+        <div className="space-y-6 tab-in">
             {(() => {
               // Facet tiles: every value that actually occurs, most common
               // first, with how many Chaps have it.
@@ -805,7 +805,7 @@ export default function Dashboard({ session }) {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: Math.min(idx, 8) * 0.04, duration: 0.25 }}
-                        className="bg-surface border border-rule flex flex-col panel hover:border-rule-strong transition-colors"
+                        className="bg-surface border border-rule flex flex-col panel lift"
                       >
                         <div className="p-5 flex-1">
                           <div className="flex items-start gap-3">
@@ -921,7 +921,7 @@ export default function Dashboard({ session }) {
           </div>
         ) : activeTab === 'profile' ? (
         /* Edit Profile: grouped sections, one save bar. */
-        <div className="max-w-3xl mx-auto w-full">
+        <div className="max-w-3xl mx-auto w-full tab-in">
           <div className="mb-8">
             <h2 className="font-heading text-3xl font-semibold text-ink tracking-tight">Edit Profile</h2>
             {isAlumniMentor && (
@@ -1306,7 +1306,7 @@ export default function Dashboard({ session }) {
           latest news in the main column; profile, magazine and official links
           in the side column. Phones stack them in that order. */}
       {activeTab === 'home' && (
-        <div className="space-y-8">
+        <div className="space-y-8 tab-in">
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1366,7 +1366,7 @@ export default function Dashboard({ session }) {
                   </div>
                   <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {newsPosts.slice(0, 3).map(post => (
-                      <li key={post.id} className="group relative flex flex-col overflow-hidden bg-surface border border-rule panel hover:border-rule-strong transition-colors">
+                      <li key={post.id} className="group relative flex flex-col overflow-hidden bg-surface border border-rule panel lift">
                         <div className="aspect-[16/9] overflow-hidden bg-sunken">
                           <img src={artFor(post)} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
                         </div>

@@ -19,7 +19,7 @@ export default function Circles({ matches = [], me = {}, onOpen }) {
             <button
               type="button"
               onClick={() => onOpen(key)}
-              className="group flex h-full w-full flex-col items-start gap-3 bg-surface border border-rule p-4 text-left panel cursor-pointer hover:border-rule-strong transition-colors"
+              className="group flex h-full w-full flex-col items-start gap-3 bg-surface border border-rule p-4 text-left panel cursor-pointer lift"
             >
               <span className="flex items-baseline gap-2">
                 <span className="wordmark text-3xl leading-none text-heritage tabular">{members.length}</span>

@@ -58,7 +58,7 @@ export default function MessageBoard() {
   });
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-400">
+    <div className="space-y-6 tab-in">
       <div className="flex flex-wrap items-end justify-between gap-x-8 gap-y-4">
         <div>
           <p className="text-sm font-medium text-ink-muted">Community Bulletin &amp; Gazette</p>
@@ -86,7 +86,7 @@ export default function MessageBoard() {
         <motion.article
           key={lead.id}
           {...enter(0)}
-          className="group relative grid overflow-hidden bg-surface border border-rule panel md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] hover:border-rule-strong transition-colors"
+          className="group relative grid overflow-hidden bg-surface border border-rule panel md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lift"
         >
           <div className="aspect-[16/10] md:aspect-auto md:min-h-80 overflow-hidden bg-sunken">
             <img
@@ -123,7 +123,7 @@ export default function MessageBoard() {
             <motion.article
               key={post.id}
               {...enter(idx + 1)}
-              className="group relative flex flex-col overflow-hidden bg-surface border border-rule panel hover:border-rule-strong transition-colors"
+              className="group relative flex flex-col overflow-hidden bg-surface border border-rule panel lift"
             >
               <div className="aspect-[16/9] overflow-hidden bg-sunken">
                 <img
