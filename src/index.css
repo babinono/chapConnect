@@ -803,3 +803,66 @@ table, .tabular { font-variant-numeric: tabular-nums; }
     border-radius: var(--radius-panel);
   }
 }
+
+
+/* ==== Yearbook look (dev experiment) =====================================
+   Turned on with ?look=yearbook, off with ?look=default. Everything lives
+   under .yearbook so the default look is untouched: cream paper, slab
+   headings, typewriter captions, big class numerals, and print-style hard
+   shadows in place of glows. */
+.yb-only { display: none; }
+.yearbook .yb-only { display: block; }
+
+.yearbook {
+  --radius-panel: 0.125rem;
+  --font-heading: var(--font-wordmark);
+  --font-caption: 'Courier New', Courier, ui-monospace, monospace;
+}
+.yearbook:not(.dark) {
+  --canvas: #f3ecdc;
+  --surface: #fbf7ec;
+  --surface-sunken: #ebe3cf;
+  --rule: #d9cfb6;
+  --rule-strong: #b3a686;
+  --ink-muted: #4d5266;
+  --ink-faint: #5d6070;
+}
+/* Paper grain. */
+.yearbook body {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.yearbook h1, .yearbook h2, .yearbook h3 { font-weight: 700; letter-spacing: -0.01em; }
+
+/* One flat ink, no glow. */
+.yearbook .navy-field { background-image: none; }
+
+/* The photo is printed in the field's own ink through a dot screen. */
+.yearbook .duotone { background-image: none; }
+.yearbook .duotone > img { opacity: 0.85; filter: grayscale(1) contrast(1.35) brightness(0.9); }
+.yearbook .duotone::after {
+  background:
+    radial-gradient(var(--duotone-ground) 0.9px, transparent 1.2px) 0 0 / 4px 4px,
+    linear-gradient(to bottom, var(--duotone-ground) 0%, transparent 30%);
+}
+
+/* Typewriter captions: the details under a name, and photo captions. */
+.yearbook .yb-caption,
+.yearbook article dl,
+.yearbook li dl { font-family: var(--font-caption); font-size: 0.8125rem; }
+
+/* Class years as page numerals. */
+.yearbook .class-heading { border-bottom: 2px solid var(--ink); }
+.yearbook .class-heading .wordmark {
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  line-height: 1;
+  color: var(--heritage);
+}
+.yearbook .class-badge { height: 1.5rem; padding-inline: 0.4rem; font-size: 0.875rem; }
+
+/* Cards lift like a print pulled off the page: a hard offset, not a blur. */
+.yearbook .lift:hover {
+  translate: -2px -2px;
+  border-color: var(--ink);
+  box-shadow: 4px 4px 0 var(--ink);
+}
+.yearbook button.lift:active { translate: 0 0; box-shadow: none; }

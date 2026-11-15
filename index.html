@@ -17,6 +17,13 @@
           if (localStorage.getItem('cc_scheme') === 'ivy') {
             document.documentElement.classList.add('ivy');
           }
+          // Dev experiment: ?look=yearbook turns the yearbook look on,
+          // ?look=default turns it off. Remembered per browser.
+          var look = new URLSearchParams(location.search).get('look');
+          if (look) localStorage.setItem('cc_look', look);
+          if (localStorage.getItem('cc_look') === 'yearbook') {
+            document.documentElement.classList.add('yearbook');
+          }
         } catch (e) {}
       })();
     </script>

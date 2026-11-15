@@ -785,7 +785,7 @@ export default function Dashboard({ session }) {
                   {directoryGroups.map(group => (
                     <section key={group.key} aria-label={group.label || 'Recommended alumni'}>
                       {group.label && (
-                        <h3 className="mb-4 flex items-baseline gap-3 border-b border-rule pb-2">
+                        <h3 className="class-heading mb-4 flex items-baseline gap-3 border-b border-rule pb-2">
                           <span className="wordmark text-xl text-ink">{group.label}</span>
                           <span className="tabular text-sm text-ink-faint">{group.items.length}</span>
                         </h3>

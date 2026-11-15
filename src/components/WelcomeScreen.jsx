@@ -154,6 +154,9 @@ export default function WelcomeScreen({ session }) {
             loading="eager"
             fetchPriority="high"
           />
+          <p className="yb-only yb-caption absolute bottom-3 left-6 z-10 text-xs text-on-navy sm:left-12 lg:left-16">
+            Chaparral Stadium, Westlake High School
+          </p>
         </motion.div>
       </section>
 
