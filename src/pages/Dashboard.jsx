@@ -70,6 +70,7 @@ export default function Dashboard({ session }) {
   const [alumniMatches, setAlumniMatches] = useState([]);
   const [matchFilters, setMatchFilters] = useState({ q: '', college: '', company: '', gradYear: '', location: '' });
   const [newsPosts, setNewsPosts] = useState([]);
+  const [directoryView, setDirectoryView] = useState('match'); // 'match' | 'class'
   useEffect(() => {
     initMessageBoard().then(() => setNewsPosts(getBoardPosts()));
   }, []);
@@ -559,6 +560,16 @@ export default function Dashboard({ session }) {
     return true;
   });
 
+  const directoryGroups = directoryView === 'class'
+    ? [...new Set(filteredMatches.map(m => m.candidate.gradYear || 0))]
+        .sort((a, b) => b - a)
+        .map(year => ({
+          key: String(year),
+          label: year ? `Class of ${year}` : 'Class year not listed',
+          items: filteredMatches.filter(m => (m.candidate.gradYear || 0) === year),
+        }))
+    : [{ key: 'all', label: null, items: filteredMatches }];
+
   return (
     <div className="min-h-[100dvh] flex flex-col">
       <header className="sticky top-0 z-30 border-b border-rule bg-canvas/95 backdrop-blur supports-[backdrop-filter]:bg-canvas/85">
@@ -697,15 +708,21 @@ export default function Dashboard({ session }) {
                         <span className="tabular font-medium text-ink">{filteredMatches.length}</span>
                         {' '}{filteredMatches.length === 1 ? 'Chap' : 'Chaps'}{active ? ' match' : ' recommended'}
                       </p>
-                      {active && (
-                        <button
-                          type="button"
-                          onClick={() => setMatchFilters({ q: '', college: '', company: '', gradYear: '', location: '' })}
-                          className="font-medium text-action-text hover:underline cursor-pointer"
-                        >
-                          Clear filters
-                        </button>
-                      )}
+                      <div className="flex flex-wrap items-center justify-end gap-3">
+                        {active && (
+                          <button
+                            type="button"
+                            onClick={() => setMatchFilters({ q: '', college: '', company: '', gradYear: '', location: '' })}
+                            className="font-medium text-action-text hover:underline cursor-pointer"
+                          >
+                            Clear filters
+                          </button>
+                        )}
+                        <div className="flex gap-2" role="group" aria-label="Arrange alumni">
+                          <button type="button" className="chip" aria-pressed={directoryView === 'match'} onClick={() => setDirectoryView('match')}>Best match</button>
+                          <button type="button" className="chip" aria-pressed={directoryView === 'class'} onClick={() => setDirectoryView('class')}>By class</button>
+                        </div>
+                      </div>
                     </div>
                   )}
                 </>
@@ -748,8 +765,17 @@ export default function Dashboard({ session }) {
                   Try a different search, or clear the filters to see everyone.
                 </ChapEmpty>
               ) : (
+                <div className="space-y-10">
+                  {directoryGroups.map(group => (
+                    <section key={group.key} aria-label={group.label || 'Recommended alumni'}>
+                      {group.label && (
+                        <h3 className="mb-4 flex items-baseline gap-3 border-b border-rule pb-2">
+                          <span className="wordmark text-xl text-ink">{group.label}</span>
+                          <span className="tabular text-sm text-ink-faint">{group.items.length}</span>
+                        </h3>
+                      )}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {filteredMatches.map((m, idx) => {
+                  {group.items.map((m, idx) => {
                     const currentUserId = session?.user?.id || 'local_user';
                     const candId = m.candidate.id;
                     const isUnlocked = checkUnlocked(currentUserId, candId);
@@ -863,6 +889,9 @@ export default function Dashboard({ session }) {
                       </motion.article>
                     );
                   })}
+                </div>
+                    </section>
+                  ))}
                 </div>
               )}
             </div>
