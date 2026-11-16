@@ -45,7 +45,7 @@ import ThemeControls from '../components/ui/ThemeControls';
 
 // How many ranked alumni to pull for the matching tab's filters (the home
 // column shows the top few of the same list).
-const MATCH_POOL = 60;
+const MATCH_POOL = 60; // default pool size
 // matchingEngine fills these in when a record has no school or career, so
 // they aren't real values to filter on.
 const PLACEHOLDER_VALUES = new Set(['University', 'Professional']);

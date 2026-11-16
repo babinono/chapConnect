@@ -6,7 +6,8 @@ export default function Autocomplete({
   onChange, 
   placeholder, 
   suggestions = [], 
-  required = false 
+  required = false,
+  className = "input"
 }) {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
@@ -106,7 +107,7 @@ export default function Autocomplete({
   };
 
   return (
-    <div ref={containerRef} className="relative w-full">
+    <div ref={containerRef} className="relative w-full mb-2">
       <input
         type="text"
         name={name}
@@ -116,10 +117,10 @@ export default function Autocomplete({
         placeholder={placeholder}
         required={required}
         autoComplete="off"
-        className="input"
+        className={className}
       />
       {showSuggestions && (
-        <ul className="absolute z-50 w-full mt-2 bg-surface border border-rule overflow-hidden panel">
+        <ul className="w-full mt-2 bg-surface border border-rule overflow-hidden panel">
           {filteredSuggestions.map((suggestion, index) => (
             <li
               key={suggestion}

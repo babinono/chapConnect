@@ -11,7 +11,7 @@ export default function Circles({ matches = [], me = {}, onOpen }) {
   return (
     <section aria-labelledby="circles-title">
       <h2 id="circles-title" className="font-heading text-2xl font-semibold tracking-tight text-ink mb-4">
-        Your circles
+        Your Chaps Nest
       </h2>
       <ul className="grid gap-4 grid-cols-2 xl:grid-cols-4">
         {circles.map(({ key, label, note, members }) => (

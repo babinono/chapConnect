@@ -208,7 +208,7 @@ export default function OnboardingFlow({ session }) {
     navigate('/dashboard');
   };
 
-  const inputClass = "input";
+  const inputClass = "w-full px-3 py-2 text-sm bg-sunken border border-rule rounded-md";
   const labelClass = "label";
 
   const renderFields = () => {
@@ -220,21 +220,21 @@ export default function OnboardingFlow({ session }) {
         return (
           <div className="space-y-5">
             {!knownEmail && (
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>Email Address</label>
                 <input name="email" type="email" required onChange={handleChange} value={formData.email || ''} className={inputClass} placeholder="you@example.com" />
               </div>
             )}
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Undergraduate College</label>
-              <Autocomplete name="college" required onChange={handleChange} value={formData.college || ''} suggestions={COLLEGES} placeholder="e.g. UT Austin" />
+              <Autocomplete name="college" required onChange={handleChange} value={formData.college || ''} suggestions={COLLEGES} placeholder="e.g. UT Austin" className={inputClass} />
             </div>
             <div className="space-y-3">
               <label className={labelClass}>Undergraduate Major / Degree</label>
               {majors.map((m, i) => (
                 <div key={i} className="flex items-center gap-3">
                   <div className="flex-1">
-                    <Autocomplete name={`major-${i}`} onChange={(e) => updateMajor(i, e.target.value)} value={m} suggestions={MAJORS} placeholder={i === 0 ? 'e.g. Computer Science' : 'Second major'} />
+                    <Autocomplete name={`major-${i}`} onChange={(e) => updateMajor(i, e.target.value)} value={m} suggestions={MAJORS} placeholder={i === 0 ? 'e.g. Computer Science' : 'Second major'} className={inputClass} />
                   </div>
                   {i > 0 && (
                     <button
@@ -323,11 +323,11 @@ export default function OnboardingFlow({ session }) {
 
           {isWorking && (
             <>
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>Where do you work?</label>
                 <input name="company" type="text" required onChange={handleChange} value={formData.company || ''} className={inputClass} placeholder="e.g. Google" />
               </div>
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>What is your position?</label>
                 <input name="career" type="text" required onChange={handleChange} value={formData.career || ''} className={inputClass} placeholder="e.g. Senior Software Engineer" />
               </div>
@@ -335,7 +335,7 @@ export default function OnboardingFlow({ session }) {
           )}
 
           <div className="space-y-4 pt-4 border-t border-rule">
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Preferred Contact (Optional)</label>
               <select name="contactPlatform" onChange={handleChange} value={formData.contactPlatform || ''} className="input cursor-pointer">
                 <option value="">-- Select Platform --</option>
@@ -348,13 +348,13 @@ export default function OnboardingFlow({ session }) {
               </select>
             </div>
             {formData.contactPlatform === 'Other' && (
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>Specify Platform</label>
                 <input name="otherContactPlatform" type="text" onChange={handleChange} value={formData.otherContactPlatform || ''} className={inputClass} placeholder="e.g. Slack" />
               </div>
             )}
             {formData.contactPlatform && (
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>Contact Username / Link / Email</label>
                 <input name="contactInfo" type="text" onChange={handleChange} value={formData.contactInfo || ''} className={inputClass} placeholder="e.g. linkedin.com/in/username" />
               </div>
@@ -378,16 +378,16 @@ export default function OnboardingFlow({ session }) {
         return (
           <div className="space-y-5">
             {!knownEmail && (
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>Email Address</label>
                 <input name="email" type="email" required onChange={handleChange} value={formData.email || ''} className={inputClass} placeholder="you@example.com" />
               </div>
             )}
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>College Attended</label>
               <Autocomplete name="college" onChange={handleChange} value={formData.college || ''} suggestions={COLLEGES} placeholder="e.g. UT Austin" />
             </div>
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Major studied</label>
               <Autocomplete name="major" onChange={handleChange} value={formData.major || ''} suggestions={MAJORS} placeholder="e.g. Computer Science" />
             </div>
@@ -396,11 +396,11 @@ export default function OnboardingFlow({ session }) {
       } else if (step === 2) {
         return (
           <div className="space-y-5">
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>City you live in</label>
               <input name="location" type="text" required onChange={handleChange} value={formData.location || ''} className={inputClass} placeholder="e.g. Austin, TX" />
             </div>
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Industry / Career Field</label>
               <select 
                 name="industry" 
@@ -423,16 +423,16 @@ export default function OnboardingFlow({ session }) {
               </select>
             </div>
             {formData.industry === 'Other' && (
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>Specify Industry</label>
                 <input name="otherIndustry" type="text" required onChange={handleChange} value={formData.otherIndustry || ''} className={inputClass} placeholder="e.g. Renewable Energy" />
               </div>
             )}
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Job Title / Position / Role</label>
               <input name="career" type="text" required onChange={handleChange} value={formData.career || ''} className={inputClass} placeholder="e.g. Senior Software Engineer" />
             </div>
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Company Worked At</label>
               <input name="company" type="text" onChange={handleChange} value={formData.company || ''} className={inputClass} placeholder="e.g. Google (Optional)" />
             </div>
@@ -441,15 +441,15 @@ export default function OnboardingFlow({ session }) {
       } else {
         return (
           <div className="space-y-5">
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Graduate School 1 (If Completed)</label>
               <input name="firstGrad" type="text" onChange={handleChange} value={formData.firstGrad || ''} className={inputClass} placeholder="e.g. Stanford University (MS)" />
             </div>
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Graduate School 2 (If Completed)</label>
               <input name="secondGrad" type="text" onChange={handleChange} value={formData.secondGrad || ''} className={inputClass} placeholder="e.g. Harvard Business School (MBA)" />
             </div>
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Preferred Contact Platform</label>
               <select 
                 name="contactPlatform" 
@@ -468,12 +468,12 @@ export default function OnboardingFlow({ session }) {
               </select>
             </div>
             {formData.contactPlatform === 'Other' && (
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>Please specify contact platform</label>
                 <input name="otherContactPlatform" type="text" required onChange={handleChange} value={formData.otherContactPlatform || ''} className={inputClass} placeholder="e.g. Slack" />
               </div>
             )}
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Contact Username / Link / Email</label>
               <input name="contactInfo" type="text" required onChange={handleChange} value={formData.contactInfo || ''} className={inputClass} placeholder="e.g. linkedin.com/in/username" />
             </div>
@@ -488,16 +488,16 @@ export default function OnboardingFlow({ session }) {
         return (
           <div className="space-y-5">
             {!knownEmail && (
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>Email Address</label>
                 <input name="email" type="email" required onChange={handleChange} value={formData.email || ''} className={inputClass} placeholder="you@example.com" />
               </div>
             )}
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Current College</label>
               <Autocomplete name="college" onChange={handleChange} value={formData.college || ''} suggestions={COLLEGES} placeholder="e.g. Duke University" />
             </div>
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Major(s)</label>
               <Autocomplete name="targetMajors" onChange={handleChange} value={formData.targetMajors || ''} suggestions={MAJORS} placeholder="e.g. Finance (comma separated)" />
             </div>
@@ -506,7 +506,7 @@ export default function OnboardingFlow({ session }) {
       } else {
         return (
           <div className="space-y-5">
-            <div>
+            <div className="mb-4">
               <label className={labelClass}>Career Interest</label>
               <input name="targetCareers" type="text" onChange={handleChange} value={formData.targetCareers || ''} className={inputClass} placeholder="e.g. Consulting (comma separated)" />
             </div>
@@ -522,13 +522,13 @@ export default function OnboardingFlow({ session }) {
               </select>
             </div>
             {formData.contactPlatform === 'Other' && (
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>Specify Platform</label>
                 <input name="otherContactPlatform" type="text" onChange={handleChange} value={formData.otherContactPlatform || ''} className={inputClass} placeholder="e.g. TikTok" />
               </div>
             )}
             {formData.contactPlatform && (
-              <div>
+              <div className="mb-4">
                 <label className={labelClass}>Handle / Link (Optional)</label>
                 <input name="contactInfo" type="text" onChange={handleChange} value={formData.contactInfo || ''} className={inputClass} placeholder="e.g. @username" />
               </div>
@@ -611,7 +611,7 @@ export default function OnboardingFlow({ session }) {
             <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_22rem] lg:gap-12 items-start">
               <div className="space-y-6">
               <div className="grid gap-5 sm:grid-cols-2">
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 mb-4">
                   <label htmlFor="ob-first" className={labelClass}>First name</label>
                   <input
                     id="ob-first"
@@ -624,7 +624,7 @@ export default function OnboardingFlow({ session }) {
                     placeholder="Katherine"
                   />
                 </div>
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 mb-4">
                   <label htmlFor="ob-last" className={labelClass}>Last name</label>
                   <input
                     id="ob-last"
@@ -637,7 +637,7 @@ export default function OnboardingFlow({ session }) {
                 </div>
               </div>
 
-              <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-2 mb-4">
                 <label htmlFor="ob-nick" className={labelClass}>
                   Go by something else? <span className="text-ink-faint font-normal">(optional)</span>
                 </label>
@@ -658,7 +658,7 @@ export default function OnboardingFlow({ session }) {
 
               <div className="grid gap-6 sm:grid-cols-2 sm:items-start">
                 {needsYear && (
-                  <div className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-2 mb-4">
                     <label htmlFor="ob-year" className={labelClass}>High school graduating class</label>
                     <input
                       id="ob-year"
@@ -682,7 +682,7 @@ export default function OnboardingFlow({ session }) {
                     )}
                   </div>
                 )}
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 mb-4">
                   <label htmlFor="ob-city" className={labelClass}>City you live in</label>
                   <input
                     id="ob-city"
@@ -721,9 +721,9 @@ export default function OnboardingFlow({ session }) {
   const isLastStep = (flow === 'post_college' && step === 3) || (flow === 'established' && step === 3) || (flow === 'recent' && step === 2) || (flow === 'student' && step === 2);
 
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center gap-4 p-4 sm:p-6 lg:p-10">
+    <div className="min-h-[100dvh] flex flex-col items-start justify-start gap-4 p-4 sm:p-6 lg:p-10">
       <ThemeControls className="w-full max-w-2xl justify-end" />
-      <div className="tab-in w-full max-w-2xl bg-surface border border-rule p-6 sm:p-8 lg:p-10 relative panel">
+      <div className="tab-in w-full bg-surface border border-rule p-6 sm:p-8 lg:p-10 relative panel">
         <OnboardingProgress current={step + 1} total={totalSteps} />
 
         <h1 key={`${flow}-${step}`} className="tab-in font-heading text-3xl font-semibold text-ink tracking-tight mb-8">
